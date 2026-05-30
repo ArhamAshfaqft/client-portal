@@ -26,8 +26,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const isClient = profile?.role === "client";
-  console.log("[Sidebar] profile:", profile?.full_name, "role:", profile?.role, "isClient:", isClient);
-  console.log("[Sidebar] perms - sites:", can(Permissions.SITES_VIEW), "feedback_all:", can(Permissions.FEEDBACK_VIEW_ALL), "team:", can(Permissions.TEAM_VIEW), "reports:", can(Permissions.REPORTS_CREATE), "settings:", can(Permissions.SETTINGS_VIEW));
+  const noProfile = !profile;
 
   const navItems = isClient
     ? [
@@ -36,13 +35,13 @@ export function Sidebar() {
       ]
     : [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
-        { href: "/dashboard/sites", label: "Sites", icon: Globe, show: can(Permissions.SITES_VIEW) },
-        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: can(Permissions.FEEDBACK_VIEW_ASSIGNED) && !can(Permissions.FEEDBACK_VIEW_ALL) },
-        { href: "/dashboard/team", label: "Team", icon: Users, show: can(Permissions.TEAM_VIEW) },
-        { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: can(Permissions.FEEDBACK_VIEW_ALL) },
-        { href: "/dashboard/reports", label: "Reports", icon: Clock, show: can(Permissions.REPORTS_CREATE) || can(Permissions.REPORTS_VIEW_ALL) },
-        { href: "/dashboard/activity", label: "Activity", icon: History, show: profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ALL) },
-        { href: "/dashboard/settings", label: "Settings", icon: Settings, show: can(Permissions.SETTINGS_VIEW) },
+        { href: "/dashboard/sites", label: "Sites", icon: Globe, show: noProfile || can(Permissions.SITES_VIEW) },
+        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: noProfile || (can(Permissions.FEEDBACK_VIEW_ASSIGNED) && !can(Permissions.FEEDBACK_VIEW_ALL)) },
+        { href: "/dashboard/team", label: "Team", icon: Users, show: noProfile || can(Permissions.TEAM_VIEW) },
+        { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: noProfile || can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/reports", label: "Reports", icon: Clock, show: noProfile || can(Permissions.REPORTS_CREATE) || can(Permissions.REPORTS_VIEW_ALL) },
+        { href: "/dashboard/activity", label: "Activity", icon: History, show: noProfile || profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/settings", label: "Settings", icon: Settings, show: noProfile || can(Permissions.SETTINGS_VIEW) },
       ].filter((item) => item.show);
 
   return (
