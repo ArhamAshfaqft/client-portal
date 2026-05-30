@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -76,24 +77,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   const fetchProfile = useCallback(
     async (userId: string) => {
       if (!supabase) return;
       console.log("[Auth] querying profiles for:", userId);
+      const timeout = setTimeout(() => console.log("[Auth] FETCH TIMEOUT - query is hanging for", userId), 8000);
       try {
-        const result = await Promise.race([
-          supabase.from("profiles").select("*").eq("user_id", userId).single(),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 8000)),
-        ]);
-        const data = (result as any)?.data;
-        const error = (result as any)?.error;
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+        clearTimeout(timeout);
         console.log("[Auth] profile query result:", data ? "found" : "null", error?.message || "no error");
-        if (error) console.log("[Auth] profile error:", JSON.stringify(error));
+        if (error) console.log("[Auth] profile error details:", JSON.stringify(error));
         if (data) setProfile(data as Profile);
-      } catch (e: any) {
-        console.log("[Auth] profile query failed:", e?.message || e);
+      } catch (e) {
+        clearTimeout(timeout);
+        console.log("[Auth] fetchProfile caught error:", e);
       }
     },
     [supabase]
