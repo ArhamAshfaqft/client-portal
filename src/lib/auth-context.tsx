@@ -112,22 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const init = async () => {
-      console.log("[Auth] checking session...");
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      console.log("[Auth] getUser result:", user?.email || "no user", error?.message || "ok");
-      if (user) {
-        setUser(user);
-        await fetchProfile(user.id);
-      }
-      setIsLoading(false);
-    };
-
-    init();
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -140,6 +124,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
       }
     });
+
+    const init = async () => {
+      console.log("[Auth] checking session...");
+      const { data } = await supabase.auth.getSession();
+      const user = data?.session?.user;
+      console.log("[Auth] session user:", user?.email || "none");
+      if (user) {
+        setUser(user);
+        await fetchProfile(user.id);
+      }
+      setIsLoading(false);
+    };
+
+    init();
 
     return () => subscription.unsubscribe();
   }, [supabase, fetchProfile]);
