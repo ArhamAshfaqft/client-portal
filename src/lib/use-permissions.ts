@@ -1,9 +1,13 @@
 import { useAuth } from "@/lib/auth-context";
-import { can, canAny, canAll, type Permission } from "@/lib/permissions";
+import { can, canAny, canAll, ALL_PERMISSIONS, type Permission } from "@/lib/permissions";
 
 export function usePermissions() {
   const { profile } = useAuth();
-  const permissions = (profile?.permissions ?? []) as Permission[];
+  const raw = (profile?.permissions ?? []) as Permission[];
+  const permissions: Permission[] =
+    profile?.role === "owner" && raw.length === 0
+      ? (ALL_PERMISSIONS.map((p) => p.key) as Permission[])
+      : raw;
 
   return {
     can: (permission: Permission) => can(permissions, permission),
