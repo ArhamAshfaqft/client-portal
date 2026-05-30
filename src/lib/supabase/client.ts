@@ -2,15 +2,47 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function createNoopClient(): SupabaseClient {
-  const noop = new Proxy(
-    {},
-    {
-      get(_, prop) {
-        if (prop === "then") return undefined;
-        return () => noop;
-      },
-    }
-  );
+  const noopResult = { data: null, error: null };
+  const noopDataResult = { data: [], error: null };
+
+  const queryMethods = {
+    select: () => queryMethods,
+    insert: () => queryMethods,
+    update: () => queryMethods,
+    delete: () => queryMethods,
+    eq: () => queryMethods,
+    in: () => queryMethods,
+    order: () => queryMethods,
+    limit: () => queryMethods,
+    maybeSingle: () => queryMethods,
+    single: () => noopResult,
+    then: undefined,
+  };
+
+  const noopStorage = {
+    from: () => ({
+      upload: async () => noopResult,
+      getPublicUrl: () => ({ data: { publicUrl: "" } }),
+      list: async () => noopDataResult,
+      remove: async () => noopResult,
+    }),
+  };
+
+  const noopAuth = {
+    getUser: async () => ({ data: { user: null }, error: null }),
+    signOut: async () => noopResult,
+    signInWithPassword: async () => noopResult,
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+  };
+
+  const noop = {
+    from: () => queryMethods,
+    auth: noopAuth,
+    storage: noopStorage,
+    rpc: () => queryMethods,
+  };
+
   return noop as unknown as SupabaseClient;
 }
 
