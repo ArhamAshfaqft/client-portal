@@ -67,7 +67,10 @@ export default function DashboardPage() {
       setLoading(false);
       return;
     }
-    if (!profile?.agency_id) return;
+    if (!profile?.agency_id) {
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       try {

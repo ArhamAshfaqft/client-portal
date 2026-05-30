@@ -64,7 +64,10 @@ export default function SitesPage() {
       setLoading(false);
       return;
     }
-    if (!profile?.agency_id) return;
+    if (!profile?.agency_id) {
+      setLoading(false);
+      return;
+    }
     fetchSites();
   }, [profile, isDemo]);
 

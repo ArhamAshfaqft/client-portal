@@ -109,7 +109,10 @@ export default function TeamPage() {
       setLoading(false);
       return;
     }
-    if (!profile?.agency_id) return;
+    if (!profile?.agency_id) {
+      setLoading(false);
+      return;
+    }
     fetchMembers();
   }, [profile, isDemo]);
 
