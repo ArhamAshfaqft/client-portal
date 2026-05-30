@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { usePermissions } from "@/lib/use-permissions";
+import { Permissions } from "@/lib/permissions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +92,7 @@ const positionIcons: Record<string, typeof Shield> = {
 
 export default function TeamPage() {
   const { profile, isDemo } = useAuth();
+  const { can } = usePermissions();
   const supabase = createClient();
   const [members, setMembers] = useState<MemberEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,7 +200,7 @@ export default function TeamPage() {
         <p className="text-sm text-muted-foreground">
           {members.length} team member{members.length !== 1 ? "s" : ""}
         </p>
-        {profile?.role === "owner" && (
+        {can(Permissions.TEAM_INVITE) && (
           <Button onClick={() => setShowInvite(true)}>
             <UserPlus className="w-4 h-4 mr-2" />
             Invite Member
@@ -270,7 +273,7 @@ export default function TeamPage() {
                         </p>
                       </div>
                     </div>
-                    {profile?.role === "owner" && member.role !== "owner" && (
+                    {can(Permissions.TEAM_REMOVE) && member.role !== "owner" && (
                       <button
                         onClick={() => handleRemove(member.user_id)}
                         className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors"
