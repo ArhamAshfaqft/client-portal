@@ -77,18 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
   const supabase = createClient();
-  console.log("[Auth] createClient returned:", !!supabase?.auth?.getUser);
 
   const fetchProfile = useCallback(
     async (userId: string) => {
-      console.log("[Auth] fetchProfile for:", userId);
-      if (!supabase) { console.log("[Auth] supabase is null, skipping"); return; }
-      const { data, error } = await supabase
+      if (!supabase) return;
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
-      console.log("[Auth] profile result:", data ? "found" : "not found", error?.message);
       if (data) setProfile(data as Profile);
     },
     [supabase]
@@ -97,9 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = sessionStorage.getItem("feedspace_demo");
     const savedRole = sessionStorage.getItem("feedspace_demo_role") as "owner" | "developer" | "client" | null;
-    console.log("[Auth] init - demo:", saved, "supabase:", !!supabase);
     if (saved === "true") {
-      console.log("[Auth] demo login");
       setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
       setIsDemo(true);
       setIsLoading(false);
@@ -107,7 +102,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!supabase) {
-      console.log("[Auth] no supabase, skipping auth");
       setIsLoading(false);
       return;
     }
@@ -115,7 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("[Auth] state change:", session?.user?.email || "signed out");
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
@@ -126,10 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const init = async () => {
-      console.log("[Auth] checking session...");
       const { data } = await supabase.auth.getSession();
       const user = data?.session?.user;
-      console.log("[Auth] session user:", user?.email || "none");
       if (user) {
         setUser(user);
         await fetchProfile(user.id);

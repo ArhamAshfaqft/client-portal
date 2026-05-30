@@ -144,11 +144,9 @@ CREATE POLICY "Users can update their agency" ON agencies
     id IN (SELECT agency_id FROM profiles WHERE user_id = auth.uid() AND role = 'owner')
   );
 
--- Profiles: users in same agency can see each other
-CREATE POLICY "Users can view profiles in their agency" ON profiles
-  FOR SELECT USING (
-    agency_id IN (SELECT agency_id FROM profiles WHERE user_id = auth.uid())
-  );
+-- Profiles: authenticated users can view profiles
+CREATE POLICY "Users can view profiles" ON profiles
+  FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (user_id = auth.uid());
