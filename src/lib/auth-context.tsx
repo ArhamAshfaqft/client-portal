@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    console.log("[Auth] useEffect running, supabase type:", supabase.auth?.getSession ? "real" : "noop");
+    console.log("[Auth] useEffect running, supabase type:", typeof supabase.auth?.getSession === "function" ? "real" : "noop");
 
     let subscription: { unsubscribe: () => void } | null = null;
     try {
