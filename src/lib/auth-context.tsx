@@ -81,11 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(
     async (userId: string) => {
       if (!supabase) return;
-      const { data } = await supabase
+      console.log("[Auth] querying profiles for:", userId);
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
+      console.log("[Auth] profile query result:", data ? "found" : "null", error?.message || "no error");
+      if (error) console.log("[Auth] profile error details:", JSON.stringify(error));
       if (data) setProfile(data as Profile);
     },
     [supabase]
@@ -120,11 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const init = async () => {
       const { data } = await supabase.auth.getSession();
+      console.log("[Auth] init session:", data?.session?.user?.email || "none");
       const user = data?.session?.user;
       if (user) {
         setUser(user);
+        console.log("[Auth] fetching profile for:", user.id);
         await fetchProfile(user.id);
+      } else {
+        console.log("[Auth] no session found");
       }
+      console.log("[Auth] init done, profile:", profile?.full_name || "null");
       setIsLoading(false);
     };
 

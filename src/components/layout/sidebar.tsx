@@ -26,6 +26,8 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const isClient = profile?.role === "client";
+  console.log("[Sidebar] profile:", profile?.full_name, "role:", profile?.role, "isClient:", isClient);
+  console.log("[Sidebar] perms - sites:", can(Permissions.SITES_VIEW), "feedback_all:", can(Permissions.FEEDBACK_VIEW_ALL), "team:", can(Permissions.TEAM_VIEW), "reports:", can(Permissions.REPORTS_CREATE), "settings:", can(Permissions.SETTINGS_VIEW));
 
   const navItems = isClient
     ? [
