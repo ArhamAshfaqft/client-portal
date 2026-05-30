@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback(
     async (userId: string) => {
+      if (!supabase) return;
       const { data } = await supabase
         .from("profiles")
         .select("*")
@@ -96,6 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (saved === "true") {
       setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
       setIsDemo(true);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!supabase) {
       setIsLoading(false);
       return;
     }
@@ -132,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem("feedspace_demo");
     sessionStorage.removeItem("feedspace_demo_role");
     document.cookie = "feedspace_demo=; path=/; max-age=0";
-    await supabase.auth.signOut();
+    await supabase?.auth.signOut();
     setUser(null);
     setProfile(null);
     setIsDemo(false);

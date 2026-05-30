@@ -173,7 +173,7 @@ export async function GET() {
     return NextResponse.json([]);
   }
 
-  const projectIds = projects.map((p) => p.id);
+  const projectIds = projects.map((p: { id: string }) => p.id);
 
   const { data } = await supabase
     .from("feedback_items")
