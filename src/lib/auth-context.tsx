@@ -124,6 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) {
         setUser(user);
         await fetchProfile(user.id);
+      } else {
+        const isPlaceholder = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_URL === "https://placeholder.supabase.co";
+        const isAuthPage = typeof window !== "undefined" && (window.location.pathname.startsWith("/login") || window.location.pathname.startsWith("/register"));
+        if (isPlaceholder && !isAuthPage) {
+          sessionStorage.setItem("feedspace_demo", "true");
+          sessionStorage.setItem("feedspace_demo_role", "owner");
+          document.cookie = "feedspace_demo=true; path=/; max-age=86400";
+          setProfile(DEMO_OWNER);
+          setIsDemo(true);
+        }
       }
       setIsLoading(false);
     };
