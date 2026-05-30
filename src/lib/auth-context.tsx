@@ -105,40 +105,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!supabase) {
+      console.log("[Auth] supabase is null, skipping");
       setIsLoading(false);
       return;
     }
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
-    });
+    console.log("[Auth] useEffect running, supabase type:", supabase.auth?.getSession ? "real" : "noop");
+
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const result = supabase.auth.onAuthStateChange(async (_event, session) => {
+        console.log("[Auth] onAuthStateChange event:", _event, session?.user?.email || "signed out");
+        if (session?.user) {
+          setUser(session.user);
+          await fetchProfile(session.user.id);
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+      });
+      subscription = result.data.subscription;
+      console.log("[Auth] subscription created");
+    } catch (e) {
+      console.log("[Auth] subscription error:", e);
+    }
 
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      console.log("[Auth] init session:", data?.session?.user?.email || "none");
-      const user = data?.session?.user;
-      if (user) {
-        setUser(user);
-        console.log("[Auth] fetching profile for:", user.id);
-        await fetchProfile(user.id);
-      } else {
-        console.log("[Auth] no session found");
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log("[Auth] init session:", data?.session?.user?.email || "none");
+        const user = data?.session?.user;
+        if (user) {
+          setUser(user);
+          console.log("[Auth] fetching profile for:", user.id);
+          await fetchProfile(user.id);
+        } else {
+          console.log("[Auth] no session found");
+        }
+      } catch (e) {
+        console.log("[Auth] init error:", e);
       }
-      console.log("[Auth] init done, profile:", profile?.full_name || "null");
+      console.log("[Auth] init done");
       setIsLoading(false);
     };
 
     init();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    };
   }, [supabase, fetchProfile]);
 
   const signOut = useCallback(async () => {
