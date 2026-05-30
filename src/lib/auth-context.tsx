@@ -83,38 +83,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(
     async (userId: string) => {
       if (!supabase) return;
-      console.log("[Auth] querying profiles for:", userId);
-      const timeout = setTimeout(() => console.log("[Auth] FETCH TIMEOUT - query is hanging for", userId), 8000);
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
-        clearTimeout(timeout);
-        console.log("[Auth] profile query result:", data ? "found" : "null", error?.message || "no error");
-        if (error) console.log("[Auth] profile error details:", JSON.stringify(error));
-        if (data) setProfile(data as Profile);
-      } catch (e) {
-        clearTimeout(timeout);
-        console.log("[Auth] fetchProfile caught error:", e);
-      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (data) setProfile(data as Profile);
     },
     [supabase]
   );
-
-  const fetchSessionWithTimeout = useCallback(async () => {
-    try {
-      const result = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 8000)),
-      ]);
-      return result as { data: { session: any } };
-    } catch (e) {
-      console.log("[Auth] getSession timeout/error");
-      return { data: { session: null } };
-    }
-  }, [supabase]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("feedspace_demo");
@@ -127,51 +104,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!supabase) {
-      console.log("[Auth] supabase is null, skipping");
       setIsLoading(false);
       return;
     }
 
-    console.log("[Auth] useEffect running, supabase type:", typeof supabase.auth?.getSession === "function" ? "real" : "noop");
-
-    let subscription: { unsubscribe: () => void } | null = null;
-    try {
-      const result = supabase.auth.onAuthStateChange((_event, session) => {
-        console.log("[Auth] onAuthStateChange event:", _event, session?.user?.email || "signed out");
-        if (session?.user) {
-          setUser(session.user);
-          fetchProfile(session.user.id);
-        } else {
-          setUser(null);
-          setProfile(null);
-        }
-      });
-      subscription = result.data.subscription;
-      console.log("[Auth] subscription created");
-    } catch (e) {
-      console.log("[Auth] subscription error:", e);
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+    });
 
     const init = async () => {
-      const { data } = await fetchSessionWithTimeout();
-      console.log("[Auth] init session:", data?.session?.user?.email || "none");
+      const { data } = await supabase.auth.getSession();
       const user = data?.session?.user;
       if (user) {
         setUser(user);
-        console.log("[Auth] fetching profile for:", user.id);
         await fetchProfile(user.id);
-      } else {
-        console.log("[Auth] no session found");
       }
-      console.log("[Auth] init done");
       setIsLoading(false);
     };
 
     init();
 
-    return () => {
-      if (subscription) subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [supabase, fetchProfile]);
 
   const signOut = useCallback(async () => {

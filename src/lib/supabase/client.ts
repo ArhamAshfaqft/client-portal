@@ -49,12 +49,10 @@ function createNoopClient(): SupabaseClient {
 export function createClient(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const realUrl = url && url !== "https://placeholder.supabase.co";
-  console.log("[createClient] url present:", !!url, "key present:", !!key, "isReal:", realUrl);
-  if (!realUrl) {
-    console.log("[createClient] using noop client");
+
+  if (!url || !key || url === "https://placeholder.supabase.co") {
     return createNoopClient();
   }
-  console.log("[createClient] using real Supabase client");
-  return createBrowserClient(url!, key!);
+
+  return createBrowserClient(url, key);
 }

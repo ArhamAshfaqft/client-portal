@@ -26,7 +26,6 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const isClient = profile?.role === "client";
-  const noProfile = !profile;
 
   const navItems = isClient
     ? [

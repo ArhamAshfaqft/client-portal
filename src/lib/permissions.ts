@@ -116,13 +116,8 @@ export function getDefaultPermissions(role: string, position?: string): string[]
 }
 
 export function can(permissions: string[] | undefined | null, permission: Permission): boolean {
-  if (!permissions) {
-    console.log("[can] permissions is null/undefined, returning false for", permission);
-    return false;
-  }
-  const result = permissions.includes(permission);
-  console.log("[can]", permission, "→", result, "| perms length:", permissions.length, "| perms:", JSON.stringify(permissions));
-  return result;
+  if (!permissions) return false;
+  return permissions.includes(permission);
 }
 
 export function canAny(permissions: string[] | undefined | null, required: Permission[]): boolean {
