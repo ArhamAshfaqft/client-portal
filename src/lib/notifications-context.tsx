@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 export interface AppNotification {
   id: string;
@@ -58,7 +59,13 @@ interface NotificationsState {
 const NotificationsContext = createContext<NotificationsState | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(DEMO_NOTIFICATIONS);
+  const { isDemo } = useAuth();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
+  useEffect(() => {
+    if (isDemo) setNotifications(DEMO_NOTIFICATIONS);
+    else setNotifications([]);
+  }, [isDemo]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
