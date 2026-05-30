@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { getDefaultPermissions } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -67,6 +68,7 @@ export default function RegisterPage() {
           role: "owner",
           full_name: fullName,
           email: email,
+          permissions: getDefaultPermissions("owner"),
         });
       }
     }

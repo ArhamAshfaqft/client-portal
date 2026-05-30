@@ -125,10 +125,18 @@ ALTER TABLE feedback_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE feedback_media ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dev_reports ENABLE ROW LEVEL SECURITY;
 
+-- Agencies: authenticated users can create a new agency (registration)
+CREATE POLICY "Users can insert agencies" ON agencies
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
 -- Agencies: owner can see their own agency
 CREATE POLICY "Users can view their agency" ON agencies
   FOR SELECT USING (
-    id IN (SELECT agency_id FROM profiles WHERE user_id = auth.uid())
+    auth.role() = 'authenticated'
+    AND (
+      id IN (SELECT agency_id FROM profiles WHERE user_id = auth.uid())
+      OR NOT EXISTS (SELECT 1 FROM profiles WHERE user_id = auth.uid())
+    )
   );
 
 CREATE POLICY "Users can update their agency" ON agencies
