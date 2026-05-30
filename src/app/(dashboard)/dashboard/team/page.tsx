@@ -123,7 +123,7 @@ export default function TeamPage() {
         .order("created_at", { ascending: false });
       if (data) setMembers(data as MemberEntry[]);
     } catch {
-      setMembers(DEMO_MEMBERS);
+      // keep empty
     }
     setLoading(false);
   };

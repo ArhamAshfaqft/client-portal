@@ -111,7 +111,7 @@ export default function DashboardPage() {
           resolved_feedback: resolvedCount ?? 0,
         });
       } catch {
-        setData(DEMO_OWNER_DATA);
+        // keep empty defaults
       }
       setLoading(false);
     };
@@ -123,28 +123,28 @@ export default function DashboardPage() {
     const devStats = [
       {
         label: "My Open Tasks",
-        value: DEMO_DEV_DATA.my_open,
+        value: isDemo ? DEMO_DEV_DATA.my_open : 0,
         icon: AlertCircle,
         color: "text-amber-600 dark:text-amber-400",
         bg: "bg-amber-50 dark:bg-amber-500/10",
       },
       {
         label: "In Progress",
-        value: DEMO_DEV_DATA.my_in_progress,
+        value: isDemo ? DEMO_DEV_DATA.my_in_progress : 0,
         icon: ListTodo,
         color: "text-primary",
         bg: "bg-primary-light",
       },
       {
         label: "Resolved This Week",
-        value: DEMO_DEV_DATA.resolved_this_week,
+        value: isDemo ? DEMO_DEV_DATA.resolved_this_week : 0,
         icon: CheckCircle2,
         color: "text-emerald-600 dark:text-emerald-400",
         bg: "bg-emerald-50 dark:bg-emerald-500/10",
       },
       {
         label: "Hours This Week",
-        value: DEMO_DEV_DATA.hours_logged_this_week,
+        value: isDemo ? DEMO_DEV_DATA.hours_logged_this_week : 0,
         icon: Clock,
         color: "text-violet-600 dark:text-violet-400",
         bg: "bg-violet-50 dark:bg-violet-500/10",
@@ -197,39 +197,43 @@ export default function DashboardPage() {
                   Active Projects
                 </h3>
                 <span className="text-xs text-muted-foreground">
-                  {DEMO_DEV_DATA.active_projects} projects
+                  {isDemo ? DEMO_DEV_DATA.active_projects : 0} projects
                 </span>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  {
-                    name: "Brighton Law Firm",
-                    status: "active",
-                    feedback: 4,
-                  },
-                  {
-                    name: "Apex Fitness",
-                    status: "active",
-                    feedback: 2,
-                  },
-                ].map((proj) => (
-                  <div
-                    key={proj.name}
-                    className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {proj.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {proj.feedback} open feedback items
-                      </p>
+                {isDemo ? (
+                  [
+                    {
+                      name: "Brighton Law Firm",
+                      status: "active",
+                      feedback: 4,
+                    },
+                    {
+                      name: "Apex Fitness",
+                      status: "active",
+                      feedback: 2,
+                    },
+                  ].map((proj) => (
+                    <div
+                      key={proj.name}
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {proj.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {proj.feedback} open feedback items
+                        </p>
+                      </div>
+                      <Badge variant="success">active</Badge>
                     </div>
-                    <Badge variant="success">active</Badge>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No active projects</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -245,35 +249,39 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  {
-                    action: "Resolved feedback on Brighton Law Firm",
-                    time: "2 hours ago",
-                  },
-                  {
-                    action: "Added daily report - 6 hours logged",
-                    time: "5 hours ago",
-                  },
-                  {
-                    action: "Started work on Apex Fitness mobile nav",
-                    time: "Yesterday",
-                  },
-                ].map((activity, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 py-2 border-b border-border last:border-0"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm text-foreground">
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.time}
-                      </p>
+                {isDemo ? (
+                  [
+                    {
+                      action: "Resolved feedback on Brighton Law Firm",
+                      time: "2 hours ago",
+                    },
+                    {
+                      action: "Added daily report - 6 hours logged",
+                      time: "5 hours ago",
+                    },
+                    {
+                      action: "Started work on Apex Fitness mobile nav",
+                      time: "Yesterday",
+                    },
+                  ].map((activity, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 py-2 border-b border-border last:border-0"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-foreground">
+                          {activity.action}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {activity.time}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No recent activity</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -295,7 +303,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+            <Card>
             <CardContent className="py-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
@@ -303,7 +311,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Open</p>
-                  <p className="text-xl font-bold text-foreground">4</p>
+                  <p className="text-xl font-bold text-foreground">{isDemo ? 4 : 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -316,7 +324,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">In Progress</p>
-                  <p className="text-xl font-bold text-foreground">2</p>
+                  <p className="text-xl font-bold text-foreground">{isDemo ? 2 : 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -329,7 +337,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Resolved</p>
-                  <p className="text-xl font-bold text-foreground">3</p>
+                  <p className="text-xl font-bold text-foreground">{isDemo ? 3 : 0}</p>
                 </div>
               </div>
             </CardContent>

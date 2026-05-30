@@ -42,13 +42,13 @@ export default function MyFeedbackPage() {
 
   useEffect(() => {
     const userId = profile?.user_id;
-    if (!userId) return;
+    if (!userId || !isDemo) return;
     if (profile?.role === "client") {
       setFeedback(getClientFeedback(userId));
     } else {
       setFeedback(getAssignedFeedback(userId));
     }
-  }, [profile?.user_id, profile?.role]);
+  }, [profile?.user_id, profile?.role, isDemo]);
 
   const updateStatus = (id: string, newStatus: FeedbackStatus) => {
     setFeedback((prev) =>
@@ -192,7 +192,7 @@ export default function MyFeedbackPage() {
 
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2">
-                          {profile?.role === "client" && item.assigned_to ? (
+                          {profile?.role === "client" && item.assigned_to && isDemo ? (
                             <span className="text-xs text-muted-foreground">
                               Assigned to: {getTeamMemberName(item.assigned_to)}
                             </span>

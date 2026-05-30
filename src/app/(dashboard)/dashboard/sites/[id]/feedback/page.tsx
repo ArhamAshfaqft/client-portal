@@ -89,15 +89,15 @@ export default function SiteFeedbackPage() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(() => new Set(Object.keys(getFeedbackForSite(id).reduce((acc, f) => { acc[f.project_name || "General"] = true; return acc; }, {} as Record<string, boolean>))));
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [assignOpen, setAssignOpen] = useState<string | null>(null);
   const [previewMedia, setPreviewMedia] = useState<{ media: FeedbackMedia[]; index: number } | null>(null);
   const [replyOpen, setReplyOpen] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  const [feedback, setFeedback] = useState(() => getFeedbackForSite(id));
+  const [feedback, setFeedback] = useState<EnrichedFeedback[]>(isDemo ? getFeedbackForSite(id) : []);
 
-  const teamMembers = useMemo(() => getTeamMembers(), []);
+  const teamMembers = useMemo(() => isDemo ? getTeamMembers() : [], [isDemo]);
 
   const handleAssign = (feedbackId: string, userId: string) => {
     setFeedback((prev) =>
@@ -202,7 +202,7 @@ export default function SiteFeedbackPage() {
     });
   };
 
-  const siteName = getSiteName(id);
+  const siteName = isDemo ? getSiteName(id) : "Feedback";
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -358,7 +358,7 @@ export default function SiteFeedbackPage() {
                     const ActionIcon = action?.icon;
                     const ViewportIcon = getViewportIcon(item.viewport_width);
                     const viewportLabel = getViewportLabel(item.viewport_width, item.viewport_height);
-                    const assigneeName = getTeamMemberName(item.assigned_to);
+                    const assigneeName = isDemo ? getTeamMemberName(item.assigned_to) : null;
 
                     return (
                       <Card key={item.id} className="hover:shadow-md transition-shadow">

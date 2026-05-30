@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { DEMO_ACTIVITIES, type ActivityEntry } from "@/lib/activity-data";
 import {
@@ -31,11 +32,12 @@ const typeColors: Record<string, string> = {
 };
 
 export default function ActivityPage() {
+  const { isDemo } = useAuth();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const filtered = useMemo(() => {
-    let result = DEMO_ACTIVITIES;
+    let result = isDemo ? DEMO_ACTIVITIES : [];
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(

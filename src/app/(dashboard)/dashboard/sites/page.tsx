@@ -55,15 +55,8 @@ export default function SitesPage() {
   const [assignSite, setAssignSite] = useState<string | null>(null);
   const [assignMessage, setAssignMessage] = useState("");
   const [selectedDev, setSelectedDev] = useState("");
-  const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string }>>({
-    "demo-site-1": { userId: "demo-dev-1", message: "Client wants the hero section reworked and the mobile menu fixed. She called about it this morning." },
-    "demo-site-2": { userId: "", message: "" },
-    "demo-site-3": { userId: "", message: "" },
-    "demo-site-4": { userId: "demo-dev-2", message: "Priority: fix the appointment booking form. Client is losing leads." },
-    "demo-site-5": { userId: "", message: "" },
-    "demo-site-6": { userId: "", message: "" },
-  });
-  const teamMembers = getTeamMembers();
+  const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string }>>({});
+  const teamMembers = isDemo ? getTeamMembers() : [];
 
   useEffect(() => {
     if (isDemo) {
@@ -85,7 +78,7 @@ export default function SitesPage() {
         .order("created_at", { ascending: false });
       if (data) setSites(data as Site[]);
     } catch {
-      setSites(DEMO_SITES as unknown as Site[]);
+      // keep empty
     }
     setLoading(false);
   };
@@ -127,8 +120,12 @@ export default function SitesPage() {
   };
 
   const getCounts = (siteId: string) => {
-    const s = DEMO_SITES.find((ds) => ds.id === siteId);
-    return s?.feedback_counts || { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+    if (isDemo) {
+      const s = DEMO_SITES.find((ds) => ds.id === siteId);
+      return s?.feedback_counts || { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+    }
+    const site = sites.find((s) => s.id === siteId);
+    return (site as any)?.feedback_counts || { new_count: 0, in_progress_count: 0, resolved_count: 0 };
   };
 
   const filteredSites = sites.filter((site) => {

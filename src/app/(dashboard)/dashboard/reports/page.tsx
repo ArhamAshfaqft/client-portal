@@ -54,7 +54,7 @@ export default function ReportsPage() {
     summary: "",
     hours: "",
   });
-  const [reports, setReports] = useState(DEMO_REPORTS);
+  const [reports, setReports] = useState<typeof DEMO_REPORTS>(isDemo ? DEMO_REPORTS : []);
   const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState<string>("all");
 

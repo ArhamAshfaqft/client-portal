@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
@@ -19,6 +20,7 @@ import {
 
 export default function FeedbackOverviewPage() {
   const { profile, isDemo } = useAuth();
+  const supabase = createClient();
   const [search, setSearch] = useState("");
 
   const sites = isDemo
