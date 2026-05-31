@@ -4,7 +4,7 @@ async function build() {
   const config = {
     entryPoints: ['src/widget/index.ts'],
     bundle: true,
-    minify: true,
+    minify: false,
     sourcemap: false,
     target: 'es2019',
     platform: 'browser',

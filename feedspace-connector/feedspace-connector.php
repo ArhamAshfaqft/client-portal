@@ -10,6 +10,8 @@
 
 if (!defined('ABSPATH')) exit;
 
+require_once plugin_dir_path(__FILE__) . 'widget-gzip.php';
+
 define('FEEDSPACE_VERSION', '1.1.0');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
@@ -115,15 +117,23 @@ class FeedspaceConnector
     private function enqueueWidgetAssets($config, $token)
     {
         $widgetPath = plugin_dir_path(__FILE__) . 'widget/feedspace-widget.js';
+        $rootPath = plugin_dir_path(__FILE__) . 'feedspace-widget.js';
 
-        if (!file_exists($widgetPath)) {
-            add_action('wp_footer', function () use ($widgetPath) {
-                echo '<script>console.error("[Feedspace] Widget JS missing at ' . esc_js($widgetPath) . '")</script>';
+        $widgetJS = '';
+
+        if (file_exists($widgetPath)) {
+            $widgetJS = file_get_contents($widgetPath);
+        } elseif (defined('FEEDSPACE_WIDGET_JS_GZIP')) {
+            $widgetJS = gzdecode(base64_decode(FEEDSPACE_WIDGET_JS_GZIP));
+        }
+
+        if (empty($widgetJS)) {
+            add_action('wp_footer', function () {
+                echo '<script>console.error("[Feedspace] Widget JS unavailable")</script>';
             });
             return;
         }
 
-        $widgetJS = '/* Feedspace Widget v' . FEEDSPACE_VERSION . ' */' . file_get_contents($widgetPath);
         $apiBaseUrl = get_option('feedspace_api_url', '');
         $wpApiUrl = get_bloginfo('url');
         $wpApiKey = get_option('feedspace_api_key');
