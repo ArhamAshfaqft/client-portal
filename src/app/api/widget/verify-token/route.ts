@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: link, error } = await supabase
       .from("preview_links")
-      .select("*, projects!inner(agency_id, name)")
+      .select("*")
       .eq("token", token)
       .single();
 
@@ -27,18 +27,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ valid: false, error: "Token has expired" }, { status: 403 });
     }
 
-    const project = link.projects as any;
+    const { data: project } = await supabase
+      .from("projects")
+      .select("agency_id, name")
+      .eq("id", link.project_id)
+      .maybeSingle();
 
-    const { data: agency } = await supabase
-      .from("agencies")
-      .select("primary_color, name")
-      .eq("id", project.agency_id)
-      .single();
+    let primaryColor = "#6366f1";
+    if (project) {
+      const { data: agency } = await supabase
+        .from("agencies")
+        .select("primary_color")
+        .eq("id", project.agency_id)
+        .maybeSingle();
+      if (agency?.primary_color) primaryColor = agency.primary_color;
+    }
 
     return NextResponse.json({
       valid: true,
       projectId: link.project_id,
-      primaryColor: agency?.primary_color || "#6366f1",
+      primaryColor,
       siteName: project?.name || "Site",
     });
   } catch (err) {
