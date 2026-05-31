@@ -272,6 +272,17 @@ class FeedspaceConnector
         delete_option('feedspace_version');
     }
 
+    private static function logDebug($event, $details = array())
+    {
+        $log = get_option('feedspace_debug_log', array());
+        $log[] = array_merge(array(
+            'time' => current_time('mysql'),
+            'event' => $event,
+        ), $details);
+        $log = array_slice($log, -20);
+        update_option('feedspace_debug_log', $log, false);
+    }
+
     private function createFeedbackTable()
     {
         global $wpdb;
@@ -596,20 +607,19 @@ class FeedspaceConnector
             $mirrorBody = $body;
             $mirrorBody['id'] = $annotationId;
             $mirrorBody['createdAt'] = $now;
-            
-            $jsonBody = json_encode($mirrorBody);
-            error_log('[Feedspace] Mirroring annotation to Vercel: ' . trailingslashit($vercelUrl) . 'api/widget/annotations');
-            error_log('[Feedspace] Mirror body: ' . $jsonBody);
 
-            $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+            $mirrorUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
+            self::logDebug('mirror_start', array('annotation_id' => $annotationId, 'url' => $mirrorUrl, 'projectId' => $mirrorBody['projectId'] ?? ''));
+
+            $result = wp_remote_post($mirrorUrl, array(
                 'headers' => array('Content-Type' => 'application/json'),
-                'body' => $jsonBody,
+                'body' => json_encode($mirrorBody),
                 'timeout' => 15,
             ));
 
             if (is_wp_error($result)) {
                 $errMsg = $result->get_error_message();
-                error_log('[Feedspace] Mirroring failed with WP_Error: ' . $errMsg);
+                self::logDebug('mirror_http_error', array('annotation_id' => $annotationId, 'error' => $errMsg));
                 update_option('feedspace_last_mirror_id', $annotationId);
                 update_option('feedspace_last_mirror_code', 0);
                 update_option('feedspace_last_mirror_body', $errMsg);
@@ -618,9 +628,8 @@ class FeedspaceConnector
             } else {
                 $code = wp_remote_retrieve_response_code($result);
                 $respBody = wp_remote_retrieve_body($result);
-                error_log('[Feedspace] Mirroring response code: ' . $code);
-                error_log('[Feedspace] Mirroring response body: ' . $respBody);
                 $mirrorOk = ($code >= 200 && $code < 300);
+                self::logDebug('mirror_result', array('annotation_id' => $annotationId, 'code' => $code, 'body' => $respBody, 'success' => $mirrorOk));
                 update_option('feedspace_last_mirror_id', $annotationId);
                 update_option('feedspace_last_mirror_code', $code);
                 update_option('feedspace_last_mirror_body', $respBody);
@@ -628,7 +637,7 @@ class FeedspaceConnector
                 update_option('feedspace_last_mirror_success', $mirrorOk);
             }
         } else {
-            error_log('[Feedspace] Vercel URL (feedspace_api_url option) is empty. Skipping mirroring.');
+            self::logDebug('mirror_skipped', array('annotation_id' => $annotationId, 'reason' => 'Vercel URL not configured'));
             update_option('feedspace_last_mirror_id', $annotationId);
             update_option('feedspace_last_mirror_code', -1);
             update_option('feedspace_last_mirror_body', 'Vercel URL not configured');
@@ -882,6 +891,44 @@ class FeedspaceConnector
                 <p id="feedspace-repush-result" style="margin-top:10px;font-size:12px;color:#6b7280;display:none;"></p>
             </div>
 
+            <div class="feedspace-status-card" style="margin-top:16px;">
+                <h2>Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 20 events)</span></h2>
+                <div style="max-height:300px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
+                    <?php
+                    $debugLog = get_option('feedspace_debug_log', array());
+                    if (empty($debugLog)) {
+                        echo '<span style="color:#9ca3af;">No debug entries yet. Submit a pin or run a test to populate.</span>';
+                    } else {
+                        foreach (array_reverse($debugLog) as $entry) {
+                            $time = esc_html($entry['time'] ?? '');
+                            $event = esc_html($entry['event'] ?? '');
+                            $annotation_id = esc_html($entry['annotation_id'] ?? '');
+                            $projectId = esc_html($entry['projectId'] ?? '');
+                            $code = esc_html($entry['code'] ?? '');
+                            $body = esc_html(substr($entry['body'] ?? $entry['error'] ?? $entry['reason'] ?? '', 0, 300));
+                            $success = !empty($entry['success']);
+                            $url = esc_html($entry['url'] ?? '');
+                            $color = '#6b7280';
+                            if (strpos($event, 'error') !== false || strpos($event, 'fail') !== false || strpos($event, 'skipped') !== false) $color = '#dc2626';
+                            if (strpos($event, 'ok') !== false || strpos($event, 'result') !== false && $success) $color = '#059669';
+                            echo '<div style="margin-bottom:6px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">';
+                            echo '<span style="color:' . $color . ';">[' . $time . '] ' . strtoupper($event) . '</span>';
+                            if ($annotation_id) echo ' <span style="color:#4b5563;">id=' . $annotation_id . '</span>';
+                            if ($projectId) echo ' <span style="color:#4b5563;">project=' . $projectId . '</span>';
+                            if ($code) echo ' <span style="color:#4b5563;">HTTP ' . $code . '</span>';
+                            if ($body) echo "\n" . $body;
+                            if ($url) echo "\n" . $url;
+                            echo '</div>';
+                        }
+                    }
+                    ?>
+                </div>
+                <form method="post" style="margin-top:8px;">
+                    <input type="hidden" name="feedspace_clear_debug" value="1" />
+                    <?php submit_button('Clear Debug Log', 'delete', '', false, array('onclick' => "return confirm('Clear all debug entries?');")); ?>
+                </form>
+            </div>
+
             <div class="feedspace-config-card">
                 <h2>1-Click Connect</h2>
                 <p>Click the button below to copy all connection details, then paste into the Feedspace dashboard when adding a site.</p>
@@ -1120,8 +1167,17 @@ class FeedspaceConnector
                     count.textContent = d.data ? d.data.local_count : '?';
 
                     if (d.success) {
+                        var html = d.data.message + ' Processed: ' + d.data.pushed + ' pushed, ' + d.data.skipped + ' skipped, ' + d.data.errors + ' errors. Reload the page to see updated status.';
+                        if (d.data.details && d.data.details.length > 0) {
+                            html += '<br><br><strong>Per-annotation:</strong><br>';
+                            d.data.details.forEach(function(item) {
+                                var color = item.status === 'pushed' ? '#059669' : '#dc2626';
+                                var info = item.status === 'pushed' ? 'HTTP ' + item.code : (item.code ? 'HTTP ' + item.code + ' ' : '') + (item.detail || '');
+                                html += '<span style="color:' + color + ';">[' + item.status.toUpperCase() + '] ' + item.id + ' &mdash; ' + info + '</span><br>';
+                            });
+                        }
                         result.style.color = '#059669';
-                        result.textContent = d.data.message + ' Processed: ' + d.data.pushed + ' pushed, ' + d.data.skipped + ' skipped (already in Supabase), ' + d.data.errors + ' errors. Reload the page to see updated status.';
+                        result.innerHTML = html;
                     } else {
                         result.style.color = '#dc2626';
                         result.textContent = 'ERROR: ' + (d.data && d.data.error ? d.data.error : 'Unknown');
@@ -1193,6 +1249,8 @@ add_action('wp_ajax_feedspace_test_mirroring', function () {
         'metaData' => array(),
     );
 
+    FeedspaceConnector::logDebug('test_start', array('url' => $testUrl));
+
     $result = wp_remote_post($testUrl, array(
         'headers' => array('Content-Type' => 'application/json'),
         'body' => json_encode($testPayload),
@@ -1200,21 +1258,26 @@ add_action('wp_ajax_feedspace_test_mirroring', function () {
     ));
 
     if (is_wp_error($result)) {
+        $errMsg = $result->get_error_message();
+        FeedspaceConnector::logDebug('test_http_error', array('error' => $errMsg));
         wp_send_json_success(array(
             'local_count' => $localCount,
             'mirror_ok' => false,
             'mirror_code' => 0,
             'mirror_body' => '',
-            'mirror_error' => $result->get_error_message(),
+            'mirror_error' => $errMsg,
         ));
     }
 
     $code = (int) wp_remote_retrieve_response_code($result);
     $body = wp_remote_retrieve_body($result);
+    $ok = ($code >= 200 && $code < 300);
+
+    FeedspaceConnector::logDebug('test_result', array('code' => $code, 'body' => $body, 'success' => $ok));
 
     wp_send_json_success(array(
         'local_count' => $localCount,
-        'mirror_ok' => ($code >= 200 && $code < 300),
+        'mirror_ok' => $ok,
         'mirror_code' => $code,
         'mirror_body' => $body,
         'mirror_error' => '',
@@ -1238,6 +1301,7 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
     $total = count($annotations);
     $pushed = 0;
     $errors = 0;
+    $perItem = array();
 
     foreach ($annotations as $row) {
         $elementDna = $row->element_dna ? json_decode($row->element_dna, true) : null;
@@ -1246,7 +1310,6 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
         $payload = array(
             'id' => $row->annotation_id,
             'projectId' => $row->project_id,
-            'previewToken' => '',
             'type' => $row->type,
             'content' => $row->content,
             'pageUrl' => $row->page_url,
@@ -1266,23 +1329,34 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
             'metaData' => array(),
         );
 
-        $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+        $postUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
+        FeedspaceConnector::logDebug('repush_start', array('annotation_id' => $row->annotation_id, 'url' => $postUrl, 'projectId' => $row->project_id));
+
+        $result = wp_remote_post($postUrl, array(
             'headers' => array('Content-Type' => 'application/json'),
             'body' => json_encode($payload),
             'timeout' => 15,
         ));
 
         if (is_wp_error($result)) {
+            $errMsg = $result->get_error_message();
+            FeedspaceConnector::logDebug('repush_error', array('annotation_id' => $row->annotation_id, 'error' => $errMsg));
             $errors++;
+            $perItem[] = array('id' => $row->annotation_id, 'status' => 'error', 'detail' => $errMsg);
             continue;
         }
 
         $code = (int) wp_remote_retrieve_response_code($result);
+        $respBody = wp_remote_retrieve_body($result);
 
         if ($code >= 200 && $code < 300) {
             $pushed++;
+            $perItem[] = array('id' => $row->annotation_id, 'status' => 'pushed', 'code' => $code);
+            FeedspaceConnector::logDebug('repush_ok', array('annotation_id' => $row->annotation_id, 'code' => $code, 'body' => $respBody));
         } else {
             $errors++;
+            $perItem[] = array('id' => $row->annotation_id, 'status' => 'error', 'code' => $code, 'detail' => $respBody);
+            FeedspaceConnector::logDebug('repush_fail', array('annotation_id' => $row->annotation_id, 'code' => $code, 'body' => $respBody));
         }
     }
 
@@ -1291,7 +1365,16 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
         'pushed' => $pushed,
         'skipped' => 0,
         'errors' => $errors,
+        'details' => $perItem,
         'message' => "Re-pushed $pushed of $total local annotations to Vercel ($errors errors).",
     ));
+});
+
+add_action('admin_init', function () {
+    if (isset($_POST['feedspace_clear_debug'])) {
+        delete_option('feedspace_debug_log');
+        wp_redirect(admin_url('admin.php?page=feedspace'));
+        exit;
+    }
 });
 
