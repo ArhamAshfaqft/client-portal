@@ -96,6 +96,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Fire-and-forget: notify WP about the new feedback item
+  Promise.resolve().then(async () => {
+    const { data: proj } = await supabase.from("projects").select("site_id").eq("id", projectId).single();
+    if (!proj) return;
+    const { data: site } = await supabase.from("sites").select("url, wp_api_url, wp_api_key").eq("id", proj.site_id).single();
+    if (!site?.wp_api_key) return;
+    const restUrl = (site.wp_api_url || site.url || "").replace(/\/+$/, "");
+    if (!restUrl) return;
+    await fetch(`${restUrl}/wp-json/feedspace/v1/webhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
+      body: JSON.stringify({ action: "feedback_created", data: { id: feedbackItem.id, projectId, status: feedbackItem.status } }),
+    });
+  });
+
   if (mediaUrlsRaw) {
     const urls: string[] = JSON.parse(mediaUrlsRaw);
     for (const url of urls) {

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { getFeedbackForSite, getSiteName, getTeamMembers, getTeamMemberName, type EnrichedFeedback } from "@/lib/demo-data";
 import { MediaPreview } from "@/components/ui/media-preview";
 import { createClient } from "@/lib/supabase/client";
+import { notifyWPWebhook } from "@/lib/webhook";
 import type { FeedbackStatus } from "@/types";
 import type { FeedbackMedia } from "@/types";
 import {
@@ -111,11 +112,24 @@ export default function SiteFeedbackPage() {
   const [feedback, setFeedback] = useState<EnrichedFeedback[]>([]);
   const [loading, setLoading] = useState(!isDemo);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [siteCreds, setSiteCreds] = useState<{ wpRestUrl: string; wpApiKey: string } | null>(null);
 
   const fetchFeedback = async () => {
     if (isDemo) return;
     setLoading(true);
     try {
+      const { data: siteData } = await supabase
+        .from("sites")
+        .select("url, wp_api_url, wp_api_key")
+        .eq("id", id)
+        .single();
+      if (siteData) {
+        setSiteCreds({
+          wpRestUrl: siteData.wp_api_url || siteData.url || "",
+          wpApiKey: siteData.wp_api_key || "",
+        });
+      }
+
       const { data: projectsData } = await supabase
         .from("projects")
         .select("id, name")
@@ -302,6 +316,9 @@ export default function SiteFeedbackPage() {
       setFeedback((prev) =>
         prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
       );
+      if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
+        notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: feedbackId, status: nextStatus });
+      }
     } catch (err) {
       console.error("Failed to update status:", err);
     }

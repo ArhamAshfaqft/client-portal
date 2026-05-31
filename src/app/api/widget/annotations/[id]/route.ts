@@ -9,6 +9,54 @@ function anonClient() {
   );
 }
 
+// Best-effort: push mutation back to the WordPress site
+async function notifySiteWebhook(feedbackItemId: string, action: string, data: Record<string, any>) {
+  try {
+    const supabase = anonClient();
+    const { data: item } = await supabase
+      .from("feedback_items")
+      .select("project_id")
+      .eq("id", feedbackItemId)
+      .single();
+    if (!item) return;
+
+    const { data: project } = await supabase
+      .from("projects")
+      .select("site_id")
+      .eq("id", item.project_id)
+      .single();
+    if (!project) return;
+
+    const { data: site } = await supabase
+      .from("sites")
+      .select("url, wp_api_url, wp_api_key")
+      .eq("id", project.site_id)
+      .single();
+    if (!site) return;
+
+    const wpRestUrl = site.wp_api_url || site.url;
+    const wpApiKey = site.wp_api_key;
+    if (!wpRestUrl || !wpApiKey) return;
+
+    const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`;
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Feedspace-Key": wpApiKey },
+      body: JSON.stringify({ action, data }),
+    });
+  } catch {
+    // Webhook is best-effort, don't block the response
+  }
+}
+
+function corsHeaders() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
+  );
+}
+
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -66,7 +114,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json(data, { headers: corsHeaders() });
+    notifySiteWebhook(id, "update_status", { id, status: updates.status });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal error" },
@@ -111,6 +159,8 @@ export async function DELETE(
       { status: 500, headers: corsHeaders() }
     );
   }
+
+  notifySiteWebhook(id, "delete", { id });
 
   return NextResponse.json({ deleted: true }, { headers: corsHeaders() });
 }
