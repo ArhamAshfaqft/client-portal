@@ -40,11 +40,13 @@ const DEMO_PREVIEW_LINKS: Record<string, PreviewLink[]> = {
   ],
 };
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function SiteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { isDemo, profile } = useAuth();
-  const supabase = createClient();
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [previewLinks, setPreviewLinks] = useState<Record<string, PreviewLink[]>>({});
@@ -100,14 +102,21 @@ export default function SiteDetailPage() {
     const projectsList = (projectsData || []) as Project[];
     setProjects(projectsList);
 
+    // Batch-fetch all preview links in one query instead of N+1
+    const projectIds = projectsList.map((p) => p.id);
     const linksMap: Record<string, PreviewLink[]> = {};
-    for (const project of projectsList) {
-      const { data: links } = await supabase
+    if (projectIds.length > 0) {
+      const { data: allLinks } = await supabase
         .from("preview_links")
         .select("*")
-        .eq("project_id", project.id)
+        .in("project_id", projectIds)
         .order("created_at", { ascending: false });
-      if (links) linksMap[project.id] = links as PreviewLink[];
+      if (allLinks) {
+        for (const link of allLinks as PreviewLink[]) {
+          if (!linksMap[link.project_id]) linksMap[link.project_id] = [];
+          linksMap[link.project_id].push(link);
+        }
+      }
     }
     setPreviewLinks(linksMap);
     setLoading(false);
@@ -146,8 +155,13 @@ export default function SiteDetailPage() {
     setSubmitting(false);
   };
 
-  const copyPreviewLink = (token: string) => {
-    const url = `${window.location.origin}/preview/${token}`;
+  const copyPreviewLink = (token: string, projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
+    const linkedSite = site;
+    const isWPConnected = linkedSite?.wp_connected && linkedSite?.url;
+    const url = isWPConnected
+      ? `${linkedSite.url.replace(/\/+$/, '')}?feedspace_preview=${token}`
+      : `${window.location.origin}/preview/${token}`;
     navigator.clipboard.writeText(url);
   };
 
@@ -409,7 +423,7 @@ export default function SiteDetailPage() {
                               {isActive && (
                                 <>
                                   <button
-                                    onClick={() => copyPreviewLink(link.token)}
+                                    onClick={() => copyPreviewLink(link.token, project.id)}
                                     className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                                     title="Copy link"
                                   >

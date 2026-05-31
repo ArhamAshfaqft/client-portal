@@ -17,6 +17,9 @@ import {
   Play,
   Globe,
   Search,
+  Square,
+  Pencil,
+  ArrowUpRight,
 } from "lucide-react";
 
 const typeIcons: Record<string, typeof Pin> = {
@@ -24,6 +27,9 @@ const typeIcons: Record<string, typeof Pin> = {
   comment: MessageSquareText,
   voice: Mic,
   media: Image,
+  rect: Square,
+  arrow: ArrowUpRight,
+  draw: Pencil,
 };
 
 const statusVariants: Record<string, "warning" | "info" | "success" | "default"> = {

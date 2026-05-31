@@ -22,9 +22,11 @@ const DEMO_SETTINGS = {
   logoUrl: "",
 };
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function SettingsPage() {
   const { profile, refreshProfile, isDemo } = useAuth();
-  const supabase = createClient();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 

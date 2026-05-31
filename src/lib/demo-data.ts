@@ -99,8 +99,20 @@ export interface EnrichedFeedback extends FeedbackItem {
   replies?: EnrichedFeedback[];
 }
 
+const DEMO_FEEDBACK_DEFAULTS = {
+  coordinates_x_end: null,
+  coordinates_y_end: null,
+  width: null,
+  height: null,
+  draw_data: null,
+  element_dna: null,
+  meta_data: null,
+  device: null,
+};
+
 export const DEMO_FEEDBACK: EnrichedFeedback[] = [
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-1", project_id: "demo-proj-1", parent_id: null, type: "pin",
     content: "The hero section image needs to be updated to the new brand photo. The current one has the old logo and the color tones don't match our new brand guidelines.",
     page_url: "/", selector: null,
@@ -108,6 +120,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "open", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-29T14:30:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-2", project_id: "demo-proj-1", parent_id: null, type: "comment",
     content: "The contact form on the pricing page is not submitting properly. Tested on Chrome and Safari. Getting a 500 error after clicking submit.",
     page_url: "/pricing", selector: null,
@@ -115,6 +128,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-28T11:15:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-3", project_id: "demo-proj-1", parent_id: null, type: "voice",
     content: "Voice note explaining the animation requirements for the testimonial carousel. Client requested fade-in transitions with 3-second intervals.",
     page_url: "/testimonials", selector: null,
@@ -122,6 +136,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "open", assigned_to: "demo-dev-2", created_by: "demo-client-1", created_at: "2026-05-28T09:45:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-4", project_id: "demo-proj-2", parent_id: null, type: "media",
     content: "Attached reference images for the new multi-step contact form design showing the desired layout and field order.",
     page_url: "/contact", selector: null,
@@ -133,6 +148,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     ],
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-5", project_id: "demo-proj-2", parent_id: null, type: "pin",
     content: "The footer links are pointing to the wrong pages. Privacy policy goes to /privacy instead of /privacy-policy. Terms link is 404.",
     page_url: "/", selector: null,
@@ -140,6 +156,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "resolved", assigned_to: "demo-dev-3", created_by: "demo-client-1", created_at: "2026-05-25T13:20:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-6", project_id: "demo-proj-1", parent_id: null, type: "comment",
     content: "Mobile responsiveness needs work. The navigation menu overlaps with the logo on iPhone 14. Also the hamburger menu doesn't close on tap outside.",
     page_url: "/", selector: null,
@@ -147,6 +164,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-24T10:00:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-7", project_id: "demo-proj-3", parent_id: null, type: "media",
     content: "Uploaded brand style guide PDF for the new product page design. Includes color palette, typography, and spacing guidelines.",
     page_url: "/products", selector: null,
@@ -157,6 +175,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     ],
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-8", project_id: "demo-proj-3", parent_id: null, type: "pin",
     content: "Product filtering sidebar is cut off on tablet viewports. The price range slider and category checkboxes are partially hidden.",
     page_url: "/products", selector: null,
@@ -164,6 +183,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "open", assigned_to: "demo-dev-4", created_by: "demo-client-2", created_at: "2026-05-22T11:00:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-9", project_id: "demo-proj-4", parent_id: null, type: "comment",
     content: "Property search results page loads too slowly. Average load time is 4.2 seconds. Need to optimize the database queries and implement caching.",
     page_url: "/properties", selector: null,
@@ -171,6 +191,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "open", assigned_to: "demo-dev-2", created_by: "demo-client-3", created_at: "2026-05-21T09:00:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-10", project_id: "demo-proj-4", parent_id: null, type: "pin",
     content: "Map markers are not displaying correctly on the property map view. All markers show at the same location instead of their actual addresses.",
     page_url: "/properties/map", selector: null,
@@ -178,6 +199,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "in_progress", assigned_to: "demo-dev-3", created_by: "demo-client-3", created_at: "2026-05-20T14:30:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-11", project_id: "demo-proj-5", parent_id: null, type: "voice",
     content: "Voice note about the membership pricing table layout. Want to see a comparison table with 3 tiers side by side on desktop and stacked on mobile.",
     page_url: "/membership", selector: null,
@@ -185,6 +207,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "open", assigned_to: null, created_by: "demo-client-4", created_at: "2026-05-19T16:45:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-12", project_id: "demo-proj-5", parent_id: null, type: "comment",
     content: "The registration confirmation email is not sending. Checked Mailgun logs and there is a domain verification issue.",
     page_url: "/register", selector: null,
@@ -192,6 +215,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     status: "resolved", assigned_to: "demo-dev-1", created_by: "demo-client-4", created_at: "2026-05-18T10:15:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-13", project_id: "demo-proj-1", parent_id: null, type: "pin",
     content: "CTA buttons on the hero section need more contrast. The current blue on light grey is hard to read. Suggested: white text on dark blue background.",
     page_url: "/", selector: null,
@@ -202,6 +226,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     ],
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-fb-14", project_id: "demo-proj-3", parent_id: null, type: "media",
     content: "Uploaded competitor analysis screenshots showing product page layouts that the client likes.",
     page_url: "/products", selector: null,
@@ -212,6 +237,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
 
 export const DEMO_REPLIES: EnrichedFeedback[] = [
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-reply-1", project_id: "demo-proj-1", parent_id: "demo-fb-13", type: "comment",
     content: "James here - I checked the hero section. The current CTA uses #1e40af on #f1f5f9. I'll update it to white (#ffffff) on #1e3a5f per the suggestion. Should I also adjust the hover state?",
     page_url: "/", selector: null,
@@ -219,6 +245,7 @@ export const DEMO_REPLIES: EnrichedFeedback[] = [
     status: "open", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-17T10:30:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-reply-2", project_id: "demo-proj-1", parent_id: "demo-fb-13", type: "comment",
     content: "Yes please! For hover, maybe a slightly lighter shade of the dark blue (#2a4a7f). Also make sure the button has 8px border-radius to match the rest of the site.",
     page_url: "/", selector: null,
@@ -226,6 +253,7 @@ export const DEMO_REPLIES: EnrichedFeedback[] = [
     status: "open", assigned_to: null, created_by: "demo-client-1", created_at: "2026-05-17T11:00:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-reply-3", project_id: "demo-proj-1", parent_id: "demo-fb-1", type: "comment",
     content: "Updated the hero image with the new brand photo. Also adjusted the overlay gradient to match. Deployed to staging, please verify.",
     page_url: "/", selector: null,
@@ -233,6 +261,7 @@ export const DEMO_REPLIES: EnrichedFeedback[] = [
     status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-30T09:00:00Z",
   },
   {
+    ...DEMO_FEEDBACK_DEFAULTS,
     id: "demo-reply-4", project_id: "demo-proj-1", parent_id: "demo-fb-6", type: "comment",
     content: "The mobile nav issue was caused by a z-index conflict with the sticky header. Fixed by increasing the nav z-index to 60. Also added an overlay click handler to close the hamburger. Should be good now.",
     page_url: "/", selector: null,

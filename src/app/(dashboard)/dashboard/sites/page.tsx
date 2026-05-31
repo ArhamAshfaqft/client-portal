@@ -32,10 +32,12 @@ import {
 import Link from "next/link";
 import type { Site } from "@/types";
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function SitesPage() {
   const { profile, isDemo } = useAuth();
   const { can } = usePermissions();
-  const supabase = createClient();
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -46,6 +48,7 @@ export default function SitesPage() {
     wp_application_password: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [addError, setAddError] = useState("");
 
   const canCreate = can(Permissions.SITES_CREATE);
   const canDelete = can(Permissions.SITES_DELETE);
@@ -89,6 +92,7 @@ export default function SitesPage() {
   const handleAdd = async () => {
     if (!profile?.agency_id || isDemo) return;
     setSubmitting(true);
+    setAddError("");
 
     try {
       const result = await Promise.race([
@@ -107,7 +111,9 @@ export default function SitesPage() {
       if ((result as any)?.error) throw (result as any).error;
     } catch (e: any) {
       if (e?.message === "timeout") {
-        alert("Request timed out. Check your Supabase connection.");
+        setAddError("Request timed out. Check your Supabase connection.");
+      } else {
+        setAddError(e?.message || "Failed to add site. Please try again.");
       }
       setSubmitting(false);
       return;
@@ -115,6 +121,7 @@ export default function SitesPage() {
 
     setShowAdd(false);
     setFormData({ name: "", url: "", wp_api_url: "", wp_application_password: "" });
+    setAddError("");
     fetchSites();
     setSubmitting(false);
   };
@@ -406,8 +413,13 @@ export default function SitesPage() {
               />
               </div>
             </div>
+            {addError && (
+              <p className="text-sm text-danger bg-danger/5 rounded-lg px-3 py-2">
+                {addError}
+              </p>
+            )}
             <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setShowAdd(false)}>
+              <Button variant="outline" onClick={() => { setShowAdd(false); setAddError(""); }}>
                 Cancel
               </Button>
               <Button onClick={handleAdd} loading={submitting}>

@@ -52,7 +52,7 @@ export default function ActivityPage() {
       const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       return sortOrder === "newest" ? -diff : diff;
     });
-  }, [search, sortOrder]);
+  }, [search, sortOrder, isDemo]);
 
   useEffect(() => {
     setLoading(false);

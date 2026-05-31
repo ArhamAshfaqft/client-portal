@@ -36,6 +36,9 @@ import {
   User,
   Reply,
   Send,
+  Square,
+  Pencil,
+  ArrowUpRight,
 } from "lucide-react";
 
 const typeIcons: Record<string, typeof Pin> = {
@@ -43,6 +46,9 @@ const typeIcons: Record<string, typeof Pin> = {
   comment: MessageSquareText,
   voice: Mic,
   media: Image,
+  rect: Square,
+  arrow: ArrowUpRight,
+  draw: Pencil,
 };
 
 const typeLabels: Record<string, string> = {
@@ -50,6 +56,9 @@ const typeLabels: Record<string, string> = {
   comment: "Comment",
   voice: "Voice Note",
   media: "Media",
+  rect: "Rectangle",
+  arrow: "Arrow",
+  draw: "Freehand",
 };
 
 const statusVariants: Record<string, "warning" | "info" | "success" | "default"> = {
@@ -95,7 +104,12 @@ export default function SiteFeedbackPage() {
   const [replyOpen, setReplyOpen] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  const [feedback, setFeedback] = useState<EnrichedFeedback[]>(isDemo ? getFeedbackForSite(id) : []);
+  const [feedback, setFeedback] = useState<EnrichedFeedback[]>([]);
+
+  // Sync feedback data when demo state or site id changes
+  useEffect(() => {
+    setFeedback(isDemo ? getFeedbackForSite(id) : []);
+  }, [isDemo, id]);
 
   const teamMembers = useMemo(() => isDemo ? getTeamMembers() : [], [isDemo]);
 
@@ -125,8 +139,16 @@ export default function SiteFeedbackPage() {
       selector: null,
       coordinates_x: null,
       coordinates_y: null,
+      coordinates_x_end: null,
+      coordinates_y_end: null,
+      width: null,
+      height: null,
+      draw_data: null,
+      element_dna: null,
+      meta_data: null,
       viewport_width: null,
       viewport_height: null,
+      device: null,
       status: "open",
       assigned_to: null,
       created_by: profile?.user_id || "",

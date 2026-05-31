@@ -1,6 +1,6 @@
 export type UserRole = "owner" | "developer" | "client";
 
-export type FeedbackType = "pin" | "comment" | "voice" | "media";
+export type FeedbackType = "pin" | "comment" | "voice" | "media" | "rect" | "arrow" | "draw";
 export type FeedbackStatus = "open" | "in_progress" | "resolved" | "closed";
 export type ProjectStatus = "draft" | "active" | "completed" | "archived";
 export type MediaStorageType = "wordpress" | "supabase";
@@ -73,13 +73,32 @@ export interface FeedbackItem {
   selector: string | null;
   coordinates_x: number | null;
   coordinates_y: number | null;
+  coordinates_x_end: number | null;
+  coordinates_y_end: number | null;
+  width: number | null;
+  height: number | null;
+  draw_data: string | null;
+  element_dna: Record<string, unknown> | null;
+  meta_data: Record<string, unknown> | null;
   viewport_width: number | null;
   viewport_height: number | null;
+  device: string | null;
   status: FeedbackStatus;
   assigned_to: string | null;
   created_by: string;
   created_at: string;
 }
+
+export const DEFAULT_FEEDBACK_FIELDS = {
+  coordinates_x_end: null,
+  coordinates_y_end: null,
+  width: null,
+  height: null,
+  draw_data: null,
+  element_dna: null,
+  meta_data: null,
+  device: null,
+};
 
 export interface SiteFeedbackCounts {
   site_id: string;

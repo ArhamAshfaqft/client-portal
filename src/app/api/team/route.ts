@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export async function GET() {
   const supabase = await createClient();
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, agency_id")
     .eq("user_id", user.id)
     .single();
 
@@ -51,23 +52,47 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, fullName, agencyId } = body;
+  const { email, fullName, position, permissions } = body;
+
+  if (!email || !fullName) {
+    return NextResponse.json({ error: "Email and name are required" }, { status: 400 });
+  }
+
+  // Use service role key for admin operations (invite)
+  // The regular supabase client uses the anon key which cannot call auth.admin
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!serviceRoleKey || !supabaseUrl) {
+    return NextResponse.json(
+      { error: "Server configuration error: service role key not set" },
+      { status: 500 }
+    );
+  }
+
+  const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
 
   const { data: authData, error: authError } =
-    await supabase.auth.admin.inviteUserByEmail(email);
+    await adminClient.auth.admin.inviteUserByEmail(email);
 
   if (authError) {
     return NextResponse.json({ error: authError.message }, { status: 400 });
   }
 
   if (authData?.user) {
-    await supabase.from("profiles").insert({
+    const { error: profileError } = await supabase.from("profiles").insert({
       user_id: authData.user.id,
-      agency_id: agencyId,
+      agency_id: profile.agency_id,
       role: "developer",
       full_name: fullName,
       email: email,
+      position: position || null,
+      permissions: permissions || [],
     });
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 400 });
+    }
   }
 
   return NextResponse.json({ success: true });

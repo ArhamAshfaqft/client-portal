@@ -90,10 +90,12 @@ const positionIcons: Record<string, typeof Shield> = {
   custom: Wrench,
 };
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function TeamPage() {
   const { profile, isDemo } = useAuth();
   const { can } = usePermissions();
-  const supabase = createClient();
   const [members, setMembers] = useState<MemberEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
@@ -151,29 +153,58 @@ export default function TeamPage() {
   };
 
   const handleInvite = async () => {
-    if (!profile?.agency_id || isDemo) return;
+    if (!profile?.agency_id) return;
     setError("");
     setSubmitting(true);
 
-    const { data: authData, error: authError } =
-      await supabase.auth.admin.inviteUserByEmail(inviteEmail);
-
-    if (authError) {
-      setError(authError.message);
+    // In demo mode, add the member locally without server call
+    if (isDemo) {
+      const newMember: MemberEntry = {
+        id: `demo-mem-${Date.now()}`,
+        user_id: `demo-user-${Date.now()}`,
+        agency_id: profile.agency_id,
+        role: "developer",
+        full_name: inviteName,
+        avatar_url: null,
+        email: inviteEmail,
+        position: invitePosition,
+        permissions: customPermissions,
+        created_at: new Date().toISOString(),
+      };
+      setMembers((prev) => [newMember, ...prev]);
+      setShowInvite(false);
+      setInviteEmail("");
+      setInviteName("");
+      setInvitePosition("developer");
+      setCustomPermissions(getDefaultPermissions("developer", "developer"));
       setSubmitting(false);
       return;
     }
 
-    if (authData?.user) {
-      await supabase.from("profiles").insert({
-        user_id: authData.user.id,
-        agency_id: profile.agency_id,
-        role: "developer",
-        full_name: inviteName,
-        email: inviteEmail,
-        position: invitePosition,
-        permissions: customPermissions,
+    // Call server API route — it uses the service_role key for auth.admin
+    try {
+      const res = await fetch("/api/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: inviteEmail,
+          fullName: inviteName,
+          position: invitePosition,
+          permissions: customPermissions,
+        }),
       });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to send invitation");
+        setSubmitting(false);
+        return;
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setSubmitting(false);
+      return;
     }
 
     setShowInvite(false);

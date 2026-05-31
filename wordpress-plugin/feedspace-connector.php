@@ -28,6 +28,7 @@ class FeedspaceConnector
     private function __construct()
     {
         add_action('rest_api_init', array($this, 'registerRoutes'));
+        add_action('template_redirect', array($this, 'maybeInitPreview'));
         add_filter('upload_mimes', array($this, 'allowAdditionalMimeTypes'));
         add_action('admin_menu', array($this, 'addAdminMenu'));
         add_action('admin_init', array($this, 'registerSettings'));
@@ -38,11 +39,89 @@ class FeedspaceConnector
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
     }
 
+    public function maybeInitPreview()
+    {
+        $token = isset($_GET['feedspace_preview']) ? sanitize_text_field($_GET['feedspace_preview']) : '';
+        if (empty($token)) return;
+
+        nocache_headers();
+
+        $config = $this->verifyPreviewToken($token);
+        if (!$config) {
+            wp_die('Invalid or expired preview link.', 'Feedspace Preview', array('response' => 403));
+            return;
+        }
+
+        $this->enqueueWidgetAssets($config);
+    }
+
+    private function verifyPreviewToken($token)
+    {
+        $apiUrl = get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
+        $verifyUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
+
+        $response = wp_remote_post($verifyUrl, array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => json_encode(array('token' => $token)),
+            'timeout' => 15,
+        ));
+
+        if (is_wp_error($response)) return false;
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        if (!$body || !$body['valid']) return false;
+
+        return $body;
+    }
+
+    private function enqueueWidgetAssets($config)
+    {
+        $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
+        $apiBaseUrl = get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
+        $wpApiUrl = get_bloginfo('url');
+        $wpApiKey = get_option('feedspace_api_key');
+        $pageUrl = home_url(add_query_arg(null, null));
+
+        $inlineConfig = array(
+            'apiUrl' => $apiBaseUrl,
+            'token' => sanitize_text_field($_GET['feedspace_preview']),
+            'projectId' => $config['projectId'],
+            'primaryColor' => $config['primaryColor'],
+            'wpApiUrl' => $wpApiUrl,
+            'wpApiKey' => $wpApiKey,
+            'pageUrl' => $pageUrl,
+        );
+
+        wp_enqueue_script(
+            'feedspace-widget',
+            $widgetUrl,
+            array(),
+            FEEDSPACE_VERSION,
+            true
+        );
+
+        wp_add_inline_script('feedspace-widget', '
+            document.addEventListener("DOMContentLoaded", function() {
+                if (window.FeedspaceWidget) {
+                    window.FeedspaceWidget.init(' . json_encode($inlineConfig) . ');
+                }
+            });
+        ');
+
+        wp_enqueue_style(
+            'feedspace-google-fonts',
+            'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap',
+            array(),
+            null
+        );
+    }
+
     public function activate()
     {
         $this->createFeedbackTable();
         add_option('feedspace_version', FEEDSPACE_VERSION);
         add_option('feedspace_api_key', wp_generate_password(32, false));
+        add_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
     }
 
     public function deactivate()
@@ -284,6 +363,7 @@ class FeedspaceConnector
     public function registerSettings()
     {
         register_setting('feedspace_settings', 'feedspace_feedback_mode');
+        register_setting('feedspace_settings', 'feedspace_api_url');
     }
 
     public function addAdminMenu()
@@ -354,6 +434,15 @@ class FeedspaceConnector
                 <form method="post" action="options.php">
                     <?php settings_fields('feedspace_settings'); ?>
                     <table class="form-table">
+                        <tr>
+                            <th>Feedspace API URL</th>
+                            <td>
+                                <input type="url" name="feedspace_api_url"
+                                    value="<?php echo esc_attr(get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co')); ?>"
+                                    class="regular-text" />
+                                <p class="description">Your Feedspace app URL (e.g. https://app.feedspace.com)</p>
+                            </td>
+                        </tr>
                         <tr>
                             <th>Feedback Mode</th>
                             <td>

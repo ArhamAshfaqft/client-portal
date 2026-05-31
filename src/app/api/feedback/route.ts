@@ -21,6 +21,26 @@ export async function POST(request: Request) {
   const viewportHeight = formData.get("viewportHeight")
     ? Number(formData.get("viewportHeight"))
     : null;
+
+  // New annotation fields
+  const coordinatesXEnd = formData.get("coordinatesXEnd")
+    ? Number(formData.get("coordinatesXEnd"))
+    : null;
+  const coordinatesYEnd = formData.get("coordinatesYEnd")
+    ? Number(formData.get("coordinatesYEnd"))
+    : null;
+  const width = formData.get("width")
+    ? Number(formData.get("width"))
+    : null;
+  const height = formData.get("height")
+    ? Number(formData.get("height"))
+    : null;
+  const drawData = formData.get("drawData") as string | null;
+  const elementDnaRaw = formData.get("elementDna") as string | null;
+  const metaDataRaw = formData.get("metaData") as string | null;
+  const selector = formData.get("selector") as string | null;
+  const device = formData.get("device") as string | null;
+
   const mediaFiles = formData.getAll("media") as File[];
   const mediaUrlsRaw = formData.get("mediaUrls") as string | null;
   const storageTypeFromWidget = formData.get("storageType") as string | null;
@@ -38,6 +58,11 @@ export async function POST(request: Request) {
     }
   }
 
+  let elementDna = null;
+  let metaData = null;
+  if (elementDnaRaw) try { elementDna = JSON.parse(elementDnaRaw); } catch { }
+  if (metaDataRaw) try { metaData = JSON.parse(metaDataRaw); } catch { }
+
   const { data: feedbackItem, error: fbError } = await supabase
     .from("feedback_items")
     .insert({
@@ -45,10 +70,19 @@ export async function POST(request: Request) {
       type,
       content,
       page_url: pageUrl,
+      selector,
       coordinates_x: coordinatesX,
       coordinates_y: coordinatesY,
+      coordinates_x_end: coordinatesXEnd,
+      coordinates_y_end: coordinatesYEnd,
+      width,
+      height,
+      draw_data: drawData,
+      element_dna: elementDna,
+      meta_data: metaData,
       viewport_width: viewportWidth,
       viewport_height: viewportHeight,
+      device: device || "desktop",
       status: "open",
       created_by: createdBy || undefined,
     })

@@ -46,13 +46,23 @@ function createNoopClient(): SupabaseClient {
   return noop as unknown as SupabaseClient;
 }
 
+// Module-level singleton — guarantees the same reference across all
+// components and hooks so React dependency arrays stay stable and
+// we never open duplicate realtime connections.
+let _client: SupabaseClient | null = null;
+
 export function createClient(): SupabaseClient {
+  // Return cached singleton if it already exists
+  if (_client) return _client;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key || url === "https://placeholder.supabase.co") {
-    return createNoopClient();
+    _client = createNoopClient();
+  } else {
+    _client = createBrowserClient(url, key);
   }
 
-  return createBrowserClient(url, key);
+  return _client;
 }

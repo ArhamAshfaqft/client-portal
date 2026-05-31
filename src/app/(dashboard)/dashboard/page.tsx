@@ -42,9 +42,11 @@ const DEMO_DEV_DATA = {
   my_in_progress: 2,
 };
 
+// Module-level singleton — never changes across renders
+const supabase = createClient();
+
 export default function DashboardPage() {
   const { profile, isDemo } = useAuth();
-  const supabase = createClient();
   const [data, setData] = useState<DashboardData>({
     total_sites: 0,
     active_projects: 0,
@@ -56,8 +58,12 @@ export default function DashboardPage() {
 
   const isDev = profile?.role === "developer";
   const isClient = profile?.role === "client";
+  const agencyId = profile?.agency_id;
+  const role = profile?.role;
 
   useEffect(() => {
+    let cancelled = false;
+
     if (isDemo && (isDev || isClient)) {
       setLoading(false);
       return;
@@ -67,15 +73,13 @@ export default function DashboardPage() {
       setLoading(false);
       return;
     }
-    if (!profile?.agency_id) {
+    if (!agencyId) {
       setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       try {
-        const agencyId = profile.agency_id;
-
         const [
           { count: sitesCount },
           { count: projectsCount },
@@ -106,21 +110,24 @@ export default function DashboardPage() {
             .eq("status", "resolved"),
         ]);
 
-        setData({
-          total_sites: sitesCount ?? 0,
-          active_projects: projectsCount ?? 0,
-          open_feedback: openCount ?? 0,
-          team_members: membersCount ?? 0,
-          resolved_feedback: resolvedCount ?? 0,
-        });
+        if (!cancelled) {
+          setData({
+            total_sites: sitesCount ?? 0,
+            active_projects: projectsCount ?? 0,
+            open_feedback: openCount ?? 0,
+            team_members: membersCount ?? 0,
+            resolved_feedback: resolvedCount ?? 0,
+          });
+        }
       } catch {
         // keep empty defaults
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
 
     fetchData();
-  }, [profile, supabase, isDemo, isDev]);
+    return () => { cancelled = true; };
+  }, [agencyId, isDemo, isDev, isClient, role]);
 
   if (isDev) {
     const devStats = [

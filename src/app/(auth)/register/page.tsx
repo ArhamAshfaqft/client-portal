@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
+// Module-level singleton
+const supabase = createClient();
+
 export default function RegisterPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [fullName, setFullName] = useState("");
   const [agencyName, setAgencyName] = useState("");
   const [email, setEmail] = useState("");

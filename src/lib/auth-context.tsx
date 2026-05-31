@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -64,12 +65,17 @@ const DEMO_DEV: Profile = {
   created_at: new Date().toISOString(),
 };
 
+// Grab the singleton once at module level — the reference never changes
+const supabase = createClient();
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
-  const supabase = createClient();
+
+  // Guard against double-fire in React 18 Strict Mode
+  const initRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -82,9 +88,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // profile stays null
     }
-  }, []);
+  }, []); // supabase is now a stable module-level singleton — no dependency needed
 
   useEffect(() => {
+    // Prevent double-init on React 18 Strict Mode / concurrent features
+    if (initRef.current) return;
+    initRef.current = true;
+
+    // Guard SSR — sessionStorage is browser-only
+    if (typeof window === "undefined") {
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
     const saved = sessionStorage.getItem("feedspace_demo");
     const savedRole = sessionStorage.getItem("feedspace_demo_role") as "owner" | "developer" | "client" | null;
     if (saved === "true") {
@@ -95,18 +113,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
       const usr = session?.user ?? null;
       setUser(usr);
-      if (usr) fetchProfile(usr.id);
-      setIsLoading(false);
+      if (usr) {
+        fetchProfile(usr.id).finally(() => {
+          if (!cancelled) setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      if (cancelled) return;
+      const usr = session?.user ?? null;
+      setUser(usr);
+      if (usr) fetchProfile(usr.id);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
     sessionStorage.removeItem("feedspace_demo");
@@ -119,14 +149,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const demoLogin = useCallback((role: "owner" | "developer" | "client" = "owner") => {
-    const profile = role === "developer" ? DEMO_DEV : role === "client" ? DEMO_CLIENT : DEMO_OWNER;
+    const p = role === "developer" ? DEMO_DEV : role === "client" ? DEMO_CLIENT : DEMO_OWNER;
     sessionStorage.setItem("feedspace_demo", "true");
     sessionStorage.setItem("feedspace_demo_role", role);
     document.cookie = "feedspace_demo=true; path=/; max-age=86400";
-    setProfile(profile);
+    setProfile(p);
     setIsDemo(true);
     setIsLoading(false);
   }, []);
+
+  const refreshProfile = useCallback(() => {
+    if (user) return fetchProfile(user.id);
+    return Promise.resolve();
+  }, [user, fetchProfile]);
 
   return (
     <AuthContext.Provider
@@ -136,10 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isDemo,
         signOut,
-        refreshProfile: () => {
-          if (user) return fetchProfile(user.id);
-          return Promise.resolve();
-        },
+        refreshProfile,
         demoLogin,
       }}
     >

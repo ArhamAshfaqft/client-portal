@@ -18,9 +18,11 @@ import {
   Search,
 } from "lucide-react";
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function FeedbackOverviewPage() {
   const { profile, isDemo } = useAuth();
-  const supabase = createClient();
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [sites, setSites] = useState<ReturnType<typeof getAllFeedbackGroupedBySite>>([]);

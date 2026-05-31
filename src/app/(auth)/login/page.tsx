@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
+// Module-level singleton
+const supabase = createClient();
+
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
   const { demoLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

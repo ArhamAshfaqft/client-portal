@@ -21,13 +21,15 @@ const DEMO_PREVIEW_LINKS: Record<string, { project_id: string; target_url: strin
   "demo-preview-token-5": { project_id: "demo-proj-5", target_url: "https://pinnacle.preview.feedspace.io", site_id: "demo-site-3" },
 };
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function PreviewPage({
   params,
 }: {
   params: Promise<{ token: string }>;
 }) {
   const { token } = use(params);
-  const supabase = createClient();
   const [data, setData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +128,7 @@ export default function PreviewPage({
     };
 
     fetchPreview();
-  }, [token, supabase]);
+  }, [token]);
 
   if (loading) {
     return (
