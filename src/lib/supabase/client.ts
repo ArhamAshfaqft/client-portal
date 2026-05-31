@@ -65,6 +65,6 @@ export function createClient(): SupabaseClient {
   }
 
   return createBrowserClient(url, key, {
-    fetch: fetchWithTimeout,
+    ...({ fetch: fetchWithTimeout } as any),
   });
 }
