@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
     const { data: feedbackItem, error } = await supabase
       .from("feedback_items")
-      .upsert({
+      .insert({
         project_id: projectId,
         type: type || "pin",
         content,
@@ -136,8 +136,8 @@ export async function POST(request: Request) {
         device: device || "desktop",
         status: "open",
         created_by: createdBy || "widget-client",
-        mirror_id: mirrorId || null,
-      }, { onConflict: "mirror_id" })
+        ...(mirrorId ? { mirror_id: mirrorId } : {}),
+      })
       .select()
       .single();
 
