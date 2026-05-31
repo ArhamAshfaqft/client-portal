@@ -558,8 +558,6 @@ class FeedspaceConnector
         $annotationId = wp_generate_uuid4();
         $now = current_time('mysql');
 
-        $this->preventCaching();
-
         $data = array(
             'annotation_id' => $annotationId,
             'project_id' => sanitize_text_field($body['projectId'] ?? ''),
@@ -573,8 +571,8 @@ class FeedspaceConnector
             'coordinates_y_end' => isset($body['coordinatesYEnd']) ? floatval($body['coordinatesYEnd']) : null,
             'width' => isset($body['width']) ? floatval($body['width']) : null,
             'height' => isset($body['height']) ? floatval($body['height']) : null,
-            'draw_data' => isset($body['drawData']) ? wp_json_encode($body['drawData']) : null,
-            'element_dna' => isset($body['elementDna']) ? wp_json_encode($body['elementDna']) : null,
+            'draw_data' => isset($body['drawData']) ? (is_string($body['drawData']) ? $body['drawData'] : wp_json_encode($body['drawData'])) : null,
+            'element_dna' => isset($body['elementDna']) ? (is_string($body['elementDna']) ? $body['elementDna'] : wp_json_encode($body['elementDna'])) : null,
             'viewport_width' => intval($body['viewportWidth'] ?? 0),
             'viewport_height' => intval($body['viewportHeight'] ?? 0),
             'device' => sanitize_text_field($body['device'] ?? 'desktop'),

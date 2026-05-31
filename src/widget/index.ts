@@ -24,6 +24,15 @@ function initWidget(config: WidgetConfig): AnnotationEngine {
   injectStyles();
   dbg('Styles injected');
 
+  // Strip feedspace_preview from pageUrl to ensure consistent storage/retrieval
+  if (config.pageUrl) {
+    try {
+      const u = new URL(config.pageUrl);
+      u.searchParams.delete('feedspace_preview');
+      config.pageUrl = u.toString();
+    } catch { /* leave as-is if not a valid URL */ }
+  }
+
   const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
   dbg('API client created');
 

@@ -1972,6 +1972,14 @@
     dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey });
     injectStyles();
     dbg2("Styles injected");
+    if (config.pageUrl) {
+      try {
+        const u = new URL(config.pageUrl);
+        u.searchParams.delete("feedspace_preview");
+        config.pageUrl = u.toString();
+      } catch {
+      }
+    }
     const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
     dbg2("API client created");
     const engine = new AnnotationEngine(config, api);
