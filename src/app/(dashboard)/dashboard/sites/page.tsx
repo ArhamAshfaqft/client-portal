@@ -377,13 +377,12 @@ export default function SitesPage() {
                 onChange={(e) => setFormData({ ...formData, wp_api_url: e.target.value })}
               />
               <div className="mt-3">
-                <Input
-                  label="Application Password"
-                  type="password"
-                  placeholder="xxxx xxxx xxxx xxxx"
-                  value={formData.wp_application_password}
-                  onChange={(e) => setFormData({ ...formData, wp_application_password: e.target.value })}
-                />
+              <Input
+                label="API Key"
+                placeholder="Paste the API key from Feedspace Connector settings"
+                value={formData.wp_application_password}
+                onChange={(e) => setFormData({ ...formData, wp_application_password: e.target.value })}
+              />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-2">
