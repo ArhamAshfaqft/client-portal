@@ -154,7 +154,7 @@ export default function SitesPage() {
           wp_api_url: formData.wp_api_url || null,
           wp_api_key: formData.wp_api_key || null,
           wp_application_password: formData.wp_application_password || null,
-          wp_connected: !!(formData.wp_api_url && formData.wp_application_password),
+          wp_connected: !!(formData.wp_api_url && (formData.wp_api_key || formData.wp_application_password)),
         }),
         new Promise<{ error: Error }>((_, reject) =>
           setTimeout(() => reject(new Error("timeout")), 15000)
