@@ -59,7 +59,7 @@ export default function PreviewPage({
 
         const { data: link, error: linkError } = await supabase
           .from("preview_links")
-          .select("*, projects!inner(*)")
+          .select("*")
           .eq("token", token)
           .eq("is_active", true)
           .single();
@@ -76,26 +76,31 @@ export default function PreviewPage({
           return;
         }
 
-        const { data: agency } = await supabase
-          .from("agencies")
-          .select("primary_color")
-          .eq("id", link.projects.agency_id)
-          .single();
-
-        const { data: project } = await supabase
+        const project = await supabase
           .from("projects")
-          .select("site_id")
+          .select("site_id, agency_id")
           .eq("id", link.project_id)
-          .single();
+          .maybeSingle()
+          .then(r => r.data);
 
+        let primaryColor = "#2563eb";
         let wpUrl: string | undefined;
         let wpApiKey: string | undefined;
         if (project) {
-          const { data: site } = await supabase
+          const agency = await supabase
+            .from("agencies")
+            .select("primary_color")
+            .eq("id", project.agency_id)
+            .maybeSingle()
+            .then(r => r.data);
+          if (agency?.primary_color) primaryColor = agency.primary_color;
+
+          const site = await supabase
             .from("sites")
             .select("wp_api_url, wp_application_password")
             .eq("id", project.site_id)
-            .single();
+            .maybeSingle()
+            .then(r => r.data);
           if (site?.wp_api_url) {
             wpUrl = site.wp_api_url;
             wpApiKey = site.wp_application_password || undefined;
@@ -106,7 +111,7 @@ export default function PreviewPage({
           projectId: link.project_id,
           targetUrl: link.target_url,
           isValid: true,
-          primaryColor: agency?.primary_color || "#2563eb",
+          primaryColor,
           wpUrl,
           wpApiKey,
         });
