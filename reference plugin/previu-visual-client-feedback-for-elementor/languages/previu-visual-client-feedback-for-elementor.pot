@@ -1,0 +1,56 @@
+# Copyright (C) 2026 arhamashfaq
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Previu – Visual Client Feedback for Elementor 2.2.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/previu-visual-client-feedback-for-elementor\n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Previu\n"
+
+#: includes/class-review-page.php:37
+msgid "Review Link Expired"
+msgstr ""
+
+#: includes/class-review-page.php:37
+msgid "This review link is no longer active. Please contact the developer for an updated link."
+msgstr ""
+
+#: includes/class-rest-api.php:350
+#, php-format
+msgid "New Feedback from %1$s on %2$s"
+msgstr ""
+
+#: includes/class-rest-api.php:355
+msgid "A client"
+msgstr ""
+
+#: includes/class-rest-api.php:357
+#, php-format
+msgid "Hello,\n\n"
+msgstr ""
+
+#: includes/class-rest-api.php:359
+#, php-format
+msgid "%1$s just left a new piece of feedback on the \"%2$s\" review session."
+msgstr ""
+
+#: includes/class-rest-api.php:366
+#, php-format
+msgid "Comment: \"%s\""
+msgstr ""
+
+#: includes/class-rest-api.php:371
+msgid "Page: "
+msgstr ""
+
+#: includes/class-rest-api.php:372
+msgid "Log into your WordPress dashboard and open Elementor to review the feedback."
+msgstr ""

@@ -204,7 +204,7 @@ export default function SiteFeedbackPage() {
           width: item.width,
           height: item.height,
           draw_data: item.draw_data ? JSON.parse(item.draw_data) : null,
-          element_dna: item.element_dna ? JSON.parse(item.element_dna) : null,
+          element_dna: item.element_dna || null,
           meta_data: item.meta_data,
           viewport_width: item.viewport_width,
           viewport_height: item.viewport_height,

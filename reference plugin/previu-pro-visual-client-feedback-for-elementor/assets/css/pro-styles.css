@@ -1,0 +1,58 @@
+/**
+ * Previu Pro — CSS for pro-only UI elements.
+ */
+
+/* ── Spinner animation ── */
+@keyframes ccfe-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── File remove button ── */
+.ccfe-pro-remove-file:hover {
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-radius: 50%;
+}
+
+/* ── Elementor media grid ── */
+.ccfe-ep-media-item:hover {
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+  transition: all 0.15s;
+}
+
+/* ── Image action buttons (maximize / send-to-media) ── */
+.ccfe-ep-img-btn:hover {
+  background: rgba(99, 102, 241, 0.85) !important;
+  transform: scale(1.05);
+  transition: all 0.1s;
+}
+
+/* ── Comment panel attachment preview ── */
+.ccfe-cp-attachment-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 18px;
+}
+
+/* ── Lightbox close button ── */
+.ccfe-ep-lb-close:hover {
+  background: rgba(239, 68, 68, 0.8) !important;
+}
+
+/* ── Client-side lightbox ── */
+.ccfe-cp-img-maximize:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.05);
+}
+
+.ccfe-cp-lightbox img {
+  animation: ccfe-lb-fadein 0.2s ease;
+}
+
+@keyframes ccfe-lb-fadein {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+

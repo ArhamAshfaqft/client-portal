@@ -3,3 +3,7 @@ node_modules/
 .env.local
 .env
 *.local
+scripts/query-db.js
+*.log
+*.zip
+cookie.txt*
