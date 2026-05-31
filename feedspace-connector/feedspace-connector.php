@@ -272,7 +272,7 @@ class FeedspaceConnector
         delete_option('feedspace_version');
     }
 
-    private static function logDebug($event, $details = array())
+    public static function logDebug($event, $details = array())
     {
         $log = get_option('feedspace_debug_log', array());
         $log[] = array_merge(array(
