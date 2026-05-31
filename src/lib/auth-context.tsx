@@ -25,8 +25,6 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-const AUTH_TIMEOUT = 15000;
-
 const DEMO_OWNER: Profile = {
   id: "demo-id",
   user_id: "demo-user-id",
@@ -96,51 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let cancelled = false;
-
-    const timeout = setTimeout(() => {
-      if (!cancelled) {
-        setIsLoading(false);
-      }
-    }, AUTH_TIMEOUT);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (cancelled) return;
-      if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const usr = session?.user ?? null;
+      setUser(usr);
+      if (usr) fetchProfile(usr.id);
+      setIsLoading(false);
     });
 
-    const init = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const usr = data?.session?.user;
-        if (usr) {
-          setUser(usr);
-          await fetchProfile(usr.id);
-        }
-      } catch (err) {
-        console.error("Supabase connection failed:", err);
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-          clearTimeout(timeout);
-        }
-      }
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-    init();
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = useCallback(async () => {
