@@ -549,7 +549,7 @@ export class AnnotationEngine {
 
   private focusAnnotation(id: string): void {
     this.renderer.setSelected(id);
-    const annotation = this.annotations.find((a) => a.id === a.id);
+    const annotation = this.annotations.find((a) => a.id === id);
     if (annotation?.elementDna) {
       const el = findElement(annotation.elementDna);
       if (el) {

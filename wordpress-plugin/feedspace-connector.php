@@ -42,21 +42,48 @@ class FeedspaceConnector
     public function maybeInitPreview()
     {
         $token = isset($_GET['feedspace_preview']) ? sanitize_text_field($_GET['feedspace_preview']) : '';
+        
+        // Fallback to cookie if query param is not set
+        if (empty($token) && isset($_COOKIE['feedspace_preview'])) {
+            $token = sanitize_text_field($_COOKIE['feedspace_preview']);
+        }
+        
         if (empty($token)) return;
 
         nocache_headers();
 
         $config = $this->verifyPreviewToken($token);
         if (!$config) {
-            wp_die('Invalid or expired preview link.', 'Feedspace Preview', array('response' => 403));
+            // Clear invalid cookie
+            $cookie_path = defined('COOKIEPATH') ? COOKIEPATH : '/';
+            $cookie_domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+            if (isset($_COOKIE['feedspace_preview']) && !headers_sent()) {
+                setcookie('feedspace_preview', '', time() - 3600, $cookie_path, $cookie_domain);
+            }
+            if (isset($_GET['feedspace_preview'])) {
+                wp_die('Invalid or expired preview link.', 'Feedspace Preview', array('response' => 403));
+            }
             return;
         }
 
-        $this->enqueueWidgetAssets($config);
+        // Set/refresh cookie valid for 1 hour
+        if (!headers_sent()) {
+            $cookie_path = defined('COOKIEPATH') ? COOKIEPATH : '/';
+            $cookie_domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+            setcookie('feedspace_preview', $token, time() + 3600, $cookie_path, $cookie_domain);
+        }
+
+        $this->enqueueWidgetAssets($config, $token);
     }
 
     private function verifyPreviewToken($token)
     {
+        $transientKey = 'feedspace_preview_' . md5($token);
+        $cached = get_transient($transientKey);
+        if (false !== $cached) {
+            return $cached;
+        }
+
         $apiUrl = get_option('feedspace_api_url', '');
         if (empty($apiUrl)) return false;
         $verifyUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
@@ -72,21 +99,22 @@ class FeedspaceConnector
         $body = json_decode(wp_remote_retrieve_body($response), true);
         if (!$body || empty($body['valid'])) return false;
 
+        set_transient($transientKey, $body, HOUR_IN_SECONDS);
         return $body;
     }
 
-    private function enqueueWidgetAssets($config)
+    private function enqueueWidgetAssets($config, $token)
     {
         $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
         $apiBaseUrl = get_option('feedspace_api_url', '');
         $wpApiUrl = get_bloginfo('url');
         $wpApiKey = get_option('feedspace_api_key');
-        $pageUrl = home_url(add_query_arg(null, null));
+        $pageUrl = remove_query_arg('feedspace_preview', home_url(add_query_arg(null, null)));
         $isDebug = get_option('feedspace_debug_enabled') === '1';
 
         $inlineConfig = array(
             'apiUrl' => $apiBaseUrl,
-            'token' => sanitize_text_field($_GET['feedspace_preview']),
+            'token' => $token,
             'projectId' => $config['projectId'],
             'primaryColor' => $config['primaryColor'],
             'wpApiUrl' => $wpApiUrl,
@@ -101,6 +129,7 @@ class FeedspaceConnector
             FEEDSPACE_VERSION,
             true
         );
+
 
         $debugPrefix = $isDebug ? 'window.__feedspaceDebug = window.__feedspaceDebug || []; function fd(m,d){ window.__feedspaceDebug.push({msg:m,data:d,time:Date.now()}); console.log("[Feedspace]", m, d||""); } fd("Plugin: widget enqueued");' : '';
 
@@ -519,7 +548,7 @@ class FeedspaceConnector
             'project_id' => sanitize_text_field($body['projectId'] ?? ''),
             'type' => sanitize_text_field($body['type'] ?? 'pin'),
             'content' => sanitize_textarea_field($body['content'] ?? ''),
-            'page_url' => esc_url_raw($body['pageUrl'] ?? ''),
+            'page_url' => remove_query_arg('feedspace_preview', esc_url_raw($body['pageUrl'] ?? '')),
             'selector' => sanitize_text_field($body['selector'] ?? ''),
             'coordinates_x' => isset($body['coordinatesX']) ? floatval($body['coordinatesX']) : null,
             'coordinates_y' => isset($body['coordinatesY']) ? floatval($body['coordinatesY']) : null,
@@ -569,17 +598,28 @@ class FeedspaceConnector
         global $wpdb;
         $tableName = $wpdb->prefix . 'feedspace_annotations';
         $pageUrl = esc_url_raw($request->get_param('pageUrl') ?? '');
+        if ($pageUrl) {
+            $pageUrl = remove_query_arg('feedspace_preview', $pageUrl);
+        }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
-        if (!$pageUrl || !$projectId) {
+        if (!$projectId) {
             return new WP_REST_Response(array(), 200);
         }
 
-        $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
-            $pageUrl,
-            $projectId
-        ));
+        if ($pageUrl) {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
+                $pageUrl,
+                $projectId
+            ));
+        } else {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $tableName WHERE project_id = %s ORDER BY created_at ASC",
+                $projectId
+            ));
+        }
+
 
         $annotations = array();
         foreach ($results as $row) {
