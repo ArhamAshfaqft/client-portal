@@ -3,14 +3,14 @@
  * Plugin Name: Feedspace Connector
  * Plugin URI: https://feedspace.io
  * Description: Connects your WordPress site to Feedspace for client feedback management. Enables media storage and API integration.
- * Version: 1.0.18
+ * Version: 1.1.0
  * Author: Feedspace
  * Text Domain: feedspace
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('FEEDSPACE_VERSION', '1.0.18');
+define('FEEDSPACE_VERSION', '1.1.0');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
 class FeedspaceConnector
@@ -114,14 +114,23 @@ class FeedspaceConnector
 
     private function enqueueWidgetAssets($config, $token)
     {
-        $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
+        $widgetPath = plugin_dir_path(__FILE__) . 'widget/feedspace-widget.js';
+
+        if (!file_exists($widgetPath)) {
+            add_action('wp_footer', function () use ($widgetPath) {
+                echo '<script>console.error("[Feedspace] Widget JS missing at ' . esc_js($widgetPath) . '")</script>';
+            });
+            return;
+        }
+
+        $widgetJS = '/* Feedspace Widget v' . FEEDSPACE_VERSION . ' */' . file_get_contents($widgetPath);
         $apiBaseUrl = get_option('feedspace_api_url', '');
         $wpApiUrl = get_bloginfo('url');
         $wpApiKey = get_option('feedspace_api_key');
         $pageUrl = remove_query_arg('feedspace_preview', home_url(add_query_arg(null, null)));
         $isDebug = get_option('feedspace_debug_enabled') === '1';
 
-        $inlineConfig = array(
+        $configJSON = json_encode(array(
             'apiUrl' => $apiBaseUrl,
             'token' => $token,
             'projectId' => $config['projectId'],
@@ -129,34 +138,17 @@ class FeedspaceConnector
             'wpApiUrl' => $wpApiUrl,
             'wpApiKey' => $wpApiKey,
             'pageUrl' => $pageUrl,
-        );
+        ));
 
-        wp_enqueue_script(
-            'feedspace-widget',
-            $widgetUrl,
-            array(),
-            FEEDSPACE_VERSION,
-            true
-        );
+        $debugInit = $isDebug ? 'window.__feedspaceDebug=window.__feedspaceDebug||[];' : '';
 
-
-        $debugPrefix = $isDebug ? 'window.__feedspaceDebug = window.__feedspaceDebug || []; function fd(m,d){ window.__feedspaceDebug.push({msg:m,data:d,time:Date.now()}); console.log("[Feedspace]", m, d||""); } fd("Plugin: widget enqueued");' : '';
-
-        wp_add_inline_script('feedspace-widget', '
-            ' . $debugPrefix . '
-            document.addEventListener("DOMContentLoaded", function() {
-                ' . ($isDebug ? 'fd("DOMContentLoaded fired");' : '') . '
-                if (window.FeedspaceWidget) {
-                    ' . ($isDebug ? 'fd("FeedspaceWidget found, calling init()");' : '') . '
-                    window.FeedspaceWidget.init(' . json_encode($inlineConfig) . ');
-                } else {
-                    ' . ($isDebug ? 'fd("FeedspaceWidget NOT found — script failed to execute");' : '') . '
-                }
-            });
-        ');
+        add_action('wp_footer', function () use ($widgetJS, $configJSON, $debugInit, $isDebug) {
+            echo '<script>' . $widgetJS . '</script>';
+            echo '<script>' . $debugInit . '(function(){if(window.FeedspaceWidget)window.FeedspaceWidget.init(' . $configJSON . ');else console.error("[Feedspace] Widget not loaded")})();</script>';
+        }, 20);
 
         if ($isDebug) {
-            add_action('wp_footer', array($this, 'renderDebugPanel'));
+            add_action('wp_footer', array($this, 'renderDebugPanel'), 30);
         }
 
         wp_enqueue_style(
@@ -591,18 +583,18 @@ class FeedspaceConnector
         }
 
         // Mirror to Vercel/Supabase so the dashboard shows this annotation.
-        // Fire-and-forget: if Vercel is down, the widget still works.
+        $mirrorOk = false;
         $vercelUrl = get_option('feedspace_api_url', '');
         if ($vercelUrl) {
             $mirrorBody = $body;
             $mirrorBody['id'] = $annotationId;
             $mirrorBody['createdAt'] = $now;
-            wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+            $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
                 'headers' => array('Content-Type' => 'application/json'),
                 'body' => json_encode($mirrorBody),
                 'timeout' => 10,
-                'blocking' => false,
             ));
+            $mirrorOk = !is_wp_error($result) && wp_remote_retrieve_response_code($result) < 400;
         }
 
         return new WP_REST_Response(array(
@@ -627,6 +619,7 @@ class FeedspaceConnector
             'createdAt' => $now,
             'replies' => array(),
             'media' => array(),
+            '_mirrored' => $mirrorOk,
         ), 201);
     }
 
@@ -728,44 +721,6 @@ class FeedspaceConnector
         return new WP_REST_Response(array('deleted' => true), 200);
     }
 
-    public function deleteAnnotation($request)
-    {
-        global $wpdb;
-        $tableName = $wpdb->prefix . 'feedspace_annotations';
-        $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
-
-        if (!$projectId) {
-            return new WP_REST_Response(array('total' => 0, 'open' => 0, 'resolved' => 0, 'in_progress' => 0), 200);
-        }
-
-        $open = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $tableName WHERE project_id = %s AND status IN ('open', 'in_progress')",
-            $projectId
-        ));
-
-        $resolved = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $tableName WHERE project_id = %s AND status = 'resolved'",
-            $projectId
-        ));
-
-        $total = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $tableName WHERE project_id = %s",
-            $projectId
-        ));
-
-        $inProgress = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $tableName WHERE project_id = %s AND status = 'in_progress'",
-            $projectId
-        ));
-
-        return new WP_REST_Response(array(
-            'total' => $total,
-            'open' => $open,
-            'resolved' => $resolved,
-            'in_progress' => $inProgress,
-        ), 200);
-    }
-
     public function allowAdditionalMimeTypes($mimes)
     {
         $mimes['webm'] = 'video/webm';
@@ -835,22 +790,30 @@ class FeedspaceConnector
             </div>
 
             <div class="feedspace-config-card">
-                <h2>API Configuration</h2>
-                <p>Use these credentials to connect from Feedspace dashboard:</p>
-                <table class="form-table">
-                    <tr>
-                        <th>REST API URL</th>
-                        <td><code><?php echo esc_url($restUrl); ?></code></td>
-                    </tr>
-                    <tr>
-                        <th>API Key</th>
-                        <td>
-                            <code id="feedspace-api-key"><?php echo esc_html($apiKey); ?></code>
-                            <button type="button" class="button button-small" onclick="copyApiKey()">Copy</button>
-                            <button type="button" class="button button-small" onclick="regenerateKey()">Regenerate</button>
-                        </td>
-                    </tr>
-                </table>
+                <h2>1-Click Connect</h2>
+                <p>Click the button below to copy all connection details, then paste into the Feedspace dashboard when adding a site.</p>
+                <button type="button" class="button button-primary button-large" onclick="copyFullConfig()" style="margin:10px 0;">
+                    Copy Connection Config
+                </button>
+                <p style="margin-top:8px;color:#059669;display:none;" id="copy-confirm">&#10003; Copied! Now paste into Feedspace dashboard.</p>
+                <hr style="margin:16px 0;">
+                <details style="cursor:pointer;">
+                    <summary style="font-weight:600;margin-bottom:8px;">Manual configuration</summary>
+                    <table class="form-table">
+                        <tr>
+                            <th>REST API URL</th>
+                            <td><code><?php echo esc_url($restUrl); ?></code></td>
+                        </tr>
+                        <tr>
+                            <th>API Key</th>
+                            <td>
+                                <code id="feedspace-api-key"><?php echo esc_html($apiKey); ?></code>
+                                <button type="button" class="button button-small" onclick="copyApiKey()">Copy</button>
+                                <button type="button" class="button button-small" onclick="regenerateKey()">Regenerate</button>
+                            </td>
+                        </tr>
+                    </table>
+                </details>
             </div>
 
             <div class="feedspace-settings-card">
@@ -930,6 +893,20 @@ class FeedspaceConnector
         </style>
 
         <script>
+            function copyFullConfig() {
+                var config = {
+                    name: <?php echo json_encode(get_bloginfo('name')); ?>,
+                    url: <?php echo json_encode($siteUrl); ?>,
+                    wp_api_url: <?php echo json_encode($siteUrl); ?>,
+                    wp_application_password: <?php echo json_encode($apiKey); ?>
+                };
+                navigator.clipboard.writeText(JSON.stringify(config, null, 2)).then(function() {
+                    var el = document.getElementById('copy-confirm');
+                    el.style.display = 'block';
+                    setTimeout(function() { el.style.display = 'none'; }, 3000);
+                });
+            }
+
             function copyApiKey() {
                 var key = document.getElementById('feedspace-api-key');
                 navigator.clipboard.writeText(key.textContent).then(function() {

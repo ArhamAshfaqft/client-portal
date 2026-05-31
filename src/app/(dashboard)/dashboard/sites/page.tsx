@@ -398,6 +398,29 @@ export default function SitesPage() {
                 Connect your WordPress site to enable media storage on your
                 client&apos;s hosting. No extra server costs.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mb-3"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    const cfg = JSON.parse(text);
+                    if (cfg.name && cfg.url && cfg.wp_api_url && cfg.wp_application_password) {
+                      setFormData({
+                        ...formData,
+                        name: formData.name || cfg.name,
+                        url: formData.url || cfg.url,
+                        wp_api_url: cfg.wp_api_url,
+                        wp_application_password: cfg.wp_application_password,
+                      });
+                    }
+                  } catch {}
+                }}
+              >
+                Paste Config
+              </Button>
               <Input
                 label="WordPress REST API URL"
                 placeholder="https://clientsite.com/wp-json"

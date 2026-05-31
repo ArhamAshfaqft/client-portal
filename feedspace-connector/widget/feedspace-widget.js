@@ -1,4 +1,7 @@
-"use strict";(()=>{var W=`
+"use strict";
+(() => {
+  // src/widget/styles.ts
+  var STYLES = `
 #feedspace-widget-root *,
 #feedspace-widget-root *::before,
 #feedspace-widget-root *::after {
@@ -624,59 +627,815 @@
 .feedspace-draw-preview {
   pointer-events: none;
 }
-`,D=!1;function P(){if(D)return;let l=document.createElement("style");l.textContent=W,document.head.appendChild(l),D=!0}function F(l,e,t,i){async function o(s,a={}){let d=`${l.replace(/\/+$/,"")}/api${s}`,c=await fetch(d,{...a,headers:{"Content-Type":"application/json",...a.headers}});if(!c.ok)throw new Error(`API error ${c.status}: ${await c.text()}`);return c.json()}async function r(s,a,d){let c=`${t.replace(/\/+$/,"")}/wp-json/feedspace/v1${a}`,p=await fetch(c,{method:s,headers:{"Content-Type":"application/json","X-Feedspace-Key":i},body:d?JSON.stringify(d):void 0});if(!p.ok)throw new Error(`WordPress API error ${p.status}: ${await p.text()}`);return p.json()}let n=!!(t&&i);return{verifyToken:()=>o("/widget/verify-token",{method:"POST",body:JSON.stringify({token:e})}),getAnnotations:(s,a)=>n?r("GET",`/annotations?pageUrl=${encodeURIComponent(s)}&projectId=${encodeURIComponent(a)}`):o(`/widget/annotations?token=${encodeURIComponent(e)}&pageUrl=${encodeURIComponent(s)}`),createAnnotation:s=>n?r("POST","/annotations",s):o("/widget/annotations",{method:"POST",body:JSON.stringify(s)}),updateAnnotation:(s,a)=>n?r("PATCH",`/annotations/${s}`,a):o(`/widget/annotations/${s}`,{method:"PATCH",body:JSON.stringify(a)}),deleteAnnotation:s=>n?r("DELETE",`/annotations/${s}`):o(`/widget/annotations/${s}`,{method:"DELETE"})}}function H(l){let e=l.closest("[data-feedspace-widget-id]");if(e)return e.getAttribute("data-feedspace-widget-id");let t=l.closest("[data-id]");return t?t.getAttribute("data-id"):null}function Y(l){if(l.id)return`#${CSS.escape(l.id)}`;let e=H(l);if(e)return`[data-id="${e}"]`;let t=[],i=l;for(;i&&i!==document.body;){let o=i.tagName.toLowerCase(),r=i.parentElement;if(r){let s=Array.from(r.children).filter(a=>a.tagName===i.tagName).indexOf(i)+1;t.unshift(`${o}:nth-of-type(${s})`)}else t.unshift(o);i=r}return t.join(" > ")}function M(l){return(l.textContent||"").trim().slice(0,80)}function B(l){let e=l.tagName.toLowerCase(),t=M(l),i=Array.from(l.attributes).filter(n=>["class","style","src","href","alt","title"].includes(n.name)).map(n=>`${n.name}=${n.value}`).join("|"),o=`${e}|${t}|${i}`,r=0;for(let n=0;n<o.length;n++){let s=o.charCodeAt(n);r=(r<<5)-r+s,r|=0}return Math.abs(r).toString(36)}function N(l){let e=l,t=l.closest("[data-feedspace-widget-id],[data-id]");return t&&(e=t),{selector:Y(e),tag:e.tagName.toLowerCase(),text:M(e),fingerprint:B(e),dataId:H(e)}}function x(l){if(l.selector)try{let t=document.querySelector(l.selector);if(t)return t}catch{}if(l.dataId){let t=document.querySelector(`[data-id="${l.dataId}"]`);if(t)return t}let e=document.querySelectorAll(l.tag);for(let t of e){let i=M(t);if(i===l.text||i.includes(l.text))return t}for(let t of e)if(B(t)===l.fingerprint)return t;return null}function R(l){let e=l.closest("[data-feedspace-widget-id],[data-id]");if(e)return e;let t=l.closest("h1,h2,h3,h4,h5,h6,p,a,button,img,section,article,figure");return t||l}function y(l,e,t){let i=l.getBoundingClientRect();return{x:(e-i.left-window.scrollX)/i.width*100,y:(t-i.top-window.scrollY)/i.height*100}}function L(l,e,t){let i=l.getBoundingClientRect();return{x:i.left+window.scrollX+i.width*e/100,y:i.top+window.scrollY+i.height*t/100}}var A=class{constructor(){this.svg=null;this.annotations=[];this.callbacks=null;this.filter="all";this.selectedId=null}init(e){this.callbacks=e,this.createSVG()}createSVG(){let e=document.getElementById("feedspace-overlay");e||(e=document.createElementNS("http://www.w3.org/2000/svg","svg"),e.id="feedspace-overlay",document.body.appendChild(e)),this.svg=e}setAnnotations(e){this.annotations=e,this.renderAll()}setFilter(e){this.filter=e,this.renderAll()}setSelected(e){this.selectedId=e,this.renderAll()}getFiltered(){return this.filter==="all"?this.annotations:this.annotations.filter(e=>e.status===this.filter)}renderAll(){if(!this.svg)return;for(;this.svg.firstChild;)this.svg.removeChild(this.svg.firstChild);let e=document.createElementNS("http://www.w3.org/2000/svg","defs"),t=document.createElementNS("http://www.w3.org/2000/svg","marker");t.setAttribute("id","feedspace-arrowhead"),t.setAttribute("markerWidth","10"),t.setAttribute("markerHeight","7"),t.setAttribute("refX","10"),t.setAttribute("refY","3.5"),t.setAttribute("orient","auto");let i=document.createElementNS("http://www.w3.org/2000/svg","polygon");i.setAttribute("points","0 0, 10 3.5, 0 7"),i.setAttribute("fill","#6366f1"),t.appendChild(i),e.appendChild(t),this.svg.appendChild(e);let o=this.getFiltered(),r=window.scrollX,n=window.scrollY;this.svg.setAttribute("style",`position:absolute;top:0;left:0;width:${document.documentElement.scrollWidth}px;height:${document.documentElement.scrollHeight}px;pointer-events:none;z-index:99998;`);for(let s=0;s<o.length;s++)this.renderOne(o[s],s,r,n)}renderOne(e,t,i,o){let r=e.elementDna?x(e.elementDna):null;if(!r)return;let n=L(r,e.anchorXPct,e.anchorYPct),s=this.createBadge(t+1,e.id,e.status);switch(e.type){case"pin":this.renderPin(n.x,n.y,s);break;case"rect":this.renderRect(e,r,n,s);break;case"arrow":this.renderArrow(e,r,n,s);break;case"draw":this.renderDraw(e,r,n,s);break}}renderPin(e,t,i){let o=document.createElementNS("http://www.w3.org/2000/svg","g");o.appendChild(i),o.setAttribute("transform",`translate(${e}, ${t})`),o.style.pointerEvents="auto",this.svg.appendChild(o)}renderRect(e,t,i,o){let r=t.getBoundingClientRect(),n=e.widthPct?r.width*e.widthPct/100:80,s=e.heightPct?r.height*e.heightPct/100:60,a=document.createElementNS("http://www.w3.org/2000/svg","g"),d=document.createElementNS("http://www.w3.org/2000/svg","rect");d.setAttribute("x",String(i.x)),d.setAttribute("y",String(i.y)),d.setAttribute("width",String(n)),d.setAttribute("height",String(s)),d.setAttribute("fill","rgba(99, 102, 241, 0.08)"),d.setAttribute("stroke","#6366f1"),d.setAttribute("stroke-width","2"),d.setAttribute("stroke-dasharray","6,3"),d.setAttribute("rx","4"),a.appendChild(d),o.setAttribute("transform",`translate(${i.x-8}, ${i.y-8})`),a.appendChild(o),a.style.pointerEvents="auto",this.svg.appendChild(a)}renderArrow(e,t,i,o){let r=i.x+100,n=i.y+100;if(e.endElementDna){let d=x(e.endElementDna);if(d&&e.endAnchorXPct!=null&&e.endAnchorYPct!=null){let c=L(d,e.endAnchorXPct,e.endAnchorYPct);r=c.x,n=c.y}}let s=document.createElementNS("http://www.w3.org/2000/svg","g"),a=document.createElementNS("http://www.w3.org/2000/svg","line");a.setAttribute("x1",String(i.x)),a.setAttribute("y1",String(i.y)),a.setAttribute("x2",String(r)),a.setAttribute("y2",String(n)),a.setAttribute("stroke","#6366f1"),a.setAttribute("stroke-width","2"),a.setAttribute("marker-end","url(#feedspace-arrowhead)"),s.appendChild(a),o.setAttribute("transform",`translate(${i.x-8}, ${i.y-8})`),s.appendChild(o),s.style.pointerEvents="auto",this.svg.appendChild(s)}renderDraw(e,t,i,o){var n,s;let r=document.createElementNS("http://www.w3.org/2000/svg","g");if((n=e.drawData)!=null&&n.pathD){let a=document.createElementNS("http://www.w3.org/2000/svg","path");a.setAttribute("d",e.drawData.pathD),a.setAttribute("fill","none"),a.setAttribute("stroke","#6366f1"),a.setAttribute("stroke-width","2"),a.setAttribute("stroke-linecap","round"),a.setAttribute("stroke-linejoin","round"),r.appendChild(a)}if((s=e.drawData)!=null&&s.points&&e.drawData.points.length>1){let a=e.drawData.points,d=t.getBoundingClientRect(),c=document.createElementNS("http://www.w3.org/2000/svg","polyline"),p=a.map(h=>{let f=d.left+window.scrollX+d.width*h.x/100,u=d.top+window.scrollY+d.height*h.y/100;return`${f},${u}`}).join(" ");c.setAttribute("points",p),c.setAttribute("fill","none"),c.setAttribute("stroke","#6366f1"),c.setAttribute("stroke-width","2"),c.setAttribute("stroke-linecap","round"),c.setAttribute("stroke-linejoin","round"),r.appendChild(c)}o.setAttribute("transform",`translate(${i.x-8}, ${i.y-8})`),r.appendChild(o),r.style.pointerEvents="auto",this.svg.appendChild(r)}createBadge(e,t,i){let o=document.createElementNS("http://www.w3.org/2000/svg","g");o.setAttribute("data-annotation-id",t),o.classList.add("feedspace-annotation-pin"),o.style.cursor="pointer";let r="#6366f1";(i==="resolved"||i==="closed")&&(r="#10b981"),i==="in_progress"&&(r="#f59e0b");let n=document.createElementNS("http://www.w3.org/2000/svg","circle");n.setAttribute("cx","10"),n.setAttribute("cy","10"),n.setAttribute("r","10"),n.setAttribute("fill",r),n.setAttribute("stroke","#fff"),n.setAttribute("stroke-width","2");let s=document.createElementNS("http://www.w3.org/2000/svg","text");if(s.setAttribute("x","10"),s.setAttribute("y","10"),s.setAttribute("text-anchor","middle"),s.setAttribute("dominant-baseline","central"),s.setAttribute("fill","#fff"),s.setAttribute("font-size","11"),s.setAttribute("font-weight","600"),s.textContent=String(e),this.selectedId===t){let a=document.createElementNS("http://www.w3.org/2000/svg","circle");a.setAttribute("cx","10"),a.setAttribute("cy","10"),a.setAttribute("r","10"),a.setAttribute("fill","none"),a.setAttribute("stroke",r),a.setAttribute("stroke-width","2");let d=document.createElementNS("http://www.w3.org/2000/svg","animate");d.setAttribute("attributeName","r"),d.setAttribute("values","10;20;10"),d.setAttribute("dur","1.5s"),d.setAttribute("repeatCount","indefinite"),a.appendChild(d);let c=document.createElementNS("http://www.w3.org/2000/svg","animate");c.setAttribute("attributeName","opacity"),c.setAttribute("values","1;0;1"),c.setAttribute("dur","1.5s"),c.setAttribute("repeatCount","indefinite"),a.appendChild(c),o.appendChild(a)}return o.appendChild(n),o.appendChild(s),o.addEventListener("click",a=>{var d;a.stopPropagation(),(d=this.callbacks)==null||d.onAnnotationClick(t)}),o}destroy(){this.svg&&this.svg.parentNode&&this.svg.parentNode.removeChild(this.svg),this.svg=null,this.annotations=[]}};var E=class{constructor(){this.root=null;this.overlay=null;this.callbacks=null;this.annotation=null;this.files=[];this.inputEl=null;this.onClose=null}open(e,t,i){this.annotation=e,this.callbacks=t,this.onClose=i,this.files=[],this.render()}close(){this.overlay&&this.overlay.parentNode&&this.overlay.parentNode.removeChild(this.overlay),this.root&&this.root.parentNode&&this.root.parentNode.removeChild(this.root),this.overlay=null,this.root=null}render(){this.close(),this.overlay=document.createElement("div"),this.overlay.className="feedspace-panel-overlay",this.overlay.addEventListener("click",()=>this.close()),document.body.appendChild(this.overlay),this.root=document.createElement("div"),this.root.className="feedspace-panel";let e=!this.annotation,t=e?"Add Feedback":"Feedback Details",i=document.createElement("div");i.className="feedspace-panel-header",i.innerHTML=`
-      <span class="feedspace-panel-title">${t}</span>
+`;
+  var injected = false;
+  function injectStyles() {
+    if (injected) return;
+    const style = document.createElement("style");
+    style.textContent = STYLES;
+    document.head.appendChild(style);
+    injected = true;
+  }
+
+  // src/widget/api.ts
+  function createApiClient(baseUrl, token, wpApiUrl, wpApiKey) {
+    async function vercelRequest(path, options = {}) {
+      const url = `${baseUrl.replace(/\/+$/, "")}/api${path}`;
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers
+        }
+      });
+      if (!res.ok) {
+        throw new Error(`API error ${res.status}: ${await res.text()}`);
+      }
+      return res.json();
+    }
+    async function wpRequest(method, path, body) {
+      const url = `${wpApiUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1${path}`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Feedspace-Key": wpApiKey
+        },
+        body: body ? JSON.stringify(body) : void 0
+      });
+      if (!res.ok) {
+        throw new Error(`WordPress API error ${res.status}: ${await res.text()}`);
+      }
+      return res.json();
+    }
+    const useWp = !!(wpApiUrl && wpApiKey);
+    return {
+      verifyToken: () => vercelRequest(`/widget/verify-token`, {
+        method: "POST",
+        body: JSON.stringify({ token })
+      }),
+      getAnnotations: (pageUrl, projectId) => {
+        if (useWp) {
+          return wpRequest("GET", `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId)}`);
+        }
+        return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
+      },
+      createAnnotation: (payload) => {
+        if (useWp) {
+          return wpRequest("POST", "/annotations", payload);
+        }
+        return vercelRequest(`/widget/annotations`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+      },
+      updateAnnotation: (id, data) => {
+        if (useWp) {
+          return wpRequest("PATCH", `/annotations/${id}`, data);
+        }
+        return vercelRequest(`/widget/annotations/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(data)
+        });
+      },
+      deleteAnnotation: (id) => {
+        if (useWp) {
+          return wpRequest("DELETE", `/annotations/${id}`);
+        }
+        return vercelRequest(`/widget/annotations/${id}`, {
+          method: "DELETE"
+        });
+      }
+    };
+  }
+
+  // src/widget/element-dna.ts
+  function getDataId(el) {
+    const widget = el.closest("[data-feedspace-widget-id]");
+    if (widget) return widget.getAttribute("data-feedspace-widget-id");
+    const elWidget = el.closest("[data-id]");
+    if (elWidget) return elWidget.getAttribute("data-id");
+    return null;
+  }
+  function getSelector(el) {
+    if (el.id) return `#${CSS.escape(el.id)}`;
+    const dataId = getDataId(el);
+    if (dataId) return `[data-id="${dataId}"]`;
+    const path = [];
+    let current = el;
+    while (current && current !== document.body) {
+      const tag = current.tagName.toLowerCase();
+      const parent = current.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children).filter(
+          (s) => s.tagName === current.tagName
+        );
+        const idx = siblings.indexOf(current) + 1;
+        path.unshift(`${tag}:nth-of-type(${idx})`);
+      } else {
+        path.unshift(tag);
+      }
+      current = parent;
+    }
+    return path.join(" > ");
+  }
+  function getTextContent(el) {
+    return (el.textContent || "").trim().slice(0, 80);
+  }
+  function getFingerprint(el) {
+    const tag = el.tagName.toLowerCase();
+    const text = getTextContent(el);
+    const attrs = Array.from(el.attributes).filter((a) => ["class", "style", "src", "href", "alt", "title"].includes(a.name)).map((a) => `${a.name}=${a.value}`).join("|");
+    const raw = `${tag}|${text}|${attrs}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      const chr = raw.charCodeAt(i);
+      hash = (hash << 5) - hash + chr;
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36);
+  }
+  function getElementDNA(el) {
+    let target = el;
+    const widget = el.closest("[data-feedspace-widget-id],[data-id]");
+    if (widget) target = widget;
+    return {
+      selector: getSelector(target),
+      tag: target.tagName.toLowerCase(),
+      text: getTextContent(target),
+      fingerprint: getFingerprint(target),
+      dataId: getDataId(target)
+    };
+  }
+  function findElement(dna) {
+    if (dna.selector) {
+      try {
+        const match = document.querySelector(dna.selector);
+        if (match) return match;
+      } catch {
+      }
+    }
+    if (dna.dataId) {
+      const match = document.querySelector(`[data-id="${dna.dataId}"]`);
+      if (match) return match;
+    }
+    const allTag = document.querySelectorAll(dna.tag);
+    for (const el of allTag) {
+      const text = getTextContent(el);
+      if (text === dna.text) return el;
+      if (text.includes(dna.text)) return el;
+    }
+    for (const el of allTag) {
+      if (getFingerprint(el) === dna.fingerprint) return el;
+    }
+    return null;
+  }
+  function closestTargetable(el) {
+    const widget = el.closest("[data-feedspace-widget-id],[data-id]");
+    if (widget) return widget;
+    const semantic = el.closest("h1,h2,h3,h4,h5,h6,p,a,button,img,section,article,figure");
+    if (semantic) return semantic;
+    return el;
+  }
+  function toRelative(el, pageX, pageY) {
+    const rect = el.getBoundingClientRect();
+    return {
+      x: (pageX - rect.left - window.scrollX) / rect.width * 100,
+      y: (pageY - rect.top - window.scrollY) / rect.height * 100
+    };
+  }
+  function toAbsolute(el, xPct, yPct) {
+    const rect = el.getBoundingClientRect();
+    return {
+      x: rect.left + window.scrollX + rect.width * xPct / 100,
+      y: rect.top + window.scrollY + rect.height * yPct / 100
+    };
+  }
+
+  // src/widget/annotation-renderer.ts
+  var AnnotationRenderer = class {
+    constructor() {
+      this.svg = null;
+      this.annotations = [];
+      this.callbacks = null;
+      this.filter = "all";
+      this.selectedId = null;
+    }
+    init(callbacks) {
+      this.callbacks = callbacks;
+      this.createSVG();
+    }
+    createSVG() {
+      let svg = document.getElementById("feedspace-overlay");
+      if (!svg) {
+        svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = "feedspace-overlay";
+        document.body.appendChild(svg);
+      }
+      this.svg = svg;
+    }
+    setAnnotations(annotations) {
+      this.annotations = annotations;
+      this.renderAll();
+    }
+    setFilter(filter) {
+      this.filter = filter;
+      this.renderAll();
+    }
+    setSelected(id) {
+      this.selectedId = id;
+      this.renderAll();
+    }
+    getFiltered() {
+      if (this.filter === "all") return this.annotations;
+      return this.annotations.filter((a) => a.status === this.filter);
+    }
+    renderAll() {
+      if (!this.svg) return;
+      while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", "feedspace-arrowhead");
+      marker.setAttribute("markerWidth", "10");
+      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("refX", "10");
+      marker.setAttribute("refY", "3.5");
+      marker.setAttribute("orient", "auto");
+      const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      arrowPath.setAttribute("points", "0 0, 10 3.5, 0 7");
+      arrowPath.setAttribute("fill", "#6366f1");
+      marker.appendChild(arrowPath);
+      defs.appendChild(marker);
+      this.svg.appendChild(defs);
+      const filtered = this.getFiltered();
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+      this.svg.setAttribute(
+        "style",
+        `position:absolute;top:0;left:0;width:${document.documentElement.scrollWidth}px;height:${document.documentElement.scrollHeight}px;pointer-events:none;z-index:99998;`
+      );
+      for (let i = 0; i < filtered.length; i++) {
+        this.renderOne(filtered[i], i, scrollX, scrollY);
+      }
+    }
+    renderOne(annotation, index, scrollX, scrollY) {
+      const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
+      if (!el) return;
+      const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
+      const badge = this.createBadge(index + 1, annotation.id, annotation.status);
+      switch (annotation.type) {
+        case "pin":
+          this.renderPin(anchor.x, anchor.y, badge);
+          break;
+        case "rect":
+          this.renderRect(annotation, el, anchor, badge);
+          break;
+        case "arrow":
+          this.renderArrow(annotation, el, anchor, badge);
+          break;
+        case "draw":
+          this.renderDraw(annotation, el, anchor, badge);
+          break;
+      }
+    }
+    renderPin(x, y, badge) {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.appendChild(badge);
+      g.setAttribute("transform", `translate(${x}, ${y})`);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderRect(annotation, el, anchor, badge) {
+      const rect = el.getBoundingClientRect();
+      const w = annotation.widthPct ? rect.width * annotation.widthPct / 100 : 80;
+      const h = annotation.heightPct ? rect.height * annotation.heightPct / 100 : 60;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      r.setAttribute("x", String(anchor.x));
+      r.setAttribute("y", String(anchor.y));
+      r.setAttribute("width", String(w));
+      r.setAttribute("height", String(h));
+      r.setAttribute("fill", "rgba(99, 102, 241, 0.08)");
+      r.setAttribute("stroke", "#6366f1");
+      r.setAttribute("stroke-width", "2");
+      r.setAttribute("stroke-dasharray", "6,3");
+      r.setAttribute("rx", "4");
+      g.appendChild(r);
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderArrow(annotation, el, anchor, badge) {
+      let endX = anchor.x + 100;
+      let endY = anchor.y + 100;
+      if (annotation.endElementDna) {
+        const endEl = findElement(annotation.endElementDna);
+        if (endEl && annotation.endAnchorXPct != null && annotation.endAnchorYPct != null) {
+          const endPos = toAbsolute(endEl, annotation.endAnchorXPct, annotation.endAnchorYPct);
+          endX = endPos.x;
+          endY = endPos.y;
+        }
+      }
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", String(anchor.x));
+      line.setAttribute("y1", String(anchor.y));
+      line.setAttribute("x2", String(endX));
+      line.setAttribute("y2", String(endY));
+      line.setAttribute("stroke", "#6366f1");
+      line.setAttribute("stroke-width", "2");
+      line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+      g.appendChild(line);
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderDraw(annotation, el, anchor, badge) {
+      var _a, _b;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      if ((_a = annotation.drawData) == null ? void 0 : _a.pathD) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", annotation.drawData.pathD);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#6366f1");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        g.appendChild(path);
+      }
+      if (((_b = annotation.drawData) == null ? void 0 : _b.points) && annotation.drawData.points.length > 1) {
+        const points = annotation.drawData.points;
+        const rect = el.getBoundingClientRect();
+        const pl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        const ptsStr = points.map((p) => {
+          const absX = rect.left + window.scrollX + rect.width * p.x / 100;
+          const absY = rect.top + window.scrollY + rect.height * p.y / 100;
+          return `${absX},${absY}`;
+        }).join(" ");
+        pl.setAttribute("points", ptsStr);
+        pl.setAttribute("fill", "none");
+        pl.setAttribute("stroke", "#6366f1");
+        pl.setAttribute("stroke-width", "2");
+        pl.setAttribute("stroke-linecap", "round");
+        pl.setAttribute("stroke-linejoin", "round");
+        g.appendChild(pl);
+      }
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    createBadge(num, id, status) {
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("data-annotation-id", id);
+      g.classList.add("feedspace-annotation-pin");
+      g.style.cursor = "pointer";
+      let color = "#6366f1";
+      if (status === "resolved" || status === "closed") color = "#10b981";
+      if (status === "in_progress") color = "#f59e0b";
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", "10");
+      circle.setAttribute("cy", "10");
+      circle.setAttribute("r", "10");
+      circle.setAttribute("fill", color);
+      circle.setAttribute("stroke", "#fff");
+      circle.setAttribute("stroke-width", "2");
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", "10");
+      text.setAttribute("y", "10");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("fill", "#fff");
+      text.setAttribute("font-size", "11");
+      text.setAttribute("font-weight", "600");
+      text.textContent = String(num);
+      if (this.selectedId === id) {
+        const pulse = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        pulse.setAttribute("cx", "10");
+        pulse.setAttribute("cy", "10");
+        pulse.setAttribute("r", "10");
+        pulse.setAttribute("fill", "none");
+        pulse.setAttribute("stroke", color);
+        pulse.setAttribute("stroke-width", "2");
+        const anim = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+        anim.setAttribute("attributeName", "r");
+        anim.setAttribute("values", "10;20;10");
+        anim.setAttribute("dur", "1.5s");
+        anim.setAttribute("repeatCount", "indefinite");
+        pulse.appendChild(anim);
+        const animOpacity = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+        animOpacity.setAttribute("attributeName", "opacity");
+        animOpacity.setAttribute("values", "1;0;1");
+        animOpacity.setAttribute("dur", "1.5s");
+        animOpacity.setAttribute("repeatCount", "indefinite");
+        pulse.appendChild(animOpacity);
+        g.appendChild(pulse);
+      }
+      g.appendChild(circle);
+      g.appendChild(text);
+      g.addEventListener("click", (e) => {
+        var _a;
+        e.stopPropagation();
+        (_a = this.callbacks) == null ? void 0 : _a.onAnnotationClick(id);
+      });
+      return g;
+    }
+    destroy() {
+      if (this.svg && this.svg.parentNode) {
+        this.svg.parentNode.removeChild(this.svg);
+      }
+      this.svg = null;
+      this.annotations = [];
+    }
+  };
+
+  // src/widget/comment-panel.ts
+  var CommentPanel = class {
+    constructor() {
+      this.root = null;
+      this.overlay = null;
+      this.callbacks = null;
+      this.annotation = null;
+      this.files = [];
+      this.inputEl = null;
+      this.onClose = null;
+    }
+    open(annotation, callbacks, onClose) {
+      this.annotation = annotation;
+      this.callbacks = callbacks;
+      this.onClose = onClose;
+      this.files = [];
+      this.render();
+    }
+    close() {
+      if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
+      if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
+      this.overlay = null;
+      this.root = null;
+    }
+    render() {
+      this.close();
+      this.overlay = document.createElement("div");
+      this.overlay.className = "feedspace-panel-overlay";
+      this.overlay.addEventListener("click", () => this.close());
+      document.body.appendChild(this.overlay);
+      this.root = document.createElement("div");
+      this.root.className = "feedspace-panel";
+      const isNew = !this.annotation;
+      const title = isNew ? "Add Feedback" : "Feedback Details";
+      const header = document.createElement("div");
+      header.className = "feedspace-panel-header";
+      header.innerHTML = `
+      <span class="feedspace-panel-title">${title}</span>
       <button class="feedspace-panel-close" id="feedspace-panel-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-    `,this.root.appendChild(i),i.querySelector("#feedspace-panel-close").addEventListener("click",()=>this.close());let o=document.createElement("div");if(o.className="feedspace-panel-body",!e&&this.annotation){let f=document.createElement("div");if(f.className="feedspace-feedback-item",f.style.cursor="default",f.innerHTML=`
+    `;
+      this.root.appendChild(header);
+      header.querySelector("#feedspace-panel-close").addEventListener("click", () => this.close());
+      const body = document.createElement("div");
+      body.className = "feedspace-panel-body";
+      if (!isNew && this.annotation) {
+        const info = document.createElement("div");
+        info.className = "feedspace-feedback-item";
+        info.style.cursor = "default";
+        info.innerHTML = `
         <div class="feedspace-feedback-item-header">
           <span class="feedspace-feedback-type">${this.annotation.type}</span>
-          <span class="feedspace-feedback-status ${this.annotation.status}">${this.annotation.status.replace("_"," ")}</span>
+          <span class="feedspace-feedback-status ${this.annotation.status}">${this.annotation.status.replace("_", " ")}</span>
         </div>
-        <div class="feedspace-feedback-content">${k(this.annotation.content)}</div>
-        <div class="feedspace-feedback-meta">${k(this.annotation.createdBy)} \xB7 ${new Date(this.annotation.createdAt).toLocaleString()}</div>
-      `,o.appendChild(f),this.annotation.replies&&this.annotation.replies.length>0){let u=document.createElement("div");u.style.cssText="font-size:13px;font-weight:600;color:#374151;margin:12px 0 8px;",u.textContent="Replies",o.appendChild(u);for(let v of this.annotation.replies){let m=document.createElement("div");m.className="feedspace-reply",m.innerHTML=`
-            <div class="feedspace-reply-text">${k(v.content)}</div>
-            <div class="feedspace-reply-meta">${k(v.createdBy)} \xB7 ${new Date(v.createdAt).toLocaleString()}</div>
-          `,o.appendChild(m)}}}let r=document.createElement("div");r.style.cssText="font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px;",r.textContent=e?"Add Comment":"Reply",o.appendChild(r);let n=document.createElement("textarea");n.className="feedspace-comment-input",n.placeholder="Type your feedback here...",n.rows=3,n.style.width="100%",o.appendChild(n),this.inputEl=n;let s=document.createElement("div");s.style.cssText="display:flex;gap:8px;margin-top:12px;",s.innerHTML=`
+        <div class="feedspace-feedback-content">${escHtml(this.annotation.content)}</div>
+        <div class="feedspace-feedback-meta">${escHtml(this.annotation.createdBy)} \xB7 ${new Date(this.annotation.createdAt).toLocaleString()}</div>
+      `;
+        body.appendChild(info);
+        if (this.annotation.replies && this.annotation.replies.length > 0) {
+          const repliesTitle = document.createElement("div");
+          repliesTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;margin:12px 0 8px;";
+          repliesTitle.textContent = "Replies";
+          body.appendChild(repliesTitle);
+          for (const reply of this.annotation.replies) {
+            const r = document.createElement("div");
+            r.className = "feedspace-reply";
+            r.innerHTML = `
+            <div class="feedspace-reply-text">${escHtml(reply.content)}</div>
+            <div class="feedspace-reply-meta">${escHtml(reply.createdBy)} \xB7 ${new Date(reply.createdAt).toLocaleString()}</div>
+          `;
+            body.appendChild(r);
+          }
+        }
+      }
+      const replyTitle = document.createElement("div");
+      replyTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px;";
+      replyTitle.textContent = isNew ? "Add Comment" : "Reply";
+      body.appendChild(replyTitle);
+      const input = document.createElement("textarea");
+      input.className = "feedspace-comment-input";
+      input.placeholder = "Type your feedback here...";
+      input.rows = 3;
+      input.style.width = "100%";
+      body.appendChild(input);
+      this.inputEl = input;
+      const mediaActions = document.createElement("div");
+      mediaActions.style.cssText = "display:flex;gap:8px;margin-top:12px;";
+      mediaActions.innerHTML = `
       <button class="feedspace-icon-btn" id="feedspace-attach-btn" title="Attach file">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
       </button>
       <button class="feedspace-icon-btn" id="feedspace-record-btn" title="Record voice">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
       </button>
-    `,o.appendChild(s);let a=document.createElement("input");a.type="file",a.multiple=!0,a.style.display="none",a.accept="image/*,video/*,audio/*,.pdf,.doc,.docx",o.appendChild(a);let d=document.createElement("div");d.id="feedspace-file-previews",o.appendChild(d);let c=document.createElement("div");c.id="feedspace-recording-indicator",c.style.display="none",c.className="feedspace-recording-indicator",c.innerHTML=`
+    `;
+      body.appendChild(mediaActions);
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      fileInput.accept = "image/*,video/*,audio/*,.pdf,.doc,.docx";
+      body.appendChild(fileInput);
+      const filePreviewContainer = document.createElement("div");
+      filePreviewContainer.id = "feedspace-file-previews";
+      body.appendChild(filePreviewContainer);
+      const recordingIndicator = document.createElement("div");
+      recordingIndicator.id = "feedspace-recording-indicator";
+      recordingIndicator.style.display = "none";
+      recordingIndicator.className = "feedspace-recording-indicator";
+      recordingIndicator.innerHTML = `
       <span class="feedspace-recording-dot"></span>
       <span class="feedspace-recording-time">0:00</span>
       <button class="feedspace-icon-btn" id="feedspace-stop-recording" style="margin-left:auto;color:#ef4444;border-color:#ef4444;">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
       </button>
-    `,o.appendChild(c),this.root.appendChild(o);let p=document.createElement("div");p.className="feedspace-panel-footer";let h=document.createElement("button");h.className="feedspace-submit-btn",h.style.width="100%",h.style.justifyContent="center",h.innerHTML=`
+    `;
+      body.appendChild(recordingIndicator);
+      this.root.appendChild(body);
+      const footer = document.createElement("div");
+      footer.className = "feedspace-panel-footer";
+      const submitBtn = document.createElement("button");
+      submitBtn.className = "feedspace-submit-btn";
+      submitBtn.style.width = "100%";
+      submitBtn.style.justifyContent = "center";
+      submitBtn.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      ${e?"Submit Feedback":"Send Reply"}
-    `,h.addEventListener("click",()=>this.handleSubmit()),p.appendChild(h),this.root.appendChild(p),document.body.appendChild(this.root),s.querySelector("#feedspace-attach-btn").addEventListener("click",()=>a.click()),s.querySelector("#feedspace-record-btn").addEventListener("click",()=>{var f,u,v;(f=this.callbacks)!=null&&f.isRecording?(u=this.callbacks)==null||u.onStopRecording():(v=this.callbacks)==null||v.onStartRecording()}),a.addEventListener("change",()=>{let f=Array.from(a.files||[]);this.files=[...this.files,...f],this.updateFilePreviews(d,a),a.value=""}),setTimeout(()=>n.focus(),100)}updateFilePreviews(e,t){e.innerHTML="";for(let i=0;i<this.files.length;i++){let o=this.files[i],r=document.createElement("div");r.className="feedspace-file-preview",r.innerHTML=`
+      ${isNew ? "Submit Feedback" : "Send Reply"}
+    `;
+      submitBtn.addEventListener("click", () => this.handleSubmit());
+      footer.appendChild(submitBtn);
+      this.root.appendChild(footer);
+      document.body.appendChild(this.root);
+      mediaActions.querySelector("#feedspace-attach-btn").addEventListener("click", () => fileInput.click());
+      mediaActions.querySelector("#feedspace-record-btn").addEventListener("click", () => {
+        var _a, _b, _c;
+        if ((_a = this.callbacks) == null ? void 0 : _a.isRecording) {
+          (_b = this.callbacks) == null ? void 0 : _b.onStopRecording();
+        } else {
+          (_c = this.callbacks) == null ? void 0 : _c.onStartRecording();
+        }
+      });
+      fileInput.addEventListener("change", () => {
+        const selected = Array.from(fileInput.files || []);
+        this.files = [...this.files, ...selected];
+        this.updateFilePreviews(filePreviewContainer, fileInput);
+        fileInput.value = "";
+      });
+      setTimeout(() => input.focus(), 100);
+    }
+    updateFilePreviews(container, fileInput) {
+      container.innerHTML = "";
+      for (let i = 0; i < this.files.length; i++) {
+        const f = this.files[i];
+        const div = document.createElement("div");
+        div.className = "feedspace-file-preview";
+        div.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span>${k(o.name)} (${(o.size/1024).toFixed(0)} KB)</span>
+        <span>${escHtml(f.name)} (${(f.size / 1024).toFixed(0)} KB)</span>
         <span class="remove" data-idx="${i}">&times;</span>
-      `,r.querySelector(".remove").addEventListener("click",()=>{this.files.splice(i,1),this.updateFilePreviews(e,t)}),e.appendChild(r)}}handleSubmit(){var t,i;let e=((t=this.inputEl)==null?void 0:t.value.trim())||"";!e&&this.files.length===0||((i=this.callbacks)==null||i.onSubmit(e,this.files),this.inputEl&&(this.inputEl.value=""),this.files=[])}};function k(l){let e=document.createElement("div");return e.textContent=l,e.innerHTML}var S=class{constructor(){this.root=null;this.overlay=null;this.callbacks=null;this.annotations=[];this.currentFilter="all";this.onClose=null}open(e,t,i){this.annotations=e,this.callbacks=t,this.onClose=i,this.render()}close(){this.overlay&&this.overlay.parentNode&&this.overlay.parentNode.removeChild(this.overlay),this.root&&this.root.parentNode&&this.root.parentNode.removeChild(this.root),this.overlay=null,this.root=null}updateAnnotations(e){this.annotations=e,this.root&&this.renderList()}render(){this.close(),this.overlay=document.createElement("div"),this.overlay.className="feedspace-panel-overlay",this.overlay.addEventListener("click",()=>this.close()),document.body.appendChild(this.overlay),this.root=document.createElement("div"),this.root.className="feedspace-panel";let e=document.createElement("div");e.className="feedspace-panel-header",e.innerHTML=`
+      `;
+        div.querySelector(".remove").addEventListener("click", () => {
+          this.files.splice(i, 1);
+          this.updateFilePreviews(container, fileInput);
+        });
+        container.appendChild(div);
+      }
+    }
+    handleSubmit() {
+      var _a, _b;
+      const content = ((_a = this.inputEl) == null ? void 0 : _a.value.trim()) || "";
+      if (!content && this.files.length === 0) return;
+      (_b = this.callbacks) == null ? void 0 : _b.onSubmit(content, this.files);
+      if (this.inputEl) this.inputEl.value = "";
+      this.files = [];
+    }
+  };
+  function escHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // src/widget/feedback-list.ts
+  var FeedbackListPanel = class {
+    constructor() {
+      this.root = null;
+      this.overlay = null;
+      this.callbacks = null;
+      this.annotations = [];
+      this.currentFilter = "all";
+      this.onClose = null;
+    }
+    open(annotations, callbacks, onClose) {
+      this.annotations = annotations;
+      this.callbacks = callbacks;
+      this.onClose = onClose;
+      this.render();
+    }
+    close() {
+      if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
+      if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
+      this.overlay = null;
+      this.root = null;
+    }
+    updateAnnotations(annotations) {
+      this.annotations = annotations;
+      if (this.root) {
+        this.renderList();
+      }
+    }
+    render() {
+      this.close();
+      this.overlay = document.createElement("div");
+      this.overlay.className = "feedspace-panel-overlay";
+      this.overlay.addEventListener("click", () => this.close());
+      document.body.appendChild(this.overlay);
+      this.root = document.createElement("div");
+      this.root.className = "feedspace-panel";
+      const header = document.createElement("div");
+      header.className = "feedspace-panel-header";
+      header.innerHTML = `
       <span class="feedspace-panel-title">Feedback List</span>
       <button class="feedspace-panel-close" id="feedback-list-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-    `,this.root.appendChild(e),e.querySelector("#feedback-list-close").addEventListener("click",()=>this.close());let t=document.createElement("div");t.className="feedspace-filter-tabs";let i=[{value:"all",label:"All"},{value:"open",label:"Open"},{value:"in_progress",label:"In Progress"},{value:"resolved",label:"Resolved"}];for(let r of i){let n=document.createElement("button");n.className=`feedspace-filter-tab${this.currentFilter===r.value?" active":""}`,n.textContent=r.label,n.dataset.filter=r.value,n.addEventListener("click",()=>{var s;this.currentFilter=r.value,t.querySelectorAll(".feedspace-filter-tab").forEach(a=>a.classList.remove("active")),n.classList.add("active"),(s=this.callbacks)==null||s.onFilterChange(r.value)}),t.appendChild(n)}this.root.appendChild(t);let o=document.createElement("div");o.className="feedspace-panel-body",o.id="feedback-list-body",this.root.appendChild(o),document.body.appendChild(this.root),this.renderList()}renderList(){var i;let e=(i=this.root)==null?void 0:i.querySelector("#feedback-list-body");if(!e)return;e.innerHTML="";let t=this.currentFilter==="all"?this.annotations:this.annotations.filter(o=>o.status===this.currentFilter);if(t.length===0){e.innerHTML=`
+    `;
+      this.root.appendChild(header);
+      header.querySelector("#feedback-list-close").addEventListener("click", () => this.close());
+      const filters = document.createElement("div");
+      filters.className = "feedspace-filter-tabs";
+      const filterOptions = [
+        { value: "all", label: "All" },
+        { value: "open", label: "Open" },
+        { value: "in_progress", label: "In Progress" },
+        { value: "resolved", label: "Resolved" }
+      ];
+      for (const opt of filterOptions) {
+        const btn = document.createElement("button");
+        btn.className = `feedspace-filter-tab${this.currentFilter === opt.value ? " active" : ""}`;
+        btn.textContent = opt.label;
+        btn.dataset.filter = opt.value;
+        btn.addEventListener("click", () => {
+          var _a;
+          this.currentFilter = opt.value;
+          filters.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          (_a = this.callbacks) == null ? void 0 : _a.onFilterChange(opt.value);
+        });
+        filters.appendChild(btn);
+      }
+      this.root.appendChild(filters);
+      const body = document.createElement("div");
+      body.className = "feedspace-panel-body";
+      body.id = "feedback-list-body";
+      this.root.appendChild(body);
+      document.body.appendChild(this.root);
+      this.renderList();
+    }
+    renderList() {
+      var _a;
+      const body = (_a = this.root) == null ? void 0 : _a.querySelector("#feedback-list-body");
+      if (!body) return;
+      body.innerHTML = "";
+      const filtered = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      if (filtered.length === 0) {
+        body.innerHTML = `
         <div class="feedspace-empty-state">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
           <p>No feedback items yet</p>
         </div>
-      `;return}for(let o of t){let r=document.createElement("div");r.className="feedspace-feedback-item",r.dataset.annotationId=o.id,r.innerHTML=`
+      `;
+        return;
+      }
+      for (const annotation of filtered) {
+        const item = document.createElement("div");
+        item.className = "feedspace-feedback-item";
+        item.dataset.annotationId = annotation.id;
+        item.innerHTML = `
         <div class="feedspace-feedback-item-header">
-          <span class="feedspace-feedback-type">${o.type}</span>
-          <span class="feedspace-feedback-status ${o.status}">${o.status.replace("_"," ")}</span>
+          <span class="feedspace-feedback-type">${annotation.type}</span>
+          <span class="feedspace-feedback-status ${annotation.status}">${annotation.status.replace("_", " ")}</span>
         </div>
-        <div class="feedspace-feedback-content">${j(o.content)}</div>
-        <div class="feedspace-feedback-meta">${j(o.createdBy)} \xB7 ${new Date(o.createdAt).toLocaleString()}</div>
-      `,r.addEventListener("click",()=>{var n;e.querySelectorAll(".feedspace-feedback-item").forEach(s=>s.classList.remove("highlight")),r.classList.add("highlight"),(n=this.callbacks)==null||n.onSelectAnnotation(o.id)}),e.appendChild(r)}}};function j(l){let e=document.createElement("div");return e.textContent=l,e.innerHTML}async function $(l,e,t,i){let o=new FormData;o.append("file",t),i&&o.append("project_id",i);let r=l.replace(/\/+$/,""),n=await fetch(`${r}/wp-json/feedspace/v1/media`,{method:"POST",headers:{"X-Feedspace-Key":e},body:o});if(!n.ok)throw new Error(`WordPress upload failed: ${n.status}`);return n.json()}function g(l,e){let t=window.__feedspaceDebug;t&&Array.isArray(t)&&t.push({msg:l,data:e,time:Date.now()}),console.log("[Feedspace]",l,e||"")}var b={select:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',pin:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',rect:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>',arrow:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',draw:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',list:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',desktop:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',tablet:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',mobile:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',submit:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'},C=class{constructor(e,t){this.annotations=[];this.currentTool="select";this.deviceMode="desktop";this.filterMode="all";this.clientName="";this.isDrawing=!1;this.drawStart=null;this.drawPoints=[];this.tempSvgEl=null;this.isRecording=!1;this.mediaRecorder=null;this.audioChunks=[];this.recordingStartTime=0;this.recordingTimer=null;this.toolbarRoot=null;this.nameModal=null;this.hoverHighlightEl=null;this.config=e,this.api=t,this.renderer=new A,this.commentPanel=new E,this.feedbackList=new S}async init(){if(g("AnnotationEngine.init() called"),this.clientName=localStorage.getItem("feedspace_client_name")||"",g("clientName from localStorage:",this.clientName||"(empty)"),!this.clientName){g("No client name \u2014 showing name modal"),this.showNameModal();return}g("Client name found \u2014 booting directly"),this.boot()}showNameModal(){if(g("showNameModal() called"),this.nameModal){g("nameModal already exists \u2014 skipping");return}let e=document.createElement("div");e.className="feedspace-name-modal",e.innerHTML=`
+        <div class="feedspace-feedback-content">${escHtml2(annotation.content)}</div>
+        <div class="feedspace-feedback-meta">${escHtml2(annotation.createdBy)} \xB7 ${new Date(annotation.createdAt).toLocaleString()}</div>
+      `;
+        item.addEventListener("click", () => {
+          var _a2;
+          body.querySelectorAll(".feedspace-feedback-item").forEach((el) => el.classList.remove("highlight"));
+          item.classList.add("highlight");
+          (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(annotation.id);
+        });
+        body.appendChild(item);
+      }
+    }
+  };
+  function escHtml2(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // src/widget/uploader.ts
+  async function uploadToWordPress(wpApiUrl, wpApiKey, file, projectId) {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (projectId) formData.append("project_id", projectId);
+    const baseUrl = wpApiUrl.replace(/\/+$/, "");
+    const res = await fetch(`${baseUrl}/wp-json/feedspace/v1/media`, {
+      method: "POST",
+      headers: { "X-Feedspace-Key": wpApiKey },
+      body: formData
+    });
+    if (!res.ok) {
+      throw new Error(`WordPress upload failed: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // src/widget/annotation-engine.ts
+  function dbg(msg, data) {
+    const arr = window.__feedspaceDebug;
+    if (arr && Array.isArray(arr)) {
+      arr.push({ msg, data, time: Date.now() });
+    }
+    console.log("[Feedspace]", msg, data || "");
+  }
+  var SVG_ICONS = {
+    select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
+    pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+    rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>',
+    arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+    draw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
+    list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    mobile: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    submit: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
+  };
+  var AnnotationEngine = class {
+    constructor(config, api) {
+      this.annotations = [];
+      this.currentTool = "select";
+      this.deviceMode = "desktop";
+      this.filterMode = "all";
+      this.clientName = "";
+      this.isDrawing = false;
+      this.drawStart = null;
+      this.drawPoints = [];
+      this.tempSvgEl = null;
+      this.isRecording = false;
+      this.mediaRecorder = null;
+      this.audioChunks = [];
+      this.recordingStartTime = 0;
+      this.recordingTimer = null;
+      this.toolbarRoot = null;
+      this.nameModal = null;
+      this.hoverHighlightEl = null;
+      this.config = config;
+      this.api = api;
+      this.renderer = new AnnotationRenderer();
+      this.commentPanel = new CommentPanel();
+      this.feedbackList = new FeedbackListPanel();
+    }
+    async init() {
+      dbg("AnnotationEngine.init() called");
+      this.clientName = localStorage.getItem("feedspace_client_name") || "";
+      dbg("clientName from localStorage:", this.clientName || "(empty)");
+      if (!this.clientName) {
+        dbg("No client name \u2014 showing name modal");
+        this.showNameModal();
+        return;
+      }
+      dbg("Client name found \u2014 booting directly");
+      this.boot();
+    }
+    showNameModal() {
+      dbg("showNameModal() called");
+      if (this.nameModal) {
+        dbg("nameModal already exists \u2014 skipping");
+        return;
+      }
+      const modal = document.createElement("div");
+      modal.className = "feedspace-name-modal";
+      modal.innerHTML = `
       <div class="feedspace-name-modal-card">
         <h3>What is your name?</h3>
         <p>This will be shown with your feedback.</p>
@@ -686,42 +1445,556 @@
           <button class="confirm" id="feedspace-name-continue">Continue</button>
         </div>
       </div>
-    `,document.body.appendChild(e),this.nameModal=e,g("Name modal appended to body");let t=e.querySelector("#feedspace-name-input");t.focus(),e.querySelector("#feedspace-name-skip").addEventListener("click",()=>{this.clientName="Anonymous",localStorage.setItem("feedspace_client_name",this.clientName),this.destroyNameModal(),this.boot()}),e.querySelector("#feedspace-name-continue").addEventListener("click",()=>{this.clientName=t.value.trim()||"Anonymous",localStorage.setItem("feedspace_client_name",this.clientName),this.destroyNameModal(),this.boot()}),t.addEventListener("keydown",i=>{var o;i.key==="Enter"&&((o=e.querySelector("#feedspace-name-continue"))==null||o.click())})}destroyNameModal(){this.nameModal&&this.nameModal.parentNode&&this.nameModal.parentNode.removeChild(this.nameModal),this.nameModal=null}boot(){g("boot() called \u2014 initializing renderer, toolbar, drawing, annotations"),this.renderer.init({onAnnotationClick:e=>this.onAnnotationClick(e)}),this.buildToolbar(),this.attachDrawingListeners(),this.loadAnnotations(),g("boot() complete")}buildToolbar(){var e,t;this.toolbarRoot=document.createElement("div"),this.toolbarRoot.id="feedspace-widget-root",this.toolbarRoot.innerHTML=`
+    `;
+      document.body.appendChild(modal);
+      this.nameModal = modal;
+      dbg("Name modal appended to body");
+      const input = modal.querySelector("#feedspace-name-input");
+      input.focus();
+      modal.querySelector("#feedspace-name-skip").addEventListener("click", () => {
+        this.clientName = "Anonymous";
+        localStorage.setItem("feedspace_client_name", this.clientName);
+        this.destroyNameModal();
+        this.boot();
+      });
+      modal.querySelector("#feedspace-name-continue").addEventListener("click", () => {
+        this.clientName = input.value.trim() || "Anonymous";
+        localStorage.setItem("feedspace_client_name", this.clientName);
+        this.destroyNameModal();
+        this.boot();
+      });
+      input.addEventListener("keydown", (e) => {
+        var _a;
+        if (e.key === "Enter") {
+          (_a = modal.querySelector("#feedspace-name-continue")) == null ? void 0 : _a.click();
+        }
+      });
+    }
+    destroyNameModal() {
+      if (this.nameModal && this.nameModal.parentNode) {
+        this.nameModal.parentNode.removeChild(this.nameModal);
+      }
+      this.nameModal = null;
+    }
+    boot() {
+      dbg("boot() called \u2014 initializing renderer, toolbar, drawing, annotations");
+      this.renderer.init({
+        onAnnotationClick: (id) => this.onAnnotationClick(id)
+      });
+      this.buildToolbar();
+      this.attachDrawingListeners();
+      this.loadAnnotations();
+      dbg("boot() complete");
+    }
+    buildToolbar() {
+      var _a, _b;
+      this.toolbarRoot = document.createElement("div");
+      this.toolbarRoot.id = "feedspace-widget-root";
+      this.toolbarRoot.innerHTML = `
       <div class="feedspace-toolbar">
         <div class="feedspace-toolbar-group">
           <div class="feedspace-toolbar-label">Tools</div>
-          <button class="feedspace-tool-btn active" data-tool="select" title="Select">${b.select}</button>
-          <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${b.pin}</button>
-          <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${b.rect}</button>
-          <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${b.arrow}</button>
-          <button class="feedspace-tool-btn" data-tool="draw" title="Freehand Draw">${b.draw}</button>
+          <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
+          <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+          <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
+          <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
+          <button class="feedspace-tool-btn" data-tool="draw" title="Freehand Draw">${SVG_ICONS.draw}</button>
         </div>
         <div class="feedspace-toolbar-divider"></div>
         <div class="feedspace-toolbar-group">
           <div class="feedspace-toolbar-label">View</div>
-          <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${b.desktop}</button>
-          <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${b.tablet}</button>
-          <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${b.mobile}</button>
+          <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
+          <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
+          <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
         </div>
         <div class="feedspace-toolbar-divider"></div>
         <div class="feedspace-toolbar-group">
           <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
-            ${b.list}
+            ${SVG_ICONS.list}
             <span class="badge" id="feedspace-list-count" style="display:none">0</span>
           </button>
         </div>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
-          ${b.submit}
+          ${SVG_ICONS.submit}
           Finish Review
         </button>
       </div>
-    `,document.body.appendChild(this.toolbarRoot),this.toolbarRoot.querySelectorAll("[data-tool]").forEach(i=>{i.addEventListener("click",()=>this.setTool(i.getAttribute("data-tool")))}),this.toolbarRoot.querySelectorAll("[data-device]").forEach(i=>{i.addEventListener("click",()=>this.setDevice(i.getAttribute("data-device")))}),(e=this.toolbarRoot.querySelector('[data-action="list"]'))==null||e.addEventListener("click",()=>{this.feedbackList.open(this.annotations,{onSelectAnnotation:i=>this.focusAnnotation(i),onFilterChange:i=>{this.filterMode=i,this.renderer.setFilter(i)}},()=>{})}),(t=this.toolbarRoot.querySelector('[data-action="submit"]'))==null||t.addEventListener("click",()=>{this.showToast("Feedback saved! Thanks for your input.")})}setTool(e){var i;this.currentTool=this.currentTool===e?"select":e,(i=this.toolbarRoot)==null||i.querySelectorAll("[data-tool]").forEach(o=>{o.classList.toggle("active",o.getAttribute("data-tool")===this.currentTool)}),document.body.setAttribute("data-feedspace-tool",this.currentTool),this.currentTool==="select"&&this.clearHoverHighlight();let t=document.getElementById("feedspace-overlay");t&&t.classList.toggle("feedspace-active",this.currentTool==="select"),this.cleanupDrawState()}setDevice(e){var o,r;this.deviceMode=e,(o=this.toolbarRoot)==null||o.querySelectorAll("[data-device]").forEach(n=>{n.classList.toggle("active",n.getAttribute("data-device")===e)});let t=document.body,i=document.getElementById("feedspace-viewport-wrapper");if(i&&((r=i.parentNode)==null||r.removeChild(i)),e==="desktop")t.style.maxWidth="",t.style.margin="",t.style.boxShadow="";else{let n=e==="tablet"?"768px":"375px";t.style.maxWidth=n,t.style.margin="0 auto",t.style.boxShadow="0 0 0 1px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.1)"}document.documentElement.style.background=e!=="desktop"?"#e5e7eb":"",this.renderer.renderAll()}attachDrawingListeners(){document.addEventListener("mousedown",e=>this.onMouseDown(e)),document.addEventListener("mousemove",e=>this.onMouseMove(e)),document.addEventListener("mouseup",e=>this.onMouseUp(e)),document.addEventListener("mouseleave",()=>this.clearHoverHighlight())}updateHoverHighlight(e){if(this.currentTool==="select"){this.clearHoverHighlight();return}let t=R(e.target);t!==this.hoverHighlightEl&&(this.clearHoverHighlight(),t&&t!==document.body&&(t.classList.add("feedspace-hover-highlight"),this.hoverHighlightEl=t))}clearHoverHighlight(){this.hoverHighlightEl&&(this.hoverHighlightEl.classList.remove("feedspace-hover-highlight"),this.hoverHighlightEl=null)}onMouseDown(e){var r;if(this.currentTool==="select"||e.button!==0||(r=e.target)!=null&&r.closest("#feedspace-widget-root, #feedspace-overlay, .feedspace-panel, .feedspace-panel-overlay, .feedspace-name-modal"))return;e.preventDefault(),this.isDrawing=!0;let t=R(e.target),i=N(t),o=y(t,e.pageX,e.pageY);this.drawStart={x:e.pageX,y:e.pageY,el:t,dna:i},this.drawPoints=[{x:o.x,y:o.y}],this.currentTool==="pin"&&this.finishDrawing(t,i,[{x:o.x,y:o.y}])}onMouseMove(e){if(!this.isDrawing||!this.drawStart){this.updateHoverHighlight(e);return}let t=document.getElementById("feedspace-overlay");if(!t)return;this.removeTempPreview(t);let i=this.drawStart.el,o=this.drawStart.dna,r=y(i,e.pageX,e.pageY);if(this.currentTool==="rect"){let n=i.getBoundingClientRect(),s=this.drawStart.x-window.scrollX,a=this.drawStart.y-window.scrollY,d=e.pageX-window.scrollX,c=e.pageY-window.scrollY,p=document.createElementNS("http://www.w3.org/2000/svg","rect");p.setAttribute("x",String(Math.min(s,d))),p.setAttribute("y",String(Math.min(a,c))),p.setAttribute("width",String(Math.abs(d-s))),p.setAttribute("height",String(Math.abs(c-a))),p.setAttribute("fill","rgba(99, 102, 241, 0.1)"),p.setAttribute("stroke","#6366f1"),p.setAttribute("stroke-width","2"),p.setAttribute("stroke-dasharray","6,3"),p.setAttribute("rx","4"),t.appendChild(p),this.tempSvgEl=p}if(this.currentTool==="arrow"){let n=document.createElementNS("http://www.w3.org/2000/svg","line");n.setAttribute("x1",String(this.drawStart.x)),n.setAttribute("y1",String(this.drawStart.y)),n.setAttribute("x2",String(e.pageX)),n.setAttribute("y2",String(e.pageY)),n.setAttribute("stroke","#6366f1"),n.setAttribute("stroke-width","2"),n.setAttribute("stroke-dasharray","5,3"),n.setAttribute("marker-end","url(#feedspace-arrowhead)"),t.appendChild(n),this.tempSvgEl=n}if(this.currentTool==="draw"){let n=y(i,e.pageX,e.pageY);this.drawPoints.push({x:n.x,y:n.y});let s=i.getBoundingClientRect(),a=document.createElementNS("http://www.w3.org/2000/svg","polyline"),d=this.drawPoints.map(c=>{let p=s.left+window.scrollX+s.width*c.x/100,h=s.top+window.scrollY+s.height*c.y/100;return`${p},${h}`}).join(" ");a.setAttribute("points",d),a.setAttribute("fill","none"),a.setAttribute("stroke","#6366f1"),a.setAttribute("stroke-width","2"),a.setAttribute("stroke-linecap","round"),a.setAttribute("stroke-linejoin","round"),t.appendChild(a),this.tempSvgEl=a}}onMouseUp(e){if(!this.isDrawing||!this.drawStart)return;if(this.currentTool==="pin"){this.isDrawing=!1;return}this.isDrawing=!1;let t=document.getElementById("feedspace-overlay");t&&this.removeTempPreview(t);let{el:i,dna:o}=this.drawStart;this.finishDrawing(i,o,this.drawPoints.length>1?this.drawPoints:[{x:50,y:50}])}removeTempPreview(e){this.tempSvgEl&&e.contains(this.tempSvgEl)&&e.removeChild(this.tempSvgEl),this.tempSvgEl=null}finishDrawing(e,t,i){let o=i[0],r=y(e,this.drawStart.x,this.drawStart.y);this.commentPanel.open(null,{onSubmit:(n,s)=>this.saveAnnotation(n,s,e,t,o,i),onStartRecording:()=>this.startRecording(),onStopRecording:()=>this.stopRecording(),onDeleteRecording:()=>this.deleteRecording(),isRecording:this.isRecording},()=>{}),this.cleanupDrawState()}cleanupDrawState(){this.isDrawing=!1,this.drawStart=null,this.drawPoints=[],this.tempSvgEl=null}async saveAnnotation(e,t,i,o,r,n){var u,v;let s=i.getBoundingClientRect(),a=n[n.length-1],d=this.currentTool==="arrow"?N(document.elementFromPoint(((u=this.drawStart)==null?void 0:u.x)||0,((v=this.drawStart)==null?void 0:v.y)||0)||i):null,c=null;this.currentTool==="draw"&&n.length>1&&(c=JSON.stringify({pathD:"",points:n.map(m=>({x:m.x,y:m.y}))}));let p={device:this.deviceMode,elementTag:o.tag,elementText:o.text},h=this.currentTool==="select"?"pin":this.currentTool,f={projectId:this.config.projectId,previewToken:this.config.token,type:h,content:e,pageUrl:this.config.pageUrl,selector:o.selector,elementDna:o,coordinatesX:r.x,coordinatesY:r.y,coordinatesXEnd:d&&a?a.x:null,coordinatesYEnd:d&&a?a.y:null,width:this.currentTool==="rect"?Math.abs(a.x-r.x):null,height:this.currentTool==="rect"?Math.abs(a.y-r.y):null,drawData:c,viewportWidth:window.innerWidth,viewportHeight:window.innerHeight,device:this.deviceMode,createdBy:this.clientName,metaData:p};try{let m=[];if(t.length>0)for(let z of t)try{let T=await $(this.config.wpApiUrl,this.config.wpApiKey,z,this.config.projectId);m.push(T.url)}catch(T){console.error("Upload failed",T)}let I=await this.api.createAnnotation(f);this.annotations.push(I),this.renderer.setAnnotations(this.annotations),this.updateBadge(),this.commentPanel.close(),this.showToast("Feedback saved!")}catch(m){console.error("Failed to save annotation",m),this.showToast("Failed to save feedback. Please try again.")}}async loadAnnotations(){try{this.annotations=await this.api.getAnnotations(this.config.pageUrl,this.config.projectId),g("loadAnnotations: fetched "+this.annotations.length+" annotations"),this.renderer.setAnnotations(this.annotations),this.updateBadge()}catch(e){console.error("Failed to load annotations",e),g("loadAnnotations: FAILED",String(e))}}onAnnotationClick(e){let t=this.annotations.find(i=>i.id===e);t&&(this.renderer.setSelected(e),this.commentPanel.open(t,{onSubmit:async(i,o)=>{try{let r=[];for(let s of o)try{let a=await $(this.config.wpApiUrl,this.config.wpApiKey,s,this.config.projectId);r.push(a.url)}catch{}let n=await this.api.updateAnnotation(e,{...t,replies:[...t.replies||[],{id:"",content:i,createdBy:this.clientName,createdAt:new Date().toISOString()}]});await this.loadAnnotations(),this.renderer.setSelected(null),this.commentPanel.close()}catch(r){console.error("Failed to add reply",r)}},onStartRecording:()=>this.startRecording(),onStopRecording:()=>this.stopRecording(),onDeleteRecording:()=>this.deleteRecording(),isRecording:this.isRecording},()=>{this.renderer.setSelected(null)}))}focusAnnotation(e){this.renderer.setSelected(e);let t=this.annotations.find(i=>i.id===e);if(t!=null&&t.elementDna){let i=x(t.elementDna);i&&i.scrollIntoView({behavior:"smooth",block:"center"})}}updateBadge(){let e=document.getElementById("feedspace-list-count");if(!e)return;let t=this.annotations.length;e.textContent=String(t),e.style.display=t>0?"":"none"}startRecording(){var e;(e=navigator.mediaDevices)!=null&&e.getUserMedia&&navigator.mediaDevices.getUserMedia({audio:!0}).then(t=>{this.mediaRecorder=new MediaRecorder(t),this.audioChunks=[],this.isRecording=!0,this.recordingStartTime=Date.now(),this.mediaRecorder.ondataavailable=i=>{i.data.size>0&&this.audioChunks.push(i.data)},this.mediaRecorder.onstop=()=>{t.getTracks().forEach(i=>i.stop())},this.mediaRecorder.start(),this.recordingTimer&&clearInterval(this.recordingTimer),this.recordingTimer=window.setInterval(()=>{let i=Math.floor((Date.now()-this.recordingStartTime)/1e3),o=Math.floor(i/60),r=i%60,n=document.getElementById("feedspace-recording-indicator");if(n){n.style.display="flex";let s=n.querySelector(".feedspace-recording-time");s&&(s.textContent=`${o}:${String(r).padStart(2,"0")}`)}},1e3)}).catch(()=>{this.showToast("Microphone access denied")})}stopRecording(){this.mediaRecorder&&this.mediaRecorder.state!=="inactive"&&this.mediaRecorder.stop(),this.isRecording=!1,this.recordingTimer&&(clearInterval(this.recordingTimer),this.recordingTimer=null);let e=document.getElementById("feedspace-recording-indicator");e&&(e.style.display="none");let t=new Blob(this.audioChunks,{type:"audio/webm"}),i=new File([t],`recording-${Date.now()}.webm`,{type:"audio/webm"}),o=document.getElementById("feedspace-file-previews");if(o){let r=document.createElement("div");r.className="feedspace-file-preview",r.innerHTML=`
+    `;
+      document.body.appendChild(this.toolbarRoot);
+      this.toolbarRoot.querySelectorAll("[data-tool]").forEach((btn) => {
+        btn.addEventListener("click", () => this.setTool(btn.getAttribute("data-tool")));
+      });
+      this.toolbarRoot.querySelectorAll("[data-device]").forEach((btn) => {
+        btn.addEventListener("click", () => this.setDevice(btn.getAttribute("data-device")));
+      });
+      (_a = this.toolbarRoot.querySelector('[data-action="list"]')) == null ? void 0 : _a.addEventListener("click", () => {
+        this.feedbackList.open(this.annotations, {
+          onSelectAnnotation: (id) => this.focusAnnotation(id),
+          onFilterChange: (filter) => {
+            this.filterMode = filter;
+            this.renderer.setFilter(filter);
+          }
+        }, () => {
+        });
+      });
+      (_b = this.toolbarRoot.querySelector('[data-action="submit"]')) == null ? void 0 : _b.addEventListener("click", () => {
+        this.showToast("Feedback saved! Thanks for your input.");
+      });
+    }
+    setTool(tool) {
+      var _a;
+      this.currentTool = this.currentTool === tool ? "select" : tool;
+      (_a = this.toolbarRoot) == null ? void 0 : _a.querySelectorAll("[data-tool]").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-tool") === this.currentTool);
+      });
+      document.body.setAttribute("data-feedspace-tool", this.currentTool);
+      if (this.currentTool === "select") this.clearHoverHighlight();
+      const overlay = document.getElementById("feedspace-overlay");
+      if (overlay) {
+        overlay.classList.toggle("feedspace-active", this.currentTool === "select");
+      }
+      this.cleanupDrawState();
+    }
+    setDevice(device) {
+      var _a, _b;
+      this.deviceMode = device;
+      (_a = this.toolbarRoot) == null ? void 0 : _a.querySelectorAll("[data-device]").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-device") === device);
+      });
+      const body = document.body;
+      let wrapper = document.getElementById("feedspace-viewport-wrapper");
+      if (wrapper) {
+        (_b = wrapper.parentNode) == null ? void 0 : _b.removeChild(wrapper);
+      }
+      if (device === "desktop") {
+        body.style.maxWidth = "";
+        body.style.margin = "";
+        body.style.boxShadow = "";
+      } else {
+        const width = device === "tablet" ? "768px" : "375px";
+        body.style.maxWidth = width;
+        body.style.margin = "0 auto";
+        body.style.boxShadow = "0 0 0 1px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.1)";
+      }
+      document.documentElement.style.background = device !== "desktop" ? "#e5e7eb" : "";
+      this.renderer.renderAll();
+    }
+    attachDrawingListeners() {
+      document.addEventListener("mousedown", (e) => this.onMouseDown(e));
+      document.addEventListener("mousemove", (e) => this.onMouseMove(e));
+      document.addEventListener("mouseup", (e) => this.onMouseUp(e));
+      document.addEventListener("mouseleave", () => this.clearHoverHighlight());
+    }
+    updateHoverHighlight(e) {
+      if (this.currentTool === "select") {
+        this.clearHoverHighlight();
+        return;
+      }
+      const target = closestTargetable(e.target);
+      if (target === this.hoverHighlightEl) return;
+      this.clearHoverHighlight();
+      if (target && target !== document.body) {
+        target.classList.add("feedspace-hover-highlight");
+        this.hoverHighlightEl = target;
+      }
+    }
+    clearHoverHighlight() {
+      if (this.hoverHighlightEl) {
+        this.hoverHighlightEl.classList.remove("feedspace-hover-highlight");
+        this.hoverHighlightEl = null;
+      }
+    }
+    onMouseDown(e) {
+      var _a;
+      if (this.currentTool === "select") return;
+      if (e.button !== 0) return;
+      if ((_a = e.target) == null ? void 0 : _a.closest("#feedspace-widget-root, #feedspace-overlay, .feedspace-panel, .feedspace-panel-overlay, .feedspace-name-modal")) return;
+      e.preventDefault();
+      this.isDrawing = true;
+      const el = closestTargetable(e.target);
+      const dna = getElementDNA(el);
+      const rel = toRelative(el, e.pageX, e.pageY);
+      this.drawStart = { x: e.pageX, y: e.pageY, el, dna };
+      this.drawPoints = [{ x: rel.x, y: rel.y }];
+      if (this.currentTool === "pin") {
+        this.finishDrawing(el, dna, [{ x: rel.x, y: rel.y }]);
+      }
+    }
+    onMouseMove(e) {
+      if (!this.isDrawing || !this.drawStart) {
+        this.updateHoverHighlight(e);
+        return;
+      }
+      const overlay = document.getElementById("feedspace-overlay");
+      if (!overlay) return;
+      this.removeTempPreview(overlay);
+      const el = this.drawStart.el;
+      const startRel = this.drawStart.dna;
+      const currentRel = toRelative(el, e.pageX, e.pageY);
+      if (this.currentTool === "rect") {
+        const rect = el.getBoundingClientRect();
+        const x1 = this.drawStart.x - window.scrollX;
+        const y1 = this.drawStart.y - window.scrollY;
+        const x2 = e.pageX - window.scrollX;
+        const y2 = e.pageY - window.scrollY;
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", String(Math.min(x1, x2)));
+        r.setAttribute("y", String(Math.min(y1, y2)));
+        r.setAttribute("width", String(Math.abs(x2 - x1)));
+        r.setAttribute("height", String(Math.abs(y2 - y1)));
+        r.setAttribute("fill", "rgba(99, 102, 241, 0.1)");
+        r.setAttribute("stroke", "#6366f1");
+        r.setAttribute("stroke-width", "2");
+        r.setAttribute("stroke-dasharray", "6,3");
+        r.setAttribute("rx", "4");
+        overlay.appendChild(r);
+        this.tempSvgEl = r;
+      }
+      if (this.currentTool === "arrow") {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(this.drawStart.x));
+        line.setAttribute("y1", String(this.drawStart.y));
+        line.setAttribute("x2", String(e.pageX));
+        line.setAttribute("y2", String(e.pageY));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2");
+        line.setAttribute("stroke-dasharray", "5,3");
+        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        overlay.appendChild(line);
+        this.tempSvgEl = line;
+      }
+      if (this.currentTool === "draw") {
+        const rel = toRelative(el, e.pageX, e.pageY);
+        this.drawPoints.push({ x: rel.x, y: rel.y });
+        const rect = el.getBoundingClientRect();
+        const pl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        const ptsStr = this.drawPoints.map((p) => {
+          const absX = rect.left + window.scrollX + rect.width * p.x / 100;
+          const absY = rect.top + window.scrollY + rect.height * p.y / 100;
+          return `${absX},${absY}`;
+        }).join(" ");
+        pl.setAttribute("points", ptsStr);
+        pl.setAttribute("fill", "none");
+        pl.setAttribute("stroke", "#6366f1");
+        pl.setAttribute("stroke-width", "2");
+        pl.setAttribute("stroke-linecap", "round");
+        pl.setAttribute("stroke-linejoin", "round");
+        overlay.appendChild(pl);
+        this.tempSvgEl = pl;
+      }
+    }
+    onMouseUp(e) {
+      if (!this.isDrawing || !this.drawStart) return;
+      if (this.currentTool === "pin") {
+        this.isDrawing = false;
+        return;
+      }
+      this.isDrawing = false;
+      const overlay = document.getElementById("feedspace-overlay");
+      if (overlay) this.removeTempPreview(overlay);
+      const { el, dna } = this.drawStart;
+      this.finishDrawing(el, dna, this.drawPoints.length > 1 ? this.drawPoints : [{ x: 50, y: 50 }]);
+    }
+    removeTempPreview(overlay) {
+      if (this.tempSvgEl && overlay.contains(this.tempSvgEl)) {
+        overlay.removeChild(this.tempSvgEl);
+      }
+      this.tempSvgEl = null;
+    }
+    finishDrawing(el, startDna, points) {
+      const firstPoint = points[0];
+      const rel = toRelative(el, this.drawStart.x, this.drawStart.y);
+      this.commentPanel.open(null, {
+        onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
+        onStartRecording: () => this.startRecording(),
+        onStopRecording: () => this.stopRecording(),
+        onDeleteRecording: () => this.deleteRecording(),
+        isRecording: this.isRecording
+      }, () => {
+      });
+      this.cleanupDrawState();
+    }
+    cleanupDrawState() {
+      this.isDrawing = false;
+      this.drawStart = null;
+      this.drawPoints = [];
+      this.tempSvgEl = null;
+    }
+    async saveAnnotation(content, files, el, startDna, firstPoint, points) {
+      var _a, _b;
+      const rect = el.getBoundingClientRect();
+      const lastPoint = points[points.length - 1];
+      const endDna = this.currentTool === "arrow" ? getElementDNA(document.elementFromPoint(
+        ((_a = this.drawStart) == null ? void 0 : _a.x) || 0,
+        ((_b = this.drawStart) == null ? void 0 : _b.y) || 0
+      ) || el) : null;
+      let drawDataStr = null;
+      if (this.currentTool === "draw" && points.length > 1) {
+        drawDataStr = JSON.stringify({
+          pathD: "",
+          points: points.map((p) => ({
+            x: p.x,
+            y: p.y
+          }))
+        });
+      }
+      const metaData = {
+        device: this.deviceMode,
+        elementTag: startDna.tag,
+        elementText: startDna.text
+      };
+      const annotationType = this.currentTool === "select" ? "pin" : this.currentTool;
+      const payload = {
+        projectId: this.config.projectId,
+        previewToken: this.config.token,
+        type: annotationType,
+        content,
+        pageUrl: this.config.pageUrl,
+        selector: startDna.selector,
+        elementDna: startDna,
+        coordinatesX: firstPoint.x,
+        coordinatesY: firstPoint.y,
+        coordinatesXEnd: endDna && lastPoint ? lastPoint.x : null,
+        coordinatesYEnd: endDna && lastPoint ? lastPoint.y : null,
+        width: this.currentTool === "rect" ? Math.abs(lastPoint.x - firstPoint.x) : null,
+        height: this.currentTool === "rect" ? Math.abs(lastPoint.y - firstPoint.y) : null,
+        drawData: drawDataStr,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        device: this.deviceMode,
+        createdBy: this.clientName,
+        metaData
+      };
+      try {
+        const mediaUrls = [];
+        if (files.length > 0) {
+          for (const file of files) {
+            try {
+              const result = await uploadToWordPress(this.config.wpApiUrl, this.config.wpApiKey, file, this.config.projectId);
+              mediaUrls.push(result.url);
+            } catch (err) {
+              console.error("Upload failed", err);
+            }
+          }
+        }
+        const annotation = await this.api.createAnnotation(payload);
+        this.annotations.push(annotation);
+        this.renderer.setAnnotations(this.annotations);
+        this.updateBadge();
+        this.commentPanel.close();
+        this.showToast("Feedback saved!");
+      } catch (err) {
+        console.error("Failed to save annotation", err);
+        this.showToast("Failed to save feedback. Please try again.");
+      }
+    }
+    async loadAnnotations() {
+      try {
+        this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+        dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
+        this.renderer.setAnnotations(this.annotations);
+        this.updateBadge();
+      } catch (err) {
+        console.error("Failed to load annotations", err);
+        dbg("loadAnnotations: FAILED", String(err));
+      }
+    }
+    onAnnotationClick(id) {
+      const annotation = this.annotations.find((a) => a.id === id);
+      if (!annotation) return;
+      this.renderer.setSelected(id);
+      this.commentPanel.open(annotation, {
+        onSubmit: async (content, files) => {
+          try {
+            const mediaUrls = [];
+            for (const file of files) {
+              try {
+                const result = await uploadToWordPress(this.config.wpApiUrl, this.config.wpApiKey, file, this.config.projectId);
+                mediaUrls.push(result.url);
+              } catch {
+              }
+            }
+            const updated = await this.api.updateAnnotation(id, {
+              ...annotation,
+              replies: [...annotation.replies || [], {
+                id: "",
+                content,
+                createdBy: this.clientName,
+                createdAt: (/* @__PURE__ */ new Date()).toISOString()
+              }]
+            });
+            await this.loadAnnotations();
+            this.renderer.setSelected(null);
+            this.commentPanel.close();
+          } catch (err) {
+            console.error("Failed to add reply", err);
+          }
+        },
+        onStartRecording: () => this.startRecording(),
+        onStopRecording: () => this.stopRecording(),
+        onDeleteRecording: () => this.deleteRecording(),
+        isRecording: this.isRecording
+      }, () => {
+        this.renderer.setSelected(null);
+      });
+    }
+    focusAnnotation(id) {
+      this.renderer.setSelected(id);
+      const annotation = this.annotations.find((a) => a.id === id);
+      if (annotation == null ? void 0 : annotation.elementDna) {
+        const el = findElement(annotation.elementDna);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    }
+    updateBadge() {
+      const badge = document.getElementById("feedspace-list-count");
+      if (!badge) return;
+      const count = this.annotations.length;
+      badge.textContent = String(count);
+      badge.style.display = count > 0 ? "" : "none";
+    }
+    startRecording() {
+      var _a;
+      if (!((_a = navigator.mediaDevices) == null ? void 0 : _a.getUserMedia)) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        this.mediaRecorder = new MediaRecorder(stream);
+        this.audioChunks = [];
+        this.isRecording = true;
+        this.recordingStartTime = Date.now();
+        this.mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) this.audioChunks.push(e.data);
+        };
+        this.mediaRecorder.onstop = () => {
+          stream.getTracks().forEach((t) => t.stop());
+        };
+        this.mediaRecorder.start();
+        if (this.recordingTimer) clearInterval(this.recordingTimer);
+        this.recordingTimer = window.setInterval(() => {
+          const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1e3);
+          const mins = Math.floor(elapsed / 60);
+          const secs = elapsed % 60;
+          const indicator = document.getElementById("feedspace-recording-indicator");
+          if (indicator) {
+            indicator.style.display = "flex";
+            const timeEl = indicator.querySelector(".feedspace-recording-time");
+            if (timeEl) timeEl.textContent = `${mins}:${String(secs).padStart(2, "0")}`;
+          }
+        }, 1e3);
+      }).catch(() => {
+        this.showToast("Microphone access denied");
+      });
+    }
+    stopRecording() {
+      if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+        this.mediaRecorder.stop();
+      }
+      this.isRecording = false;
+      if (this.recordingTimer) {
+        clearInterval(this.recordingTimer);
+        this.recordingTimer = null;
+      }
+      const indicator = document.getElementById("feedspace-recording-indicator");
+      if (indicator) indicator.style.display = "none";
+      const blob = new Blob(this.audioChunks, { type: "audio/webm" });
+      const file = new File([blob], `recording-${Date.now()}.webm`, { type: "audio/webm" });
+      const previewContainer = document.getElementById("feedspace-file-previews");
+      if (previewContainer) {
+        const div = document.createElement("div");
+        div.className = "feedspace-file-preview";
+        div.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-        <span>Voice recording (${(i.size/1024).toFixed(0)} KB)</span>
-      `,o.appendChild(r)}}deleteRecording(){this.isRecording=!1,this.mediaRecorder&&this.mediaRecorder.state!=="inactive"&&this.mediaRecorder.stop(),this.recordingTimer&&(clearInterval(this.recordingTimer),this.recordingTimer=null),this.audioChunks=[];let e=document.getElementById("feedspace-recording-indicator");e&&(e.style.display="none")}showToast(e){let t=document.getElementById("feedspace-toast");t&&t.remove();let i=document.createElement("div");i.id="feedspace-toast",i.style.cssText=`
+        <span>Voice recording (${(file.size / 1024).toFixed(0)} KB)</span>
+      `;
+        previewContainer.appendChild(div);
+      }
+    }
+    deleteRecording() {
+      this.isRecording = false;
+      if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
+        this.mediaRecorder.stop();
+      }
+      if (this.recordingTimer) {
+        clearInterval(this.recordingTimer);
+        this.recordingTimer = null;
+      }
+      this.audioChunks = [];
+      const indicator = document.getElementById("feedspace-recording-indicator");
+      if (indicator) indicator.style.display = "none";
+    }
+    showToast(message) {
+      const existing = document.getElementById("feedspace-toast");
+      if (existing) existing.remove();
+      const toast = document.createElement("div");
+      toast.id = "feedspace-toast";
+      toast.style.cssText = `
       position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
       background:#1f2937;color:#fff;padding:10px 20px;border-radius:8px;
       font-size:13px;font-family:'Poppins',sans-serif;z-index:100001;
       box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:feedspace-fade-in 0.15s;
-    `,i.textContent=e,document.body.appendChild(i),setTimeout(()=>{i.parentNode&&i.parentNode.removeChild(i)},3e3)}destroy(){var t;this.clearHoverHighlight(),this.renderer.destroy(),this.commentPanel.close(),this.feedbackList.close(),this.destroyNameModal(),this.toolbarRoot&&this.toolbarRoot.parentNode&&this.toolbarRoot.parentNode.removeChild(this.toolbarRoot),this.recordingTimer&&clearInterval(this.recordingTimer),document.body.removeAttribute("data-feedspace-tool");let e=document.getElementById("feedspace-viewport-wrapper");e&&((t=e.parentNode)==null||t.removeChild(e)),document.body.style.maxWidth="",document.body.style.margin="",document.body.style.boxShadow="",document.documentElement.style.background=""}};function X(l){function e(o,r){let n=window.__feedspaceDebug;n&&Array.isArray(n)&&n.push({msg:o,data:r,time:Date.now()}),console.log("[Feedspace]",o,r||"")}e("initWidget() called with config",{apiUrl:l.apiUrl,projectId:l.projectId,pageUrl:l.pageUrl,wpApiUrl:l.wpApiUrl,hasWpKey:!!l.wpApiKey}),P(),e("Styles injected");let t=F(l.apiUrl,l.token,l.wpApiUrl,l.wpApiKey);e("API client created");let i=new C(l,t);return e("AnnotationEngine instance created"),i.init().catch(o=>{console.error("Feedspace widget init error:",o),e("init() threw error",String(o))}),i}var w=null;window.FeedspaceWidget={init(l){w&&w.destroy(),w=X(l)},destroy(){w&&(w.destroy(),w=null)}};})();
+    `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 3e3);
+    }
+    destroy() {
+      var _a;
+      this.clearHoverHighlight();
+      this.renderer.destroy();
+      this.commentPanel.close();
+      this.feedbackList.close();
+      this.destroyNameModal();
+      if (this.toolbarRoot && this.toolbarRoot.parentNode) {
+        this.toolbarRoot.parentNode.removeChild(this.toolbarRoot);
+      }
+      if (this.recordingTimer) clearInterval(this.recordingTimer);
+      document.body.removeAttribute("data-feedspace-tool");
+      const wrapper = document.getElementById("feedspace-viewport-wrapper");
+      if (wrapper) (_a = wrapper.parentNode) == null ? void 0 : _a.removeChild(wrapper);
+      document.body.style.maxWidth = "";
+      document.body.style.margin = "";
+      document.body.style.boxShadow = "";
+      document.documentElement.style.background = "";
+    }
+  };
+
+  // src/widget/index.ts
+  function initWidget(config) {
+    function dbg2(msg, data) {
+      const arr = window.__feedspaceDebug;
+      if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
+      console.log("[Feedspace]", msg, data || "");
+    }
+    dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey });
+    injectStyles();
+    dbg2("Styles injected");
+    const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
+    dbg2("API client created");
+    const engine = new AnnotationEngine(config, api);
+    dbg2("AnnotationEngine instance created");
+    engine.init().catch((err) => {
+      console.error("Feedspace widget init error:", err);
+      dbg2("init() threw error", String(err));
+    });
+    return engine;
+  }
+  var currentEngine = null;
+  window.FeedspaceWidget = {
+    init(config) {
+      if (currentEngine) {
+        currentEngine.destroy();
+      }
+      currentEngine = initWidget(config);
+    },
+    destroy() {
+      if (currentEngine) {
+        currentEngine.destroy();
+        currentEngine = null;
+      }
+    }
+  };
+})();
