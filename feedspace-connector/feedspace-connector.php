@@ -570,6 +570,18 @@ class FeedspaceConnector
             return new WP_REST_Response(array('ok' => true, 'updated' => 'deleted'), 200);
         }
 
+        if ($action === 'reply_added' && !empty($data['parentMirrorId'])) {
+            $existing = $wpdb->get_row($wpdb->prepare(
+                "SELECT content FROM $tableName WHERE annotation_id = %s", $data['parentMirrorId']
+            ));
+            if ($existing) {
+                $replyLine = "\n\n--- Reply from " . ($data['createdBy'] ?? 'Team') . " ---\n" . ($data['content'] ?? '');
+                $wpdb->update($tableName, array('content' => $existing->content . $replyLine), array('annotation_id' => $data['parentMirrorId']));
+                self::logDebug('webhook_reply_stored', array('annotation_id' => $data['parentMirrorId'], 'reply' => substr($data['content'] ?? '', 0, 100)));
+                return new WP_REST_Response(array('ok' => true, 'updated' => 'reply'), 200);
+            }
+        }
+
         self::logDebug('webhook_unknown', array('action' => $action, 'body' => json_encode($body)));
         return new WP_REST_Response(array('error' => 'Unknown action'), 400);
     }

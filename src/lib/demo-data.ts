@@ -114,6 +114,7 @@ const DEMO_FEEDBACK_DEFAULTS = {
   element_dna: null,
   meta_data: null,
   device: null,
+  mirror_id: null,
 };
 
 export const DEMO_FEEDBACK: EnrichedFeedback[] = [

@@ -84,6 +84,7 @@ export interface FeedbackItem {
   viewport_width: number | null;
   viewport_height: number | null;
   device: string | null;
+  mirror_id: string | null;
   status: FeedbackStatus;
   assigned_to: string | null;
   created_by: string;
@@ -99,6 +100,7 @@ export const DEFAULT_FEEDBACK_FIELDS = {
   element_dna: null,
   meta_data: null,
   device: null,
+  mirror_id: null,
 };
 
 export interface SiteFeedbackCounts {

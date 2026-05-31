@@ -191,6 +191,7 @@ export default function SiteFeedbackPage() {
             draw_data: null,
             element_dna: null,
             meta_data: null,
+            mirror_id: null,
             viewport_width: null,
             viewport_height: null,
             device: null,
@@ -219,6 +220,7 @@ export default function SiteFeedbackPage() {
           height: item.height,
           draw_data: item.draw_data ? JSON.parse(item.draw_data) : null,
           element_dna: item.element_dna || null,
+          mirror_id: item.mirror_id || null,
           meta_data: item.meta_data,
           viewport_width: item.viewport_width,
           viewport_height: item.viewport_height,
@@ -317,7 +319,8 @@ export default function SiteFeedbackPage() {
         prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
       );
       if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
-        notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: feedbackId, status: nextStatus });
+        const item = feedback.find((f) => f.id === feedbackId);
+        notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: item?.mirror_id || feedbackId, status: nextStatus });
       }
     } catch (err) {
       console.error("Failed to update status:", err);
@@ -344,6 +347,7 @@ export default function SiteFeedbackPage() {
         height: null,
         draw_data: null,
         element_dna: null,
+        mirror_id: null,
         meta_data: null,
         viewport_width: null,
         viewport_height: null,
@@ -386,6 +390,17 @@ export default function SiteFeedbackPage() {
         .single();
       if (error) throw error;
 
+      if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
+        const parentItem = feedback.find((f) => f.id === feedbackId);
+        notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "reply_added", {
+          parentId: feedbackId,
+          parentMirrorId: parentItem?.mirror_id || null,
+          replyId: data.id,
+          content: replyText,
+          createdBy: profile?.full_name || "Anonymous",
+        });
+      }
+
       const reply: EnrichedFeedback = {
         id: data.id,
         project_id: data.project_id,
@@ -402,6 +417,7 @@ export default function SiteFeedbackPage() {
         height: null,
         draw_data: null,
         element_dna: null,
+        mirror_id: null,
         meta_data: null,
         viewport_width: null,
         viewport_height: null,

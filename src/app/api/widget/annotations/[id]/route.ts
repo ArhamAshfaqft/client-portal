@@ -15,7 +15,7 @@ async function notifySiteWebhook(feedbackItemId: string, action: string, data: R
     const supabase = anonClient();
     const { data: item } = await supabase
       .from("feedback_items")
-      .select("project_id")
+      .select("project_id, mirror_id")
       .eq("id", feedbackItemId)
       .single();
     if (!item) return;
@@ -38,11 +38,15 @@ async function notifySiteWebhook(feedbackItemId: string, action: string, data: R
     const wpApiKey = site.wp_api_key;
     if (!wpRestUrl || !wpApiKey) return;
 
+    const webhookPayload = {
+      action,
+      data: { ...data, id: item.mirror_id || data.id },
+    };
     const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`;
     await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Feedspace-Key": wpApiKey },
-      body: JSON.stringify({ action, data }),
+      body: JSON.stringify(webhookPayload),
     });
   } catch {
     // Webhook is best-effort, don't block the response
