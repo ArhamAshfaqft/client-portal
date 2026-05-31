@@ -8,7 +8,6 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     url: "https://brightonlaw.com",
     wp_api_url: "https://brightonlaw.com/wp-json",
     wp_api_key: null,
-    wp_api_key: null,
     wp_application_password: "****",
     wp_connected: true,
     created_at: "2026-05-15T10:00:00Z",
