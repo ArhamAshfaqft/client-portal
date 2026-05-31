@@ -43,7 +43,7 @@ const DEMO_PREVIEW_LINKS: Record<string, PreviewLink[]> = {
 export default function SiteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { isDemo } = useAuth();
+  const { isDemo, profile } = useAuth();
   const supabase = createClient();
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -136,7 +136,7 @@ export default function SiteDetailPage() {
         project_id: data.id,
         token,
         target_url: previewUrl,
-        created_by: "",
+        created_by: profile?.user_id || "",
       });
 
       setShowNewProject(false);
@@ -187,7 +187,7 @@ export default function SiteDetailPage() {
         project_id: managingProject,
         token: crypto.randomUUID(),
         target_url: linkTargetUrl.trim(),
-        created_by: "",
+        created_by: profile?.user_id || "",
         expires_at: expiryDate,
       })
       .select()
@@ -218,7 +218,11 @@ export default function SiteDetailPage() {
       });
       return;
     }
-    await supabase.from("preview_links").update({ is_active: false }).eq("id", linkId);
+    try {
+      await supabase.from("preview_links").update({ is_active: false }).eq("id", linkId);
+    } catch (err) {
+      console.error("Failed to revoke link:", err);
+    }
     fetchData();
   };
 

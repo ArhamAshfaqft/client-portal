@@ -124,7 +124,14 @@ export default function SitesPage() {
       setSites((prev) => prev.filter((s) => s.id !== siteId));
       return;
     }
-    supabase.from("sites").delete().eq("id", siteId).then(() => fetchSites());
+    (async () => {
+      try {
+        await supabase.from("sites").delete().eq("id", siteId);
+      } catch (err) {
+        console.error("Failed to delete site:", err);
+      }
+      fetchSites();
+    })();
   };
 
   const handleAssignSite = (siteId: string, userId: string) => {

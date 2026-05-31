@@ -89,6 +89,7 @@ export function FeedbackWidget({
       setIsRecording(true);
     } catch {
       console.error("Microphone access denied");
+      setMode(null);
     }
   };
 
@@ -130,7 +131,8 @@ export function FeedbackWidget({
             }),
           ];
           submitToServer(feedback);
-        });
+        })
+        .catch(console.error);
     } else if (selectedFiles.length > 0) {
       feedback.media = selectedFiles;
       submitToServer(feedback);
@@ -253,6 +255,7 @@ export function FeedbackWidget({
               onClick={() => {
                 setMode(null);
                 setPinPosition(null);
+                setPinMode(false);
               }}
               className="p-0.5 rounded hover:bg-white/20 transition-colors"
             >

@@ -35,83 +35,89 @@ export default function PreviewPage({
 
   useEffect(() => {
     const fetchPreview = async () => {
-      if (token.startsWith("demo-")) {
-        const demoLink = DEMO_PREVIEW_LINKS[token];
-        if (!demoLink) {
+      try {
+        if (token.startsWith("demo-")) {
+          const demoLink = DEMO_PREVIEW_LINKS[token];
+          if (!demoLink) {
+            setError("Preview link not found or has expired");
+            setLoading(false);
+            return;
+          }
+          const site = DEMO_SITES.find((s) => s.id === demoLink.site_id);
+          setData({
+            projectId: demoLink.project_id,
+            targetUrl: demoLink.target_url,
+            isValid: true,
+            primaryColor: "#2563eb",
+            wpUrl: site?.wp_api_url || undefined,
+            wpApiKey: site?.wp_application_password || undefined,
+          });
+          setShowWidget(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data: link, error: linkError } = await supabase
+          .from("preview_links")
+          .select("*, projects!inner(*)")
+          .eq("token", token)
+          .eq("is_active", true)
+          .single();
+
+        if (linkError || !link) {
           setError("Preview link not found or has expired");
           setLoading(false);
           return;
         }
-        const site = DEMO_SITES.find((s) => s.id === demoLink.site_id);
-        setData({
-          projectId: demoLink.project_id,
-          targetUrl: demoLink.target_url,
-          isValid: true,
-          primaryColor: "#2563eb",
-          wpUrl: site?.wp_api_url || undefined,
-          wpApiKey: site?.wp_application_password || undefined,
-        });
-        setShowWidget(true);
-        setLoading(false);
-        return;
-      }
 
-      const { data: link, error: linkError } = await supabase
-        .from("preview_links")
-        .select("*, projects!inner(*)")
-        .eq("token", token)
-        .eq("is_active", true)
-        .single();
-
-      if (linkError || !link) {
-        setError("Preview link not found or has expired");
-        setLoading(false);
-        return;
-      }
-
-      if (link.expires_at && new Date(link.expires_at) < new Date()) {
-        setError("This preview link has expired");
-        setLoading(false);
-        return;
-      }
-
-      const { data: agency } = await supabase
-        .from("agencies")
-        .select("primary_color")
-        .eq("id", link.projects.agency_id)
-        .single();
-
-      const { data: project } = await supabase
-        .from("projects")
-        .select("site_id")
-        .eq("id", link.project_id)
-        .single();
-
-      let wpUrl: string | undefined;
-      let wpApiKey: string | undefined;
-      if (project) {
-        const { data: site } = await supabase
-          .from("sites")
-          .select("wp_api_url, wp_application_password")
-          .eq("id", project.site_id)
-          .single();
-        if (site?.wp_api_url) {
-          wpUrl = site.wp_api_url;
-          wpApiKey = site.wp_application_password || undefined;
+        if (link.expires_at && new Date(link.expires_at) < new Date()) {
+          setError("This preview link has expired");
+          setLoading(false);
+          return;
         }
+
+        const { data: agency } = await supabase
+          .from("agencies")
+          .select("primary_color")
+          .eq("id", link.projects.agency_id)
+          .single();
+
+        const { data: project } = await supabase
+          .from("projects")
+          .select("site_id")
+          .eq("id", link.project_id)
+          .single();
+
+        let wpUrl: string | undefined;
+        let wpApiKey: string | undefined;
+        if (project) {
+          const { data: site } = await supabase
+            .from("sites")
+            .select("wp_api_url, wp_application_password")
+            .eq("id", project.site_id)
+            .single();
+          if (site?.wp_api_url) {
+            wpUrl = site.wp_api_url;
+            wpApiKey = site.wp_application_password || undefined;
+          }
+        }
+
+        setData({
+          projectId: link.project_id,
+          targetUrl: link.target_url,
+          isValid: true,
+          primaryColor: agency?.primary_color || "#2563eb",
+          wpUrl,
+          wpApiKey,
+        });
+
+        setShowWidget(true);
+      } catch (err) {
+        console.error("Preview fetch failed:", err);
+        setError("Something went wrong loading this preview");
+      } finally {
+        setLoading(false);
       }
-
-      setData({
-        projectId: link.project_id,
-        targetUrl: link.target_url,
-        isValid: true,
-        primaryColor: agency?.primary_color || "#2563eb",
-        wpUrl,
-        wpApiKey,
-      });
-
-      setShowWidget(true);
-      setLoading(false);
     };
 
     fetchPreview();

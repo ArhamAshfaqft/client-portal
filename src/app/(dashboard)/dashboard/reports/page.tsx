@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,9 +54,15 @@ export default function ReportsPage() {
     summary: "",
     hours: "",
   });
-  const [reports, setReports] = useState<typeof DEMO_REPORTS>(isDemo ? DEMO_REPORTS : []);
+  const [reports, setReports] = useState<typeof DEMO_REPORTS>([]);
   const [search, setSearch] = useState("");
   const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isDemo) setReports(DEMO_REPORTS);
+    setLoading(false);
+  }, [isDemo]);
 
   const projectOptions = useMemo(() => {
     const projects = new Set(reports.map((r) => r.project));

@@ -22,10 +22,13 @@ export default function FeedbackOverviewPage() {
   const { profile, isDemo } = useAuth();
   const supabase = createClient();
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sites, setSites] = useState<ReturnType<typeof getAllFeedbackGroupedBySite>>([]);
 
-  const sites = isDemo
-    ? getAllFeedbackGroupedBySite()
-    : [];
+  useEffect(() => {
+    setSites(isDemo ? getAllFeedbackGroupedBySite() : []);
+    setLoading(false);
+  }, [isDemo]);
 
   const filteredSites = useMemo(() => {
     if (!search.trim()) return sites;

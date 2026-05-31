@@ -190,7 +190,11 @@ export default function TeamPage() {
       setMembers(members.filter((m) => m.user_id !== userId));
       return;
     }
-    await supabase.from("profiles").delete().eq("user_id", userId);
+    try {
+      await supabase.from("profiles").delete().eq("user_id", userId);
+    } catch (err) {
+      console.error("Failed to remove team member:", err);
+    }
     fetchMembers();
   };
 
@@ -231,8 +235,8 @@ export default function TeamPage() {
             />
           </div>
           <div className="space-y-2">
-          {members
-            .filter((m) => {
+          {(() => {
+            const filtered = members.filter((m) => {
               if (!search.trim()) return true;
               const q = search.toLowerCase();
               return (
@@ -240,52 +244,76 @@ export default function TeamPage() {
                 m.email.toLowerCase().includes(q) ||
                 (m.position || "").toLowerCase().includes(q)
               );
-            })
-            .map((member) => {
-            const PositionIcon = member.position && member.position in positionIcons
-              ? positionIcons[member.position as PositionType]
-              : Shield;
-            return (
-              <Card key={member.id}>
-                <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={member.full_name} size="md" />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground">
-                            {member.full_name}
-                          </p>
-                          {member.role === "owner" ? (
-                            <Badge variant="info">
-                              <Shield className="w-3 h-3 mr-1" />
-                              Owner
-                            </Badge>
-                          ) : member.position ? (
-                            <Badge variant="default">
-                              <PositionIcon className="w-3 h-3 mr-1" />
-                              {positionLabels[member.position]}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {member.email}
-                        </p>
-                      </div>
+            });
+            if (filtered.length === 0) {
+              return (
+                <Card>
+                  <CardContent>
+                    <div className="text-center py-12">
+                      <UserPlus className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+                      <h3 className="text-base font-semibold text-foreground mb-1">
+                        {search ? "No matching members" : "No team members yet"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {search ? "Try a different search term" : "Invite your first team member to get started"}
+                      </p>
+                      {!search && can(Permissions.TEAM_INVITE) && (
+                        <Button size="sm" onClick={() => setShowInvite(true)}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Invite Member
+                        </Button>
+                      )}
                     </div>
-                    {can(Permissions.TEAM_REMOVE) && member.role !== "owner" && (
-                      <button
-                        onClick={() => handleRemove(member.user_id)}
-                        className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            }
+            return filtered.map((member) => {
+              const PositionIcon = member.position && member.position in positionIcons
+                ? positionIcons[member.position as PositionType]
+                : Shield;
+              return (
+                <Card key={member.id}>
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={member.full_name} size="md" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-foreground">
+                              {member.full_name}
+                            </p>
+                            {member.role === "owner" ? (
+                              <Badge variant="info">
+                                <Shield className="w-3 h-3 mr-1" />
+                                Owner
+                              </Badge>
+                            ) : member.position ? (
+                              <Badge variant="default">
+                                <PositionIcon className="w-3 h-3 mr-1" />
+                                {positionLabels[member.position]}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {member.email}
+                          </p>
+                        </div>
+                      </div>
+                      {can(Permissions.TEAM_REMOVE) && member.role !== "owner" && (
+                        <button
+                          onClick={() => handleRemove(member.user_id)}
+                          className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()}
           </div>
         </>
       )}

@@ -114,13 +114,14 @@ export default function SiteFeedbackPage() {
 
   const handleReply = (feedbackId: string) => {
     if (!replyText.trim()) return;
+    const parent = feedback.find((f) => f.id === feedbackId);
     const reply: EnrichedFeedback = {
       id: `reply-${Date.now()}`,
-      project_id: "",
+      project_id: parent?.project_id || "",
       parent_id: feedbackId,
       type: "comment",
       content: replyText,
-      page_url: "",
+      page_url: parent?.page_url || "",
       selector: null,
       coordinates_x: null,
       coordinates_y: null,
@@ -131,6 +132,10 @@ export default function SiteFeedbackPage() {
       created_by: profile?.user_id || "",
       created_at: new Date().toISOString(),
       creator_name: profile?.full_name || "Me",
+      media: [],
+      replies: [],
+      project_name: parent?.project_name || "",
+      site_name: parent?.site_name || "",
     };
     setFeedback((prev) =>
       prev.map((f) =>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,7 @@ export default function ActivityPage() {
   const { isDemo } = useAuth();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [loading, setLoading] = useState(true);
 
   const filtered = useMemo(() => {
     let result = isDemo ? DEMO_ACTIVITIES : [];
@@ -52,6 +53,10 @@ export default function ActivityPage() {
       return sortOrder === "newest" ? -diff : diff;
     });
   }, [search, sortOrder]);
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   return (
     <div className="space-y-6 max-w-3xl">
