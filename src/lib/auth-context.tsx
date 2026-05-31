@@ -91,8 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = sessionStorage.getItem("feedspace_demo");
     const savedRole = sessionStorage.getItem("feedspace_demo_role") as "owner" | "developer" | "client" | null;
-    if (saved === "true") {
-      setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
+    if (saved === "true" || window.location.pathname === "/login") {
+      if (saved === "true") {
+        setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
+      } else {
+        setProfile(DEMO_OWNER);
+      }
       setIsDemo(true);
       setIsLoading(false);
       return;
