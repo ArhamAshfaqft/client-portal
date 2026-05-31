@@ -36,9 +36,20 @@ class FeedspaceConnector
         add_action('admin_enqueue_scripts', array($this, 'adminEnqueueScripts'));
         add_filter('wp_handle_upload_prefilter', array($this, 'handleUploadPrefilter'));
         add_action('plugins_loaded', array($this, 'ensureTables'));
+        add_filter('cron_schedules', array($this, 'addCronInterval'));
+        add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+    }
+
+    public function addCronInterval($schedules)
+    {
+        $schedules['feedspace_every_minute'] = array(
+            'interval' => 60,
+            'display' => 'Every minute',
+        );
+        return $schedules;
     }
 
     public function ensureTables()
@@ -265,11 +276,113 @@ class FeedspaceConnector
         add_option('feedspace_version', FEEDSPACE_VERSION);
         add_option('feedspace_api_key', wp_generate_password(32, false));
         add_option('feedspace_api_url', '');
+        if (!wp_next_scheduled('feedspace_process_queue')) {
+            wp_schedule_event(time(), 'feedspace_every_minute', 'feedspace_process_queue');
+        }
     }
 
     public function deactivate()
     {
         delete_option('feedspace_version');
+        wp_clear_scheduled_hook('feedspace_process_queue');
+    }
+
+    public static function enqueueSync($annotationId, $payload, $action = 'mirror')
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'feedspace_sync_queue';
+        $wpdb->insert($table, array(
+            'annotation_id' => $annotationId,
+            'action' => $action,
+            'payload' => is_string($payload) ? $payload : json_encode($payload),
+            'status' => 'pending',
+            'attempts' => 0,
+            'max_attempts' => 5,
+        ));
+        return $wpdb->insert_id;
+    }
+
+    public static function processSyncQueue()
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'feedspace_sync_queue';
+        $vercelUrl = get_option('feedspace_api_url', '');
+        if (empty($vercelUrl)) return 0;
+
+        $items = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $table WHERE status = 'pending' OR (status = 'retrying' AND next_retry_at <= %s) ORDER BY created_at ASC LIMIT 10",
+            current_time('mysql')
+        ));
+
+        $processed = 0;
+        foreach ($items as $item) {
+            $payload = json_decode($item->payload, true);
+            $payload['id'] = $item->annotation_id;
+
+            $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+                'headers' => array('Content-Type' => 'application/json'),
+                'body' => json_encode($payload),
+                'timeout' => 15,
+            ));
+
+            if (is_wp_error($result)) {
+                self::handleSyncFailure($item->id, $result->get_error_message(), $item->attempts, $item->max_attempts);
+                continue;
+            }
+
+            $code = (int) wp_remote_retrieve_response_code($result);
+            if ($code >= 200 && $code < 300) {
+                $wpdb->update($table, array('status' => 'done', 'updated_at' => current_time('mysql')), array('id' => $item->id));
+                self::logDebug('queue_done', array('annotation_id' => $item->annotation_id, 'code' => $code));
+                $processed++;
+            } else {
+                $body = wp_remote_retrieve_body($result);
+                self::handleSyncFailure($item->id, "HTTP $code: $body", $item->attempts, $item->max_attempts);
+            }
+        }
+
+        return $processed;
+    }
+
+    private static function handleSyncFailure($queueId, $error, $attempts, $maxAttempts)
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'feedspace_sync_queue';
+        $newAttempts = (int) $attempts + 1;
+
+        if ($newAttempts >= (int) $maxAttempts) {
+            $wpdb->update($table, array(
+                'status' => 'failed',
+                'attempts' => $newAttempts,
+                'last_error' => $error,
+                'updated_at' => current_time('mysql'),
+            ), array('id' => $queueId));
+            self::logDebug('queue_failed', array('queue_id' => $queueId, 'error' => $error, 'attempts' => $newAttempts));
+        } else {
+            $backoff = min(3600, pow(2, $newAttempts) * 60);
+            $nextRetry = date('Y-m-d H:i:s', strtotime("+{$backoff} seconds"));
+            $wpdb->update($table, array(
+                'status' => 'retrying',
+                'attempts' => $newAttempts,
+                'last_error' => $error,
+                'next_retry_at' => $nextRetry,
+                'updated_at' => current_time('mysql'),
+            ), array('id' => $queueId));
+            self::logDebug('queue_retry', array('queue_id' => $queueId, 'error' => $error, 'attempts' => $newAttempts, 'backoff' => $backoff));
+        }
+    }
+
+    public static function getSyncQueueStats()
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'feedspace_sync_queue';
+        $stats = $wpdb->get_results("SELECT status, COUNT(*) as count FROM $table GROUP BY status", OBJECT_K);
+        return array(
+            'pending' => isset($stats['pending']) ? (int) $stats['pending']->count : 0,
+            'retrying' => isset($stats['retrying']) ? (int) $stats['retrying']->count : 0,
+            'failed' => isset($stats['failed']) ? (int) $stats['failed']->count : 0,
+            'done' => isset($stats['done']) ? (int) $stats['done']->count : 0,
+        );
     }
 
     public static function logDebug($event, $details = array())
@@ -345,6 +458,27 @@ class FeedspaceConnector
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions
             error_log('[Feedspace] Created annotations table: ' . ($wpdb->last_error ?: 'ok'));
         }
+
+        $queueTable = $wpdb->prefix . 'feedspace_sync_queue';
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queueTable));
+        if ($exists !== $queueTable) {
+            $wpdb->query("CREATE TABLE $queueTable (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                annotation_id VARCHAR(36) NOT NULL,
+                action VARCHAR(20) NOT NULL DEFAULT 'mirror',
+                payload LONGTEXT NOT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                attempts INT DEFAULT 0,
+                max_attempts INT DEFAULT 5,
+                last_error TEXT,
+                next_retry_at DATETIME DEFAULT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_status (status),
+                INDEX idx_next_retry (next_retry_at),
+                INDEX idx_annotation (annotation_id)
+            ) $charsetCollate");
+        }
     }
 
     public function registerRoutes()
@@ -402,6 +536,42 @@ class FeedspaceConnector
             'callback' => array($this, 'deleteAnnotation'),
             'permission_callback' => array($this, 'checkApiAuth'),
         ));
+
+        // Webhook: Vercel pushes status/reply changes back to WP
+        register_rest_route('feedspace/v1', '/webhook', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'handleWebhook'),
+            'permission_callback' => array($this, 'checkApiAuth'),
+        ));
+    }
+
+    public function handleWebhook($request)
+    {
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'feedspace_annotations';
+        $body = $request->get_json_params();
+        $action = $body['action'] ?? '';
+        $data = $body['data'] ?? array();
+
+        self::logDebug('webhook_received', array('action' => $action, 'id' => $data['id'] ?? ''));
+
+        if ($action === 'update_status' && !empty($data['id']) && !empty($data['status'])) {
+            $wpdb->update($tableName, array('status' => $data['status']), array('annotation_id' => $data['id']));
+            return new WP_REST_Response(array('ok' => true, 'updated' => 'status'), 200);
+        }
+
+        if ($action === 'update_content' && !empty($data['id']) && isset($data['content'])) {
+            $wpdb->update($tableName, array('content' => $data['content']), array('annotation_id' => $data['id']));
+            return new WP_REST_Response(array('ok' => true, 'updated' => 'content'), 200);
+        }
+
+        if ($action === 'delete' && !empty($data['id'])) {
+            $wpdb->delete($tableName, array('annotation_id' => $data['id']));
+            return new WP_REST_Response(array('ok' => true, 'updated' => 'deleted'), 200);
+        }
+
+        self::logDebug('webhook_unknown', array('action' => $action, 'body' => json_encode($body)));
+        return new WP_REST_Response(array('error' => 'Unknown action'), 400);
     }
 
     public function checkApiAuth($request)
@@ -600,42 +770,26 @@ class FeedspaceConnector
             ), 500);
         }
 
-        // Mirror to Vercel/Supabase so the dashboard shows this annotation.
-        $mirrorOk = false;
+        // Mirror to Vercel/Supabase via sync queue (retryable)
+        $mirrorOk = true;
         $vercelUrl = get_option('feedspace_api_url', '');
         if ($vercelUrl) {
             $mirrorBody = $body;
             $mirrorBody['id'] = $annotationId;
             $mirrorBody['createdAt'] = $now;
+            // Remove previewToken for queue — will be re-validated via preview_links
+            unset($mirrorBody['previewToken']);
 
-            $mirrorUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
-            self::logDebug('mirror_start', array('annotation_id' => $annotationId, 'url' => $mirrorUrl, 'projectId' => $mirrorBody['projectId'] ?? ''));
+            self::enqueueSync($annotationId, $mirrorBody, 'mirror');
+            self::logDebug('mirror_enqueued', array('annotation_id' => $annotationId, 'projectId' => $mirrorBody['projectId'] ?? ''));
+            update_option('feedspace_last_mirror_id', $annotationId);
+            update_option('feedspace_last_mirror_code', 0);
+            update_option('feedspace_last_mirror_body', 'Enqueued for sync');
+            update_option('feedspace_last_mirror_time', current_time('mysql'));
+            update_option('feedspace_last_mirror_success', false);
 
-            $result = wp_remote_post($mirrorUrl, array(
-                'headers' => array('Content-Type' => 'application/json'),
-                'body' => json_encode($mirrorBody),
-                'timeout' => 15,
-            ));
-
-            if (is_wp_error($result)) {
-                $errMsg = $result->get_error_message();
-                self::logDebug('mirror_http_error', array('annotation_id' => $annotationId, 'error' => $errMsg));
-                update_option('feedspace_last_mirror_id', $annotationId);
-                update_option('feedspace_last_mirror_code', 0);
-                update_option('feedspace_last_mirror_body', $errMsg);
-                update_option('feedspace_last_mirror_time', current_time('mysql'));
-                update_option('feedspace_last_mirror_success', false);
-            } else {
-                $code = wp_remote_retrieve_response_code($result);
-                $respBody = wp_remote_retrieve_body($result);
-                $mirrorOk = ($code >= 200 && $code < 300);
-                self::logDebug('mirror_result', array('annotation_id' => $annotationId, 'code' => $code, 'body' => $respBody, 'success' => $mirrorOk));
-                update_option('feedspace_last_mirror_id', $annotationId);
-                update_option('feedspace_last_mirror_code', $code);
-                update_option('feedspace_last_mirror_body', $respBody);
-                update_option('feedspace_last_mirror_time', current_time('mysql'));
-                update_option('feedspace_last_mirror_success', $mirrorOk);
-            }
+            // Try immediate process — if it fails, queue retries later
+            self::processSyncQueue();
         } else {
             self::logDebug('mirror_skipped', array('annotation_id' => $annotationId, 'reason' => 'Vercel URL not configured'));
             update_option('feedspace_last_mirror_id', $annotationId);
@@ -889,6 +1043,19 @@ class FeedspaceConnector
                     Working...
                 </span>
                 <p id="feedspace-repush-result" style="margin-top:10px;font-size:12px;color:#6b7280;display:none;"></p>
+                <p id="feedspace-queue-stats" style="margin-top:6px;font-size:12px;">
+                    <?php
+                    $qStats = FeedspaceConnector::getSyncQueueStats();
+                    $totalPending = $qStats['pending'] + $qStats['retrying'];
+                    if ($qStats['failed'] > 0) {
+                        echo '<span style="color:#dc2626;">⚠ ' . esc_html($qStats['failed']) . ' syncs failed — <a href="#" onclick="repushAnnotations();return false;">re-push now</a></span>';
+                    } elseif ($totalPending > 0) {
+                        echo '<span style="color:#d97706;">⏳ ' . esc_html($totalPending) . ' syncs pending (retrying every ' . esc_html($totalPending > 5 ? '5' : '1') . ' min)</span>';
+                    } else {
+                        echo '<span style="color:#059669;">✓ All synced</span> <span style="color:#6b7280;">(' . esc_html($qStats['done']) . ' total)</span>';
+                    }
+                    ?>
+                </p>
             </div>
 
             <div class="feedspace-status-card" style="margin-top:16px;">
