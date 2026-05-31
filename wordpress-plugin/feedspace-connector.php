@@ -3,14 +3,14 @@
  * Plugin Name: Feedspace Connector
  * Plugin URI: https://feedspace.io
  * Description: Connects your WordPress site to Feedspace for client feedback management. Enables media storage and API integration.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Feedspace
  * Text Domain: feedspace
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('FEEDSPACE_VERSION', '1.0.0');
+define('FEEDSPACE_VERSION', '1.0.1');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
 class FeedspaceConnector
