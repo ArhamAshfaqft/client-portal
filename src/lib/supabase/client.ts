@@ -1,16 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const FETCH_TIMEOUT = 30000;
-
-function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-  return fetch(input, { ...init, signal: controller.signal })
-    .then((res) => { clearTimeout(id); return res; })
-    .catch((err) => { clearTimeout(id); throw err; });
-}
-
 function createNoopClient(): SupabaseClient {
   const noopResult = { data: null, error: null };
   const noopDataResult = { data: [], error: null };
@@ -67,9 +57,7 @@ export function createClient(): SupabaseClient {
   }
 
   if (!clientInstance) {
-    clientInstance = createBrowserClient(url, key, {
-      ...({ fetch: fetchWithTimeout } as any),
-    });
+    clientInstance = createBrowserClient(url, key);
   }
 
   return clientInstance;

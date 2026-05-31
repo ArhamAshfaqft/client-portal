@@ -26,6 +26,8 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+const AUTH_TIMEOUT = 15000;
+
 const DEMO_OWNER: Profile = {
   id: "demo-id",
   user_id: "demo-user-id",
@@ -73,21 +75,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [connectionError, setConnectionError] = useState(false);
   const supabase = createClient();
 
-  const fetchProfile = useCallback(
-    async (userId: string) => {
-      try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (data) setProfile(data as Profile);
-      } catch {
-        // silently fail, profile stays null
-      }
-    },
-    []
-  );
+  const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (data) setProfile(data as Profile);
+    } catch {
+      // silently fail, profile stays null
+    }
+  }, []);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("feedspace_demo");
@@ -100,6 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false;
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        setConnectionError(true);
+        setIsLoading(false);
+      }
+    }, AUTH_TIMEOUT);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (cancelled) return;
@@ -121,11 +127,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(usr);
           await fetchProfile(usr.id);
         }
+        if (!cancelled) {
+          setIsLoading(false);
+          clearTimeout(timeout);
+        }
       } catch (err) {
         console.error("Supabase connection failed:", err);
-        if (!cancelled) setConnectionError(true);
-      } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setConnectionError(true);
+          setIsLoading(false);
+          clearTimeout(timeout);
+        }
       }
     };
 
@@ -133,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

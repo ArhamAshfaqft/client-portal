@@ -21,28 +21,31 @@ import { Permissions } from "@/lib/permissions";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile, isLoading } = useAuth();
+  const { profile } = useAuth();
   const { can } = usePermissions();
   const [collapsed, setCollapsed] = useState(false);
 
+  if (!profile) {
+    return null;
+  }
+
   const isClient = profile?.role === "client";
-  const showAll = isLoading || !profile;
 
   const navItems = isClient
     ? [
-        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
-        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: true },
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo },
       ]
     : [
-        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
-        { href: "/dashboard/sites", label: "Sites", icon: Globe, show: showAll || can(Permissions.SITES_VIEW) },
-        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: showAll || (can(Permissions.FEEDBACK_VIEW_ASSIGNED) && !can(Permissions.FEEDBACK_VIEW_ALL)) },
-        { href: "/dashboard/team", label: "Team", icon: Users, show: showAll || can(Permissions.TEAM_VIEW) },
-        { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: showAll || can(Permissions.FEEDBACK_VIEW_ALL) },
-        { href: "/dashboard/reports", label: "Reports", icon: Clock, show: showAll || can(Permissions.REPORTS_CREATE) || can(Permissions.REPORTS_VIEW_ALL) },
-        { href: "/dashboard/activity", label: "Activity", icon: History, show: showAll || profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ALL) },
-        { href: "/dashboard/settings", label: "Settings", icon: Settings, show: showAll || can(Permissions.SETTINGS_VIEW) },
-      ].filter((item) => item.show);
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/dashboard/sites", label: "Sites", icon: Globe, show: can(Permissions.SITES_VIEW) },
+        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: can(Permissions.FEEDBACK_VIEW_ASSIGNED) && !can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/team", label: "Team", icon: Users, show: can(Permissions.TEAM_VIEW) },
+        { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/reports", label: "Reports", icon: Clock, show: can(Permissions.REPORTS_CREATE) || can(Permissions.REPORTS_VIEW_ALL) },
+        { href: "/dashboard/activity", label: "Activity", icon: History, show: profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/settings", label: "Settings", icon: Settings, show: can(Permissions.SETTINGS_VIEW) },
+      ].filter((item: any) => item.show !== false);
 
   return (
     <aside
@@ -79,7 +82,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
+        {navItems.map((item: any) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
