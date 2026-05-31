@@ -122,9 +122,30 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check for existing annotation by mirror_id to prevent duplicates
+    if (mirrorId) {
+      const { data: existing } = await supabase
+        .from("feedback_items")
+        .select("id")
+        .eq("mirror_id", mirrorId)
+        .maybeSingle();
+
+      if (existing) {
+        const { data: item } = await supabase
+          .from("feedback_items")
+          .select("*")
+          .eq("id", existing.id)
+          .single();
+        return NextResponse.json(
+          item ? mapFeedbackItem(item) : { id: existing.id },
+          { status: 200, headers: corsHeaders() }
+        );
+      }
+    }
+
     const { data: feedbackItem, error } = await supabase
       .from("feedback_items")
-      .upsert({
+      .insert({
         project_id: projectId,
         type: type || "pin",
         content,
@@ -145,7 +166,7 @@ export async function POST(request: Request) {
         status: "open",
         created_by: createdBy || "widget-client",
         mirror_id: mirrorId || null,
-      }, { onConflict: "mirror_id" })
+      })
       .select()
       .single();
 
