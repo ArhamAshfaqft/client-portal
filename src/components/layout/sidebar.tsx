@@ -21,12 +21,12 @@ import { Permissions } from "@/lib/permissions";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { profile, isLoading } = useAuth();
   const { can } = usePermissions();
   const [collapsed, setCollapsed] = useState(false);
 
   const isClient = profile?.role === "client";
-  const showAll = !profile;
+  const showAll = isLoading || !profile;
 
   const navItems = isClient
     ? [

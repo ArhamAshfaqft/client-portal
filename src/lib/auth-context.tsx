@@ -6,7 +6,6 @@ import {
   useEffect,
   useState,
   useCallback,
-  useRef,
   type ReactNode,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -19,6 +18,7 @@ interface AuthState {
   profile: Profile | null;
   isLoading: boolean;
   isDemo: boolean;
+  connectionError: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   demoLogin: (role?: "owner" | "developer" | "client") => void;
@@ -65,32 +65,28 @@ const DEMO_DEV: Profile = {
   created_at: new Date().toISOString(),
 };
 
-const DEMO_AGENCY = {
-  name: "Skyline Digital Agency",
-  slug: "skyline-digital",
-  primary_color: "#2563eb",
-  secondary_color: "#64748b",
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
+  const [connectionError, setConnectionError] = useState(false);
+  const supabase = createClient();
 
   const fetchProfile = useCallback(
     async (userId: string) => {
-      if (!supabase) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (data) setProfile(data as Profile);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (data) setProfile(data as Profile);
+      } catch {
+        // silently fail, profile stays null
+      }
     },
-    [supabase]
+    []
   );
 
   useEffect(() => {
@@ -103,12 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!supabase) {
-      setIsLoading(false);
-      return;
-    }
+    let cancelled = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (cancelled) return;
       if (session?.user) {
         setUser(session.user);
         await fetchProfile(session.user.id);
@@ -119,29 +113,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      const user = data?.session?.user;
-      if (user) {
-        setUser(user);
-        await fetchProfile(user.id);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        const usr = data?.session?.user;
+        if (usr) {
+          setUser(usr);
+          await fetchProfile(usr.id);
+        }
+      } catch (err) {
+        console.error("Supabase connection failed:", err);
+        if (!cancelled) setConnectionError(true);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     init();
 
-    return () => subscription.unsubscribe();
-  }, [supabase, fetchProfile]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const signOut = useCallback(async () => {
     sessionStorage.removeItem("feedspace_demo");
     sessionStorage.removeItem("feedspace_demo_role");
     document.cookie = "feedspace_demo=; path=/; max-age=0";
-    await supabase?.auth.signOut();
+    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     setIsDemo(false);
-  }, [supabase]);
+  }, []);
 
   const demoLogin = useCallback((role: "owner" | "developer" | "client" = "owner") => {
     const profile = role === "developer" ? DEMO_DEV : role === "client" ? DEMO_CLIENT : DEMO_OWNER;
@@ -151,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(profile);
     setIsDemo(true);
     setIsLoading(false);
+    setConnectionError(false);
   }, []);
 
   return (
@@ -160,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isDemo,
+        connectionError,
         signOut,
         refreshProfile: () => {
           if (user) return fetchProfile(user.id);
