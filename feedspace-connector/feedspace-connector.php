@@ -3,14 +3,14 @@
  * Plugin Name: Feedspace Connector
  * Plugin URI: https://feedspace.io
  * Description: Connects your WordPress site to Feedspace for client feedback management. Enables media storage and API integration.
- * Version: 1.0.11
+ * Version: 1.0.17
  * Author: Feedspace
  * Text Domain: feedspace
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('FEEDSPACE_VERSION', '1.0.12');
+define('FEEDSPACE_VERSION', '1.0.17');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
 class FeedspaceConnector
@@ -34,9 +34,18 @@ class FeedspaceConnector
         add_action('admin_init', array($this, 'registerSettings'));
         add_action('admin_enqueue_scripts', array($this, 'adminEnqueueScripts'));
         add_filter('wp_handle_upload_prefilter', array($this, 'handleUploadPrefilter'));
+        add_action('plugins_loaded', array($this, 'ensureTables'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+    }
+
+    public function ensureTables()
+    {
+        $this->createFeedbackTable();
+        if (!get_option('feedspace_api_key')) {
+            add_option('feedspace_api_key', wp_generate_password(32, false));
+        }
     }
 
     public function maybeInitPreview()
@@ -121,6 +130,9 @@ class FeedspaceConnector
             'wpApiKey' => $wpApiKey,
             'pageUrl' => $pageUrl,
         );
+
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+        error_log('[Feedspace] Widget config: projectId=' . $config['projectId'] . ' pageUrl=' . $pageUrl . ' wpApiUrl=' . $wpApiUrl);
 
         wp_enqueue_script(
             'feedspace-widget',
@@ -266,53 +278,64 @@ class FeedspaceConnector
     {
         global $wpdb;
         $charsetCollate = $wpdb->get_charset_collate();
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         $feedbackTable = $wpdb->prefix . 'feedspace_feedback';
-        $sql1 = "CREATE TABLE IF NOT EXISTS $feedbackTable (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            feedspace_id VARCHAR(36) NOT NULL,
-            file_url TEXT NOT NULL,
-            file_type VARCHAR(100) DEFAULT '',
-            file_name VARCHAR(255) DEFAULT '',
-            file_size INT DEFAULT 0,
-            project_id VARCHAR(36) DEFAULT '',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            expires_at DATETIME DEFAULT NULL,
-            INDEX idx_feedspace_id (feedspace_id),
-            INDEX idx_project_id (project_id),
-            INDEX idx_expires_at (expires_at)
-        ) $charsetCollate;";
-        dbDelta($sql1);
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $feedbackTable));
+        if ($exists !== $feedbackTable) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->query("CREATE TABLE $feedbackTable (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                feedspace_id VARCHAR(36) NOT NULL,
+                file_url TEXT NOT NULL,
+                file_type VARCHAR(100) DEFAULT '',
+                file_name VARCHAR(255) DEFAULT '',
+                file_size INT DEFAULT 0,
+                project_id VARCHAR(36) DEFAULT '',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME DEFAULT NULL,
+                INDEX idx_feedspace_id (feedspace_id),
+                INDEX idx_project_id (project_id),
+                INDEX idx_expires_at (expires_at)
+            ) $charsetCollate");
+            // phpcs:enable
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+            error_log('[Feedspace] Created table ' . $feedbackTable . ': ' . ($wpdb->last_error ?: 'ok'));
+        }
 
         $annotationsTable = $wpdb->prefix . 'feedspace_annotations';
-        $sql2 = "CREATE TABLE IF NOT EXISTS $annotationsTable (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            annotation_id VARCHAR(36) NOT NULL,
-            project_id VARCHAR(36) NOT NULL,
-            type VARCHAR(20) NOT NULL DEFAULT 'pin',
-            content TEXT NOT NULL,
-            page_url TEXT NOT NULL,
-            selector TEXT,
-            coordinates_x REAL,
-            coordinates_y REAL,
-            coordinates_x_end REAL,
-            coordinates_y_end REAL,
-            width REAL,
-            height REAL,
-            draw_data TEXT,
-            element_dna TEXT,
-            viewport_width INT DEFAULT 0,
-            viewport_height INT DEFAULT 0,
-            device VARCHAR(20) DEFAULT 'desktop',
-            status VARCHAR(20) DEFAULT 'open',
-            created_by VARCHAR(100) DEFAULT 'Anonymous',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_annotation_id (annotation_id),
-            INDEX idx_project_id (project_id),
-            INDEX idx_page_url (page_url)
-        ) $charsetCollate;";
-        dbDelta($sql2);
+        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $annotationsTable));
+        if ($exists !== $annotationsTable) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->query("CREATE TABLE $annotationsTable (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                annotation_id VARCHAR(36) NOT NULL,
+                project_id VARCHAR(36) NOT NULL,
+                type VARCHAR(20) NOT NULL DEFAULT 'pin',
+                content TEXT NOT NULL,
+                page_url VARCHAR(2048) NOT NULL,
+                selector TEXT,
+                coordinates_x REAL,
+                coordinates_y REAL,
+                coordinates_x_end REAL,
+                coordinates_y_end REAL,
+                width REAL,
+                height REAL,
+                draw_data TEXT,
+                element_dna TEXT,
+                viewport_width INT DEFAULT 0,
+                viewport_height INT DEFAULT 0,
+                device VARCHAR(20) DEFAULT 'desktop',
+                status VARCHAR(20) DEFAULT 'open',
+                created_by VARCHAR(100) DEFAULT 'Anonymous',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY idx_annotation_id (annotation_id),
+                INDEX idx_project_id (project_id),
+                INDEX idx_page_url (page_url(191))
+            ) $charsetCollate");
+            // phpcs:enable
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+            error_log('[Feedspace] Created annotations table: ' . ($wpdb->last_error ?: 'ok'));
+        }
     }
 
     public function registerRoutes()
@@ -374,7 +397,7 @@ class FeedspaceConnector
         register_rest_route('feedspace/v1', '/annotations/counts', array(
             'methods' => 'GET',
             'callback' => array($this, 'getAnnotationCounts'),
-            'permission_callback' => array($this, 'checkApiAuth'),
+            'permission_callback' => '__return_true',
         ));
     }
 
@@ -543,6 +566,8 @@ class FeedspaceConnector
         $annotationId = wp_generate_uuid4();
         $now = current_time('mysql');
 
+        $this->preventCaching();
+
         $data = array(
             'annotation_id' => $annotationId,
             'project_id' => sanitize_text_field($body['projectId'] ?? ''),
@@ -567,6 +592,17 @@ class FeedspaceConnector
         );
 
         $wpdb->insert($tableName, $data);
+
+        $errorMessage = false;
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+        error_log('[Feedspace] createAnnotation insert result: ' . ($wpdb->last_error ?: 'success'));
+
+        if ($wpdb->last_error) {
+            $errorMessage = $wpdb->last_error;
+            return new WP_REST_Response(array(
+                'error' => 'Database error: ' . $wpdb->last_error,
+            ), 500);
+        }
 
         return new WP_REST_Response(array(
             'id' => $annotationId,
@@ -597,17 +633,24 @@ class FeedspaceConnector
     {
         global $wpdb;
         $tableName = $wpdb->prefix . 'feedspace_annotations';
-        $pageUrl = esc_url_raw($request->get_param('pageUrl') ?? '');
+        $rawPageUrl = $request->get_param('pageUrl') ?? '';
+        $pageUrl = esc_url_raw($rawPageUrl);
         if ($pageUrl) {
             $pageUrl = remove_query_arg('feedspace_preview', $pageUrl);
         }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
+        $this->preventCaching();
+
         if (!$projectId) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+            error_log('[Feedspace] getAnnotations: no projectId, pageUrl=' . $pageUrl);
             return new WP_REST_Response(array(), 200);
         }
 
         if ($pageUrl) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+            error_log('[Feedspace] getAnnotations: projectId=' . $projectId . ' pageUrl=' . $pageUrl);
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
                 $pageUrl,
@@ -620,6 +663,8 @@ class FeedspaceConnector
             ));
         }
 
+        // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+        error_log('[Feedspace] getAnnotations: found ' . count($results) . ' results');
 
         $annotations = array();
         foreach ($results as $row) {
@@ -686,6 +731,14 @@ class FeedspaceConnector
         $wpdb->delete($tableName, array('annotation_id' => $id));
 
         return new WP_REST_Response(array('deleted' => true), 200);
+    }
+
+    private function preventCaching()
+    {
+        nocache_headers();
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
     }
 
     public function getAnnotationCounts($request)
