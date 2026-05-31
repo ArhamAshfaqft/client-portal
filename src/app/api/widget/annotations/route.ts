@@ -67,6 +67,14 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    if (body._test) {
+      return NextResponse.json(
+        { ok: true, message: "Vercel endpoint reachable" },
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
     const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;

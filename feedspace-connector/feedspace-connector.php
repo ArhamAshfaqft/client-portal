@@ -1173,8 +1173,7 @@ add_action('wp_ajax_feedspace_test_mirroring', function () {
 
     $testUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
     $testPayload = array(
-        'projectId' => 'test-only',
-        'previewToken' => 'test-only',
+        '_test' => true,
         'type' => 'pin',
         'content' => 'Test ping from Feedspace Connector',
         'pageUrl' => get_bloginfo('url'),
