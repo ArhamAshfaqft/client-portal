@@ -1204,7 +1204,7 @@ class FeedspaceConnector
                 var config = {
                     name: <?php echo json_encode(get_bloginfo('name')); ?>,
                     url: <?php echo json_encode($siteUrl); ?>,
-                    wp_api_url: <?php echo json_encode($restUrl); ?>,
+                    wp_api_url: <?php echo json_encode($siteUrl); ?>,
                     wp_api_key: <?php echo json_encode($apiKey); ?>,
                     wp_application_password: null
                 };
