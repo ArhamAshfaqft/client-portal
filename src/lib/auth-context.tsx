@@ -18,7 +18,6 @@ interface AuthState {
   profile: Profile | null;
   isLoading: boolean;
   isDemo: boolean;
-  connectionError: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   demoLogin: (role?: "owner" | "developer" | "client") => void;
@@ -72,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
   const supabase = createClient();
 
   const fetchProfile = useCallback(async (userId: string) => {
@@ -84,19 +82,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
       if (data) setProfile(data as Profile);
     } catch {
-      // silently fail, profile stays null
+      // profile stays null
     }
   }, []);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("feedspace_demo");
     const savedRole = sessionStorage.getItem("feedspace_demo_role") as "owner" | "developer" | "client" | null;
-    if (saved === "true" || window.location.pathname === "/login") {
-      if (saved === "true") {
-        setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
-      } else {
-        setProfile(DEMO_OWNER);
-      }
+    if (saved === "true") {
+      setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
       setIsDemo(true);
       setIsLoading(false);
       return;
@@ -106,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const timeout = setTimeout(() => {
       if (!cancelled) {
-        setConnectionError(true);
         setIsLoading(false);
       }
     }, AUTH_TIMEOUT);
@@ -131,14 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(usr);
           await fetchProfile(usr.id);
         }
-        if (!cancelled) {
-          setIsLoading(false);
-          clearTimeout(timeout);
-        }
       } catch (err) {
         console.error("Supabase connection failed:", err);
+      } finally {
         if (!cancelled) {
-          setConnectionError(true);
           setIsLoading(false);
           clearTimeout(timeout);
         }
@@ -172,7 +161,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(profile);
     setIsDemo(true);
     setIsLoading(false);
-    setConnectionError(false);
   }, []);
 
   return (
@@ -182,7 +170,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isDemo,
-        connectionError,
         signOut,
         refreshProfile: () => {
           if (user) return fetchProfile(user.id);

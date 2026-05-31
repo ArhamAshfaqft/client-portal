@@ -12,17 +12,57 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/register") ||
     request.nextUrl.pathname.startsWith("/preview/");
 
-  if (!isDemo && !isPublicPath) {
+  if (!hasSupabase) {
+    if (!isDemo && !isPublicPath) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      return NextResponse.redirect(loginUrl);
+    }
+    if (isDemo && isPublicPath) {
+      const dashUrl = request.nextUrl.clone();
+      dashUrl.pathname = "/dashboard";
+      return NextResponse.redirect(dashUrl);
+    }
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+  let user: any = null;
+
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    });
+    const result = await supabase.auth.getUser();
+    user = result?.data?.user ?? null;
+  } catch {
+    // Supabase unreachable — fall through to demo cookie check
+  }
+
+  if (!user && !isDemo && !isPublicPath) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isDemo && isPublicPath) {
+  if ((user || isDemo) && isPublicPath) {
     const dashUrl = request.nextUrl.clone();
     dashUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashUrl);
   }
 
-  return NextResponse.next({ request });
+  return supabaseResponse;
 }
