@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +8,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ valid: false, error: "Missing token" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    );
     const { data: link, error } = await supabase
       .from("preview_links")
       .select("*")

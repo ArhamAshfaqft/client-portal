@@ -200,20 +200,97 @@ export async function GET() {
 
   const { data: projects } = await supabase
     .from("projects")
-    .select("id")
+    .select("id, site_id")
     .eq("agency_id", profile.agency_id);
 
   if (!projects || projects.length === 0) {
     return NextResponse.json([]);
   }
 
-  const projectIds = projects.map((p: { id: string }) => p.id);
+  const siteIds = [...new Set(projects.map((p: { site_id: string }) => p.site_id))];
 
-  const { data } = await supabase
-    .from("feedback_items")
-    .select("*, creator:profiles!created_by(full_name, avatar_url)")
-    .in("project_id", projectIds)
-    .order("created_at", { ascending: false });
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, wp_api_url, wp_application_password")
+    .in("id", siteIds);
 
-  return NextResponse.json(data || []);
+  const wpSiteMap = new Map(
+    (sites || [])
+      .filter((s: { wp_api_url: string | null }) => s.wp_api_url)
+      .map((s: { id: string; wp_api_url: string; wp_application_password: string | null }) => [
+        s.id,
+        { url: s.wp_api_url.replace(/\/+$/, ""), key: s.wp_application_password || "" },
+      ])
+  );
+
+  const wpProjectIds = new Set<string>();
+  const supabaseProjectIds: string[] = [];
+
+  for (const p of projects) {
+    if (wpSiteMap.has(p.site_id)) {
+      wpProjectIds.add(p.id);
+    } else {
+      supabaseProjectIds.push(p.id);
+    }
+  }
+
+  const wpAnnotations: any[] = [];
+  const projectSiteMap = new Map(projects.map((p: { id: string; site_id: string }) => [p.id, p.site_id]));
+
+  for (const projectId of wpProjectIds) {
+    const siteId = projectSiteMap.get(projectId)!;
+    const wp = wpSiteMap.get(siteId)!;
+    try {
+      const res = await fetch(
+        `${wp.url}/wp-json/feedspace/v1/annotations?projectId=${encodeURIComponent(projectId)}`,
+        { headers: { "X-Feedspace-Key": wp.key } }
+      );
+      if (res.ok) {
+        const annotations = await res.json();
+        for (const a of annotations) {
+          wpAnnotations.push({
+            id: a.id,
+            project_id: projectId,
+            type: a.type,
+            content: a.content,
+            status: a.status,
+            page_url: a.pageUrl,
+            coordinates_x: a.anchorXPct,
+            coordinates_y: a.anchorYPct,
+            width: a.widthPct,
+            height: a.heightPct,
+            coordinates_x_end: a.endAnchorXPct,
+            coordinates_y_end: a.endAnchorYPct,
+            draw_data: a.drawData,
+            element_dna: a.elementDna,
+            viewport_width: a.viewportWidth,
+            viewport_height: a.viewportHeight,
+            device: a.device,
+            created_by: a.createdBy,
+            created_at: a.createdAt,
+            creator: null,
+          });
+        }
+      }
+    } catch {
+      // skip unreachable WP
+    }
+  }
+
+  let supabaseData: any[] = [];
+
+  if (supabaseProjectIds.length > 0) {
+    const { data } = await supabase
+      .from("feedback_items")
+      .select("*, creator:profiles!created_by(full_name, avatar_url)")
+      .in("project_id", supabaseProjectIds)
+      .order("created_at", { ascending: false });
+
+    supabaseData = data || [];
+  }
+
+  const merged = [...wpAnnotations, ...supabaseData];
+  merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  return NextResponse.json(merged);
 }

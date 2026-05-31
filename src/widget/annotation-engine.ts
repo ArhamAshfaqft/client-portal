@@ -6,6 +6,14 @@ import { FeedbackListPanel } from './feedback-list';
 import { getElementDNA, closestTargetable, toRelative, findElement } from './element-dna';
 import { uploadToWordPress } from './uploader';
 
+function dbg(msg: string, data?: unknown): void {
+  const arr = (window as any).__feedspaceDebug;
+  if (arr && Array.isArray(arr)) {
+    arr.push({ msg, data, time: Date.now() });
+  }
+  console.log('[Feedspace]', msg, data || '');
+}
+
 const SVG_ICONS = {
   select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
   pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
@@ -44,6 +52,7 @@ export class AnnotationEngine {
 
   private toolbarRoot: HTMLElement | null = null;
   private nameModal: HTMLElement | null = null;
+  private hoverHighlightEl: HTMLElement | null = null;
 
   constructor(config: WidgetConfig, api: ApiClient) {
     this.config = config;
@@ -54,16 +63,24 @@ export class AnnotationEngine {
   }
 
   async init(): Promise<void> {
+    dbg('AnnotationEngine.init() called');
     this.clientName = localStorage.getItem('feedspace_client_name') || '';
+    dbg('clientName from localStorage:', this.clientName || '(empty)');
     if (!this.clientName) {
+      dbg('No client name — showing name modal');
       this.showNameModal();
       return;
     }
+    dbg('Client name found — booting directly');
     this.boot();
   }
 
   private showNameModal(): void {
-    if (this.nameModal) return;
+    dbg('showNameModal() called');
+    if (this.nameModal) {
+      dbg('nameModal already exists — skipping');
+      return;
+    }
     const modal = document.createElement('div');
     modal.className = 'feedspace-name-modal';
     modal.innerHTML = `
@@ -79,6 +96,7 @@ export class AnnotationEngine {
     `;
     document.body.appendChild(modal);
     this.nameModal = modal;
+    dbg('Name modal appended to body');
 
     const input = modal.querySelector('#feedspace-name-input') as HTMLInputElement;
     input.focus();
@@ -112,12 +130,14 @@ export class AnnotationEngine {
   }
 
   private boot(): void {
+    dbg('boot() called — initializing renderer, toolbar, drawing, annotations');
     this.renderer.init({
       onAnnotationClick: (id) => this.onAnnotationClick(id),
     });
     this.buildToolbar();
     this.attachDrawingListeners();
     this.loadAnnotations();
+    dbg('boot() complete');
   }
 
   private buildToolbar(): void {
@@ -188,6 +208,7 @@ export class AnnotationEngine {
     });
 
     document.body.setAttribute('data-feedspace-tool', this.currentTool);
+    if (this.currentTool === 'select') this.clearHoverHighlight();
 
     const overlay = document.getElementById('feedspace-overlay');
     if (overlay) {
@@ -231,6 +252,28 @@ export class AnnotationEngine {
     document.addEventListener('mousedown', (e) => this.onMouseDown(e));
     document.addEventListener('mousemove', (e) => this.onMouseMove(e));
     document.addEventListener('mouseup', (e) => this.onMouseUp(e));
+    document.addEventListener('mouseleave', () => this.clearHoverHighlight());
+  }
+
+  private updateHoverHighlight(e: MouseEvent): void {
+    if (this.currentTool === 'select') {
+      this.clearHoverHighlight();
+      return;
+    }
+    const target = closestTargetable(e.target as Element) as HTMLElement | null;
+    if (target === this.hoverHighlightEl) return;
+    this.clearHoverHighlight();
+    if (target && target !== document.body) {
+      target.classList.add('feedspace-hover-highlight');
+      this.hoverHighlightEl = target;
+    }
+  }
+
+  private clearHoverHighlight(): void {
+    if (this.hoverHighlightEl) {
+      this.hoverHighlightEl.classList.remove('feedspace-hover-highlight');
+      this.hoverHighlightEl = null;
+    }
   }
 
   private onMouseDown(e: MouseEvent): void {
@@ -254,7 +297,10 @@ export class AnnotationEngine {
   }
 
   private onMouseMove(e: MouseEvent): void {
-    if (!this.isDrawing || !this.drawStart) return;
+    if (!this.isDrawing || !this.drawStart) {
+      this.updateHoverHighlight(e);
+      return;
+    }
 
     const overlay = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
     if (!overlay) return;
@@ -420,6 +466,7 @@ export class AnnotationEngine {
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
       device: this.deviceMode,
+      createdBy: this.clientName,
       metaData,
     };
 
@@ -450,7 +497,7 @@ export class AnnotationEngine {
 
   private async loadAnnotations(): Promise<void> {
     try {
-      this.annotations = await this.api.getAnnotations(this.config.pageUrl);
+      this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
     } catch (err) {
@@ -616,6 +663,7 @@ export class AnnotationEngine {
   }
 
   destroy(): void {
+    this.clearHoverHighlight();
     this.renderer.destroy();
     this.commentPanel.close();
     this.feedbackList.close();

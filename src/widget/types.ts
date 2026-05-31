@@ -72,6 +72,7 @@ export interface CreateAnnotationPayload {
   viewportWidth: number;
   viewportHeight: number;
   device: string;
+  createdBy?: string;
   metaData: Record<string, unknown>;
 }
 

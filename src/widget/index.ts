@@ -13,13 +13,26 @@ declare global {
 }
 
 function initWidget(config: WidgetConfig): AnnotationEngine {
-  injectStyles();
+  function dbg(msg: string, data?: unknown) {
+    const arr = (window as any).__feedspaceDebug;
+    if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
+    console.log('[Feedspace]', msg, data || '');
+  }
 
-  const api = createApiClient(config.apiUrl, config.token);
+  dbg('initWidget() called with config', { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl });
+
+  injectStyles();
+  dbg('Styles injected');
+
+  const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
+  dbg('API client created');
+
   const engine = new AnnotationEngine(config, api);
+  dbg('AnnotationEngine instance created');
 
   engine.init().catch((err) => {
     console.error('Feedspace widget init error:', err);
+    dbg('init() threw error', String(err));
   });
 
   return engine;

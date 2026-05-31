@@ -83,9 +83,8 @@ export default function DashboardPage() {
         const [
           { count: sitesCount },
           { count: projectsCount },
-          { count: openCount },
+          annotationCounts,
           { count: membersCount },
-          { count: resolvedCount },
         ] = await Promise.all([
           supabase
             .from("sites")
@@ -96,27 +95,20 @@ export default function DashboardPage() {
             .select("*", { count: "exact", head: true })
             .eq("agency_id", agencyId)
             .in("status", ["active"]),
-          supabase
-            .from("feedback_items")
-            .select("*", { count: "exact", head: true })
-            .in("status", ["open", "in_progress"]),
+          fetch("/api/dashboard/annotation-counts").then(r => r.json()),
           supabase
             .from("profiles")
             .select("*", { count: "exact", head: true })
             .eq("agency_id", agencyId),
-          supabase
-            .from("feedback_items")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "resolved"),
         ]);
 
         if (!cancelled) {
           setData({
             total_sites: sitesCount ?? 0,
             active_projects: projectsCount ?? 0,
-            open_feedback: openCount ?? 0,
+            open_feedback: annotationCounts.open_feedback ?? 0,
             team_members: membersCount ?? 0,
-            resolved_feedback: resolvedCount ?? 0,
+            resolved_feedback: annotationCounts.resolved_feedback ?? 0,
           });
         }
       } catch {

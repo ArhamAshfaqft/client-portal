@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+
+function anonClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
+  );
+}
 
 function corsHeaders() {
   return {
@@ -22,7 +30,7 @@ export async function PATCH(
     const body = await request.json();
 
     if (body.previewToken) {
-      const supabase = await createClient();
+      const supabase = anonClient();
       const { data: link } = await supabase
         .from("preview_links")
         .select("project_id")
@@ -37,7 +45,7 @@ export async function PATCH(
       }
     }
 
-    const supabase = await createClient();
+    const supabase = anonClient();
     const updates: Record<string, any> = {};
 
     if (body.content !== undefined) updates.content = body.content;
@@ -76,7 +84,7 @@ export async function DELETE(
   const token = searchParams.get("token");
 
   if (token) {
-    const supabase = await createClient();
+    const supabase = anonClient();
     const { data: link } = await supabase
       .from("preview_links")
       .select("project_id")
@@ -91,7 +99,7 @@ export async function DELETE(
     }
   }
 
-  const supabase = await createClient();
+  const supabase = anonClient();
   const { error } = await supabase
     .from("feedback_items")
     .delete()

@@ -7,8 +7,8 @@ export interface VerifyResult {
   siteName?: string;
 }
 
-export function createApiClient(baseUrl: string, token: string) {
-  async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export function createApiClient(baseUrl: string, token: string, wpApiUrl?: string, wpApiKey?: string) {
+  async function vercelRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${baseUrl.replace(/\/+$/, '')}/api${path}`;
     const res = await fetch(url, {
       ...options,
@@ -23,32 +23,66 @@ export function createApiClient(baseUrl: string, token: string) {
     return res.json();
   }
 
+  async function wpRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const url = `${wpApiUrl!.replace(/\/+$/, '')}/wp-json/feedspace/v1${path}`;
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Feedspace-Key': wpApiKey!,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      throw new Error(`WordPress API error ${res.status}: ${await res.text()}`);
+    }
+    return res.json();
+  }
+
+  const useWp = !!(wpApiUrl && wpApiKey);
+
   return {
     verifyToken: (): Promise<VerifyResult> =>
-      request(`/widget/verify-token`, {
+      vercelRequest(`/widget/verify-token`, {
         method: 'POST',
         body: JSON.stringify({ token }),
       }),
 
-    getAnnotations: (pageUrl: string): Promise<Annotation[]> =>
-      request(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`),
+    getAnnotations: (pageUrl: string, projectId: string): Promise<Annotation[]> => {
+      if (useWp) {
+        return wpRequest('GET', `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId)}`);
+      }
+      return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
+    },
 
-    createAnnotation: (payload: CreateAnnotationPayload): Promise<Annotation> =>
-      request(`/widget/annotations`, {
+    createAnnotation: (payload: CreateAnnotationPayload): Promise<Annotation> => {
+      if (useWp) {
+        return wpRequest('POST', '/annotations', payload);
+      }
+      return vercelRequest(`/widget/annotations`, {
         method: 'POST',
         body: JSON.stringify(payload),
-      }),
+      });
+    },
 
-    updateAnnotation: (id: string, data: Partial<Annotation>): Promise<Annotation> =>
-      request(`/widget/annotations/${id}`, {
+    updateAnnotation: (id: string, data: Partial<Annotation>): Promise<Annotation> => {
+      if (useWp) {
+        return wpRequest('PATCH', `/annotations/${id}`, data);
+      }
+      return vercelRequest(`/widget/annotations/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
-      }),
+      });
+    },
 
-    deleteAnnotation: (id: string): Promise<void> =>
-      request(`/widget/annotations/${id}`, {
+    deleteAnnotation: (id: string): Promise<void> => {
+      if (useWp) {
+        return wpRequest('DELETE', `/annotations/${id}`);
+      }
+      return vercelRequest(`/widget/annotations/${id}`, {
         method: 'DELETE',
-      }),
+      });
+    },
   };
 }
 
