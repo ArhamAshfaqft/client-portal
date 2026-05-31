@@ -596,12 +596,28 @@ class FeedspaceConnector
             $mirrorBody = $body;
             $mirrorBody['id'] = $annotationId;
             $mirrorBody['createdAt'] = $now;
+            
+            $jsonBody = json_encode($mirrorBody);
+            error_log('[Feedspace] Mirroring annotation to Vercel: ' . trailingslashit($vercelUrl) . 'api/widget/annotations');
+            error_log('[Feedspace] Mirror body: ' . $jsonBody);
+
             $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
                 'headers' => array('Content-Type' => 'application/json'),
-                'body' => json_encode($mirrorBody),
-                'timeout' => 10,
+                'body' => $jsonBody,
+                'timeout' => 15,
             ));
-            $mirrorOk = !is_wp_error($result) && wp_remote_retrieve_response_code($result) < 400;
+
+            if (is_wp_error($result)) {
+                error_log('[Feedspace] Mirroring failed with WP_Error: ' . $result->get_error_message());
+            } else {
+                $code = wp_remote_retrieve_response_code($result);
+                $respBody = wp_remote_retrieve_body($result);
+                error_log('[Feedspace] Mirroring response code: ' . $code);
+                error_log('[Feedspace] Mirroring response body: ' . $respBody);
+                $mirrorOk = ($code >= 200 && $code < 300);
+            }
+        } else {
+            error_log('[Feedspace] Vercel URL (feedspace_api_url option) is empty. Skipping mirroring.');
         }
 
         return new WP_REST_Response(array(
