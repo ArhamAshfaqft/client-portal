@@ -30,6 +30,7 @@ class FeedspaceConnector
         add_action('rest_api_init', array($this, 'registerRoutes'));
         add_filter('upload_mimes', array($this, 'allowAdditionalMimeTypes'));
         add_action('admin_menu', array($this, 'addAdminMenu'));
+        add_action('admin_init', array($this, 'registerSettings'));
         add_action('admin_enqueue_scripts', array($this, 'adminEnqueueScripts'));
         add_filter('wp_handle_upload_prefilter', array($this, 'handleUploadPrefilter'));
 
@@ -278,6 +279,11 @@ class FeedspaceConnector
             $file['error'] = 'File size exceeds 50MB limit for feedback uploads.';
         }
         return $file;
+    }
+
+    public function registerSettings()
+    {
+        register_setting('feedspace_settings', 'feedspace_feedback_mode');
     }
 
     public function addAdminMenu()
