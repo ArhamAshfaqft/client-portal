@@ -45,6 +45,7 @@ export default function SitesPage() {
     name: "",
     url: "",
     wp_api_url: "",
+    wp_api_key: "",
     wp_application_password: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -151,6 +152,7 @@ export default function SitesPage() {
           name: formData.name,
           url: formData.url,
           wp_api_url: formData.wp_api_url || null,
+          wp_api_key: formData.wp_api_key || null,
           wp_application_password: formData.wp_application_password || null,
           wp_connected: !!(formData.wp_api_url && formData.wp_application_password),
         }),
@@ -170,7 +172,7 @@ export default function SitesPage() {
     }
 
     setShowAdd(false);
-    setFormData({ name: "", url: "", wp_api_url: "", wp_application_password: "" });
+    setFormData({ name: "", url: "", wp_api_url: "", wp_api_key: "", wp_application_password: "" });
     setAddError("");
     fetchSites();
     setSubmitting(false);
@@ -457,13 +459,14 @@ export default function SitesPage() {
                   try {
                     const text = await navigator.clipboard.readText();
                     const cfg = JSON.parse(text);
-                    if (cfg.name && cfg.url && cfg.wp_api_url && cfg.wp_application_password) {
+                    if (cfg.name && cfg.url) {
                       setFormData({
                         ...formData,
                         name: formData.name || cfg.name,
                         url: formData.url || cfg.url,
-                        wp_api_url: cfg.wp_api_url,
-                        wp_application_password: cfg.wp_application_password,
+                        wp_api_url: cfg.wp_api_url || formData.wp_api_url,
+                        wp_api_key: cfg.wp_api_key || formData.wp_api_key,
+                        wp_application_password: cfg.wp_application_password || formData.wp_application_password,
                       });
                     }
                   } catch {}
@@ -479,8 +482,16 @@ export default function SitesPage() {
               />
               <div className="mt-3">
               <Input
-                label="API Key"
-                placeholder="Paste the API key from Feedspace Connector settings"
+                label="Webhook API Key"
+                placeholder="From Feedspace Connector admin page"
+                value={formData.wp_api_key}
+                onChange={(e) => setFormData({ ...formData, wp_api_key: e.target.value })}
+              />
+              </div>
+              <div className="mt-3">
+              <Input
+                label="Application Password"
+                placeholder="For media uploads (optional)"
                 value={formData.wp_application_password}
                 onChange={(e) => setFormData({ ...formData, wp_application_password: e.target.value })}
               />

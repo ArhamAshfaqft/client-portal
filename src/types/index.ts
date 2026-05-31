@@ -37,6 +37,7 @@ export interface Site {
   name: string;
   url: string;
   wp_api_url: string | null;
+  wp_api_key: string | null;
   wp_application_password: string | null;
   wp_connected: boolean;
   created_at: string;
