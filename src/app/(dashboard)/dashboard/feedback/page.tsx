@@ -27,10 +27,81 @@ export default function FeedbackOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [sites, setSites] = useState<ReturnType<typeof getAllFeedbackGroupedBySite>>([]);
 
+  const fetchSitesOverview = async () => {
+    if (!profile?.agency_id) return;
+    setLoading(true);
+    try {
+      const { data: sitesData } = await supabase
+        .from("sites")
+        .select("*")
+        .eq("agency_id", profile.agency_id)
+        .order("created_at", { ascending: false });
+
+      const sitesList = sitesData || [];
+
+      if (sitesList.length === 0) {
+        setSites([]);
+        return;
+      }
+
+      const siteIds = sitesList.map((s) => s.id);
+
+      const { data: projectsData } = await supabase
+        .from("projects")
+        .select("*")
+        .in("site_id", siteIds);
+
+      const projectsList = projectsData || [];
+      const projectIds = projectsList.map((p) => p.id);
+      
+      let feedbackCountsMap: Record<string, { new_count: number; in_progress_count: number; resolved_count: number; total: number }> = {};
+      for (const site of sitesList) {
+        feedbackCountsMap[site.id] = { new_count: 0, in_progress_count: 0, resolved_count: 0, total: 0 };
+      }
+
+      if (projectIds.length > 0) {
+        const { data: feedbackData } = await supabase
+          .from("feedback_items")
+          .select("project_id, status")
+          .in("project_id", projectIds)
+          .is("parent_id", null);
+
+        if (feedbackData) {
+          const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
+          for (const item of feedbackData) {
+            const siteId = projectToSiteMap[item.project_id];
+            if (siteId && feedbackCountsMap[siteId]) {
+              feedbackCountsMap[siteId].total++;
+              if (item.status === "open") feedbackCountsMap[siteId].new_count++;
+              else if (item.status === "in_progress") feedbackCountsMap[siteId].in_progress_count++;
+              else if (item.status === "resolved") feedbackCountsMap[siteId].resolved_count++;
+            }
+          }
+        }
+      }
+
+      const mapped = sitesList.map((site) => ({
+        ...site,
+        feedback_counts: feedbackCountsMap[site.id],
+        projects: projectsList.filter((p) => p.site_id === site.id),
+      }));
+
+      setSites(mapped as any);
+    } catch (err) {
+      console.error("Error fetching feedback overview:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setSites(isDemo ? getAllFeedbackGroupedBySite() : []);
-    setLoading(false);
-  }, [isDemo]);
+    if (isDemo) {
+      setSites(getAllFeedbackGroupedBySite());
+      setLoading(false);
+    } else {
+      fetchSitesOverview();
+    }
+  }, [isDemo, profile]);
 
   const filteredSites = useMemo(() => {
     if (!search.trim()) return sites;

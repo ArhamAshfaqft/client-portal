@@ -77,14 +77,64 @@ export default function SitesPage() {
   const fetchSites = async () => {
     if (!profile?.agency_id) return;
     try {
-      const { data } = await supabase
+      const { data: sitesData } = await supabase
         .from("sites")
         .select("*")
         .eq("agency_id", profile.agency_id)
         .order("created_at", { ascending: false });
-      if (data) setSites(data as Site[]);
-    } catch {
-      // keep empty
+
+      if (sitesData) {
+        const sitesList = sitesData as Site[];
+        const siteIds = sitesList.map((s) => s.id);
+
+        if (siteIds.length > 0) {
+          // Fetch all projects for these sites
+          const { data: projectsData } = await supabase
+            .from("projects")
+            .select("id, site_id")
+            .in("site_id", siteIds);
+
+          const projectsList = projectsData || [];
+          const projectIds = projectsList.map((p) => p.id);
+
+          let countsMap: Record<string, { new_count: number; in_progress_count: number; resolved_count: number }> = {};
+          for (const s of sitesList) {
+            countsMap[s.id] = { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+          }
+
+          if (projectIds.length > 0) {
+            const { data: feedbackData } = await supabase
+              .from("feedback_items")
+              .select("project_id, status")
+              .in("project_id", projectIds)
+              .is("parent_id", null);
+
+            if (feedbackData) {
+              const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
+              for (const item of feedbackData) {
+                const siteId = projectToSiteMap[item.project_id];
+                if (siteId && countsMap[siteId]) {
+                  if (item.status === "open") countsMap[siteId].new_count++;
+                  else if (item.status === "in_progress") countsMap[siteId].in_progress_count++;
+                  else if (item.status === "resolved") countsMap[siteId].resolved_count++;
+                }
+              }
+            }
+          }
+
+          // Attach feedback_counts to each site object
+          const enrichedSites = sitesList.map((s) => ({
+            ...s,
+            feedback_counts: countsMap[s.id],
+          }));
+
+          setSites(enrichedSites as any);
+        } else {
+          setSites([]);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching sites:", err);
     }
     setLoading(false);
   };
