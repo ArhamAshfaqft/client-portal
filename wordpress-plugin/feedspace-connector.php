@@ -3,14 +3,14 @@
  * Plugin Name: Feedspace Connector
  * Plugin URI: https://feedspace.io
  * Description: Connects your WordPress site to Feedspace for client feedback management. Enables media storage and API integration.
- * Version: 1.0.1
+ * Version: 1.0.3
  * Author: Feedspace
  * Text Domain: feedspace
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('FEEDSPACE_VERSION', '1.0.1');
+define('FEEDSPACE_VERSION', '1.0.3');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
 class FeedspaceConnector
@@ -57,7 +57,8 @@ class FeedspaceConnector
 
     private function verifyPreviewToken($token)
     {
-        $apiUrl = get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
+        $apiUrl = get_option('feedspace_api_url', '');
+        if (empty($apiUrl)) return false;
         $verifyUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
 
         $response = wp_remote_post($verifyUrl, array(
@@ -69,7 +70,7 @@ class FeedspaceConnector
         if (is_wp_error($response)) return false;
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (!$body || !$body['valid']) return false;
+        if (!$body || empty($body['valid'])) return false;
 
         return $body;
     }
@@ -77,7 +78,7 @@ class FeedspaceConnector
     private function enqueueWidgetAssets($config)
     {
         $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
-        $apiBaseUrl = get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
+        $apiBaseUrl = get_option('feedspace_api_url', '');
         $wpApiUrl = get_bloginfo('url');
         $wpApiKey = get_option('feedspace_api_key');
         $pageUrl = home_url(add_query_arg(null, null));
@@ -121,7 +122,7 @@ class FeedspaceConnector
         $this->createFeedbackTable();
         add_option('feedspace_version', FEEDSPACE_VERSION);
         add_option('feedspace_api_key', wp_generate_password(32, false));
-        add_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co');
+        add_option('feedspace_api_url', '');
     }
 
     public function deactivate()
@@ -438,9 +439,9 @@ class FeedspaceConnector
                             <th>Feedspace API URL</th>
                             <td>
                                 <input type="url" name="feedspace_api_url"
-                                    value="<?php echo esc_attr(get_option('feedspace_api_url', 'https://zkxccmxymssnrlwaengw.supabase.co')); ?>"
-                                    class="regular-text" />
-                                <p class="description">Your Feedspace app URL (e.g. https://app.feedspace.com)</p>
+                                    value="<?php echo esc_attr(get_option('feedspace_api_url', '')); ?>"
+                                class="regular-text" />
+                                <p class="description">Your Feedspace app URL (e.g. https://your-app.vercel.app). Required for preview links to work.</p>
                             </td>
                         </tr>
                         <tr>

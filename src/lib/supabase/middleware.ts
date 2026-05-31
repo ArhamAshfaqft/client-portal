@@ -10,7 +10,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/register") ||
-    request.nextUrl.pathname.startsWith("/preview/");
+    request.nextUrl.pathname.startsWith("/preview/") ||
+    request.nextUrl.pathname.startsWith("/api/widget/");
 
   if (!hasSupabase) {
     if (!isDemo && !isPublicPath) {
