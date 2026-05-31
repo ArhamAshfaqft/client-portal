@@ -67,11 +67,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { projectId, previewToken, type, content, pageUrl, selector, elementDna } = body;
+    const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;
+    const mirrorId: string | undefined = body.id;
 
-    if (!projectId || !previewToken || !content) {
+    if (!projectId || !content) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400, headers: corsHeaders() }
@@ -84,23 +85,38 @@ export async function POST(request: Request) {
       { cookies: { getAll: () => [], setAll: () => {} } }
     );
 
-    const { data: link } = await supabase
-      .from("preview_links")
-      .select("project_id")
-      .eq("token", previewToken)
-      .eq("project_id", projectId)
-      .single();
+    if (previewToken) {
+      const { data: link } = await supabase
+        .from("preview_links")
+        .select("project_id")
+        .eq("token", previewToken)
+        .eq("project_id", projectId)
+        .single();
 
-    if (!link) {
-      return NextResponse.json(
-        { error: "Invalid preview token" },
-        { status: 403, headers: corsHeaders() }
-      );
+      if (!link) {
+        return NextResponse.json(
+          { error: "Invalid preview token" },
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+    } else {
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("id", projectId)
+        .single();
+
+      if (!project) {
+        return NextResponse.json(
+          { error: "Invalid project ID" },
+          { status: 403, headers: corsHeaders() }
+        );
+      }
     }
 
     const { data: feedbackItem, error } = await supabase
       .from("feedback_items")
-      .insert({
+      .upsert({
         project_id: projectId,
         type: type || "pin",
         content,
@@ -119,8 +135,9 @@ export async function POST(request: Request) {
         viewport_height: viewportHeight ?? null,
         device: device || "desktop",
         status: "open",
-        created_by: "widget-client",
-      })
+        created_by: createdBy || "widget-client",
+        mirror_id: mirrorId || null,
+      }, { onConflict: "mirror_id" })
       .select()
       .single();
 

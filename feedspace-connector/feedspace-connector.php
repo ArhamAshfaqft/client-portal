@@ -608,16 +608,32 @@ class FeedspaceConnector
             ));
 
             if (is_wp_error($result)) {
-                error_log('[Feedspace] Mirroring failed with WP_Error: ' . $result->get_error_message());
+                $errMsg = $result->get_error_message();
+                error_log('[Feedspace] Mirroring failed with WP_Error: ' . $errMsg);
+                update_option('feedspace_last_mirror_id', $annotationId);
+                update_option('feedspace_last_mirror_code', 0);
+                update_option('feedspace_last_mirror_body', $errMsg);
+                update_option('feedspace_last_mirror_time', current_time('mysql'));
+                update_option('feedspace_last_mirror_success', false);
             } else {
                 $code = wp_remote_retrieve_response_code($result);
                 $respBody = wp_remote_retrieve_body($result);
                 error_log('[Feedspace] Mirroring response code: ' . $code);
                 error_log('[Feedspace] Mirroring response body: ' . $respBody);
                 $mirrorOk = ($code >= 200 && $code < 300);
+                update_option('feedspace_last_mirror_id', $annotationId);
+                update_option('feedspace_last_mirror_code', $code);
+                update_option('feedspace_last_mirror_body', $respBody);
+                update_option('feedspace_last_mirror_time', current_time('mysql'));
+                update_option('feedspace_last_mirror_success', $mirrorOk);
             }
         } else {
             error_log('[Feedspace] Vercel URL (feedspace_api_url option) is empty. Skipping mirroring.');
+            update_option('feedspace_last_mirror_id', $annotationId);
+            update_option('feedspace_last_mirror_code', -1);
+            update_option('feedspace_last_mirror_body', 'Vercel URL not configured');
+            update_option('feedspace_last_mirror_time', current_time('mysql'));
+            update_option('feedspace_last_mirror_success', false);
         }
 
         return new WP_REST_Response(array(
@@ -764,7 +780,9 @@ class FeedspaceConnector
     public function registerSettings()
     {
         register_setting('feedspace_settings', 'feedspace_feedback_mode');
-        register_setting('feedspace_settings', 'feedspace_api_url');
+        register_setting('feedspace_settings', 'feedspace_api_url', array(
+            'sanitize_callback' => 'esc_url_raw',
+        ));
         register_setting('feedspace_settings', 'feedspace_debug_enabled');
     }
 
@@ -799,6 +817,7 @@ class FeedspaceConnector
         $feedbackMode = get_option('feedspace_feedback_mode', 'disabled');
         $siteUrl = get_bloginfo('url');
         $restUrl = rest_url('feedspace/v1/');
+        $apiUrl = get_option('feedspace_api_url', '');
         ?>
         <div class="wrap">
             <h1>Feedspace Connector</h1>
@@ -810,6 +829,57 @@ class FeedspaceConnector
                 <p><strong>Site URL:</strong> <?php echo esc_html($siteUrl); ?></p>
                 <p><strong>REST API URL:</strong> <code><?php echo esc_url($restUrl); ?></code></p>
                 <p><strong>Upload Max Size:</strong> <?php echo esc_html(size_format(wp_max_upload_size())); ?></p>
+            </div>
+
+            <div class="feedspace-status-card">
+                <h2>Mirroring Status (Vercel Sync)</h2>
+                <p>
+                    <strong>Vercel API URL:</strong>
+                    <code><?php echo $apiUrl ? esc_url($apiUrl) : '<span style="color:#dc2626;">NOT SET</span>'; ?></code>
+                </p>
+                <p>
+                    <strong>Annotation Count (local):</strong>
+                    <span id="feedspace-local-count">...</span>
+                </p>
+                <p>
+                    <strong>Last Mirror Attempt:</strong>
+                    <span id="feedspace-last-mirror" style="color:#9ca3af;">
+                        <?php
+                        $lastId = get_option('feedspace_last_mirror_id', '');
+                        $lastTime = get_option('feedspace_last_mirror_time', '');
+                        $lastSuccess = get_option('feedspace_last_mirror_success', null);
+                        $lastCode = get_option('feedspace_last_mirror_code', null);
+                        $lastBody = get_option('feedspace_last_mirror_body', '');
+                        if ($lastTime) {
+                            $color = $lastSuccess ? '#059669' : '#dc2626';
+                            $status = $lastSuccess ? 'SUCCESS' : 'FAILED';
+                            $codeStr = ($lastCode && $lastCode > 0) ? "HTTP $lastCode" : ($lastCode === -1 ? 'URL not configured' : 'Connection error');
+                            echo '<span style="color:' . esc_attr($color) . ';">' . esc_html($status) . ' – ' . esc_html($codeStr) . '</span>';
+                            echo ' <span style="font-size:11px;color:#6b7280;">' . esc_html($lastTime) . '</span>';
+                            if ($lastBody) {
+                                echo '<br><span style="font-size:11px;color:#6b7280;">Response: ' . esc_html(substr($lastBody, 0, 200)) . '</span>';
+                            }
+                        } else {
+                            echo 'No mirror attempts yet. Submit a pin on a preview page to trigger one.';
+                        }
+                        ?>
+                    </span>
+                </p>
+                <p>
+                    <strong>Last Mirror Test:</strong>
+                    <span id="feedspace-mirror-result" style="color:#9ca3af;">Not tested yet</span>
+                </p>
+                <button type="button" class="button button-primary" id="feedspace-test-mirror" onclick="testMirroring()">
+                    Test Vercel Mirroring
+                </button>
+                <button type="button" class="button button-secondary" id="feedspace-repush" onclick="repushAnnotations()" style="margin-left:6px;">
+                    Re-push All Local Annotations
+                </button>
+                <span id="feedspace-test-spinner" style="display:none;margin-left:8px;">
+                    <span class="spinner is-active" style="float:none;margin:0;vertical-align:middle;"></span>
+                    Working...
+                </span>
+                <p id="feedspace-repush-result" style="margin-top:10px;font-size:12px;color:#6b7280;display:none;"></p>
             </div>
 
             <div class="feedspace-config-card">
@@ -971,6 +1041,99 @@ class FeedspaceConnector
                     btn.textContent = 'Run Cleanup Now';
                 });
             }
+
+            function testMirroring() {
+                var btn = document.getElementById('feedspace-test-mirror');
+                var repushBtn = document.getElementById('feedspace-repush');
+                var spinner = document.getElementById('feedspace-test-spinner');
+                var result = document.getElementById('feedspace-mirror-result');
+                var count = document.getElementById('feedspace-local-count');
+
+                btn.disabled = true;
+                if (repushBtn) repushBtn.disabled = true;
+                spinner.style.display = 'inline';
+                result.style.color = '#9ca3af';
+                result.textContent = 'Testing...';
+                count.textContent = '...';
+
+                fetch(ajaxurl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=feedspace_test_mirroring'
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    btn.disabled = false;
+                    if (repushBtn) repushBtn.disabled = false;
+                    spinner.style.display = 'none';
+
+                    if (d.success) {
+                        count.textContent = d.data.local_count;
+                        if (d.data.mirror_ok) {
+                            result.style.color = '#059669';
+                            result.textContent = 'PASSED – Vercel responded ' + d.data.mirror_code + ': ' + d.data.mirror_body;
+                        } else if (d.data.mirror_code > 0) {
+                            result.style.color = '#dc2626';
+                            result.textContent = 'FAILED – Vercel returned HTTP ' + d.data.mirror_code + ': ' + d.data.mirror_body;
+                        } else if (d.data.mirror_error) {
+                            result.style.color = '#d97706';
+                            result.textContent = 'ERROR – ' + d.data.mirror_error;
+                        } else {
+                            result.style.color = '#dc2626';
+                            result.textContent = 'NOT CONFIGURED – Feedspace API URL is empty. Save it in the Settings section below.';
+                        }
+                    } else {
+                        result.style.color = '#dc2626';
+                        result.textContent = 'ERROR – ' + (d.data && d.data.error ? d.data.error : 'Unknown error');
+                    }
+                }).catch(function(e) {
+                    btn.disabled = false;
+                    if (repushBtn) repushBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    result.style.color = '#dc2626';
+                    result.textContent = 'ERROR – Request failed: ' + e.message;
+                });
+            }
+
+            function repushAnnotations() {
+                if (!confirm('This will resend ALL local annotations to Vercel. Existing feedback_items in Supabase will not be duplicated (matching by annotation_id). Continue?')) return;
+
+                var btn = document.getElementById('feedspace-repush');
+                var testBtn = document.getElementById('feedspace-test-mirror');
+                var spinner = document.getElementById('feedspace-test-spinner');
+                var result = document.getElementById('feedspace-repush-result');
+                var count = document.getElementById('feedspace-local-count');
+
+                btn.disabled = true;
+                if (testBtn) testBtn.disabled = true;
+                spinner.style.display = 'inline';
+                result.style.display = 'block';
+                result.style.color = '#6b7280';
+                result.textContent = 'Re-pushing...';
+
+                fetch(ajaxurl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=feedspace_repush_annotations'
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    btn.disabled = false;
+                    if (testBtn) testBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    count.textContent = d.data ? d.data.local_count : '?';
+
+                    if (d.success) {
+                        result.style.color = '#059669';
+                        result.textContent = d.data.message + ' Processed: ' + d.data.pushed + ' pushed, ' + d.data.skipped + ' skipped (already in Supabase), ' + d.data.errors + ' errors. Reload the page to see updated status.';
+                    } else {
+                        result.style.color = '#dc2626';
+                        result.textContent = 'ERROR: ' + (d.data && d.data.error ? d.data.error : 'Unknown');
+                    }
+                }).catch(function(e) {
+                    btn.disabled = false;
+                    if (testBtn) testBtn.disabled = false;
+                    spinner.style.display = 'none';
+                    result.style.color = '#dc2626';
+                    result.textContent = 'ERROR: ' + e.message;
+                });
+            }
         </script>
         <?php
     }
@@ -985,5 +1148,151 @@ add_action('wp_ajax_feedspace_regenerate_key', function () {
     $newKey = wp_generate_password(32, false);
     update_option('feedspace_api_key', $newKey);
     wp_send_json_success(array('key' => $newKey));
+});
+
+add_action('wp_ajax_feedspace_test_mirroring', function () {
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    global $wpdb;
+    $annotationsTable = $wpdb->prefix . 'feedspace_annotations';
+    $localCount = (int) $wpdb->get_var("SELECT COUNT(*) FROM $annotationsTable");
+
+    $vercelUrl = get_option('feedspace_api_url', '');
+
+    if (empty($vercelUrl)) {
+        wp_send_json_success(array(
+            'local_count' => $localCount,
+            'mirror_ok' => false,
+            'mirror_code' => 0,
+            'mirror_body' => '',
+            'mirror_error' => 'Feedspace API URL is not configured. Go to Settings section and enter your Vercel app URL (e.g. https://client-portal-silk-three.vercel.app).',
+        ));
+    }
+
+    $testUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
+    $testPayload = array(
+        'projectId' => 'test-only',
+        'previewToken' => 'test-only',
+        'type' => 'pin',
+        'content' => 'Test ping from Feedspace Connector',
+        'pageUrl' => get_bloginfo('url'),
+        'selector' => null,
+        'elementDna' => null,
+        'coordinatesX' => 0,
+        'coordinatesY' => 0,
+        'coordinatesXEnd' => null,
+        'coordinatesYEnd' => null,
+        'width' => null,
+        'height' => null,
+        'drawData' => null,
+        'viewportWidth' => 1440,
+        'viewportHeight' => 900,
+        'device' => 'desktop',
+        'createdBy' => 'Test',
+        'metaData' => array(),
+    );
+
+    $result = wp_remote_post($testUrl, array(
+        'headers' => array('Content-Type' => 'application/json'),
+        'body' => json_encode($testPayload),
+        'timeout' => 15,
+    ));
+
+    if (is_wp_error($result)) {
+        wp_send_json_success(array(
+            'local_count' => $localCount,
+            'mirror_ok' => false,
+            'mirror_code' => 0,
+            'mirror_body' => '',
+            'mirror_error' => $result->get_error_message(),
+        ));
+    }
+
+    $code = (int) wp_remote_retrieve_response_code($result);
+    $body = wp_remote_retrieve_body($result);
+
+    wp_send_json_success(array(
+        'local_count' => $localCount,
+        'mirror_ok' => ($code >= 200 && $code < 300),
+        'mirror_code' => $code,
+        'mirror_body' => $body,
+        'mirror_error' => '',
+    ));
+});
+
+add_action('wp_ajax_feedspace_repush_annotations', function () {
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+
+    global $wpdb;
+    $annotationsTable = $wpdb->prefix . 'feedspace_annotations';
+    $vercelUrl = get_option('feedspace_api_url', '');
+
+    if (empty($vercelUrl)) {
+        wp_send_json_error(array('error' => 'Feedspace API URL is not configured.'));
+    }
+
+    $annotations = $wpdb->get_results("SELECT * FROM $annotationsTable ORDER BY created_at ASC");
+    $total = count($annotations);
+    $pushed = 0;
+    $errors = 0;
+
+    foreach ($annotations as $row) {
+        $elementDna = $row->element_dna ? json_decode($row->element_dna, true) : null;
+        $drawData = $row->draw_data ? json_decode($row->draw_data, true) : null;
+
+        $payload = array(
+            'id' => $row->annotation_id,
+            'projectId' => $row->project_id,
+            'previewToken' => '',
+            'type' => $row->type,
+            'content' => $row->content,
+            'pageUrl' => $row->page_url,
+            'selector' => $row->selector,
+            'elementDna' => $elementDna,
+            'coordinatesX' => floatval($row->coordinates_x ?? 50),
+            'coordinatesY' => floatval($row->coordinates_y ?? 50),
+            'coordinatesXEnd' => $row->coordinates_x_end ? floatval($row->coordinates_x_end) : null,
+            'coordinatesYEnd' => $row->coordinates_y_end ? floatval($row->coordinates_y_end) : null,
+            'width' => $row->width ? floatval($row->width) : null,
+            'height' => $row->height ? floatval($row->height) : null,
+            'drawData' => $drawData,
+            'viewportWidth' => intval($row->viewport_width),
+            'viewportHeight' => intval($row->viewport_height),
+            'device' => $row->device ?: 'desktop',
+            'createdBy' => $row->created_by ?: 'Anonymous',
+            'metaData' => array(),
+        );
+
+        $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+            'headers' => array('Content-Type' => 'application/json'),
+            'body' => json_encode($payload),
+            'timeout' => 15,
+        ));
+
+        if (is_wp_error($result)) {
+            $errors++;
+            continue;
+        }
+
+        $code = (int) wp_remote_retrieve_response_code($result);
+
+        if ($code >= 200 && $code < 300) {
+            $pushed++;
+        } else {
+            $errors++;
+        }
+    }
+
+    wp_send_json_success(array(
+        'local_count' => $total,
+        'pushed' => $pushed,
+        'skipped' => 0,
+        'errors' => $errors,
+        'message' => "Re-pushed $pushed of $total local annotations to Vercel ($errors errors).",
+    ));
 });
 
