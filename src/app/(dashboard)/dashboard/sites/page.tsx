@@ -90,14 +90,28 @@ export default function SitesPage() {
     if (!profile?.agency_id || isDemo) return;
     setSubmitting(true);
 
-    await supabase.from("sites").insert({
-      agency_id: profile.agency_id,
-      name: formData.name,
-      url: formData.url,
-      wp_api_url: formData.wp_api_url || null,
-      wp_application_password: formData.wp_application_password || null,
-      wp_connected: !!(formData.wp_api_url && formData.wp_application_password),
-    });
+    try {
+      const result = await Promise.race([
+        supabase.from("sites").insert({
+          agency_id: profile.agency_id,
+          name: formData.name,
+          url: formData.url,
+          wp_api_url: formData.wp_api_url || null,
+          wp_application_password: formData.wp_application_password || null,
+          wp_connected: !!(formData.wp_api_url && formData.wp_application_password),
+        }),
+        new Promise<{ error: Error }>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 15000)
+        ),
+      ]);
+      if ((result as any)?.error) throw (result as any).error;
+    } catch (e: any) {
+      if (e?.message === "timeout") {
+        alert("Request timed out. Check your Supabase connection.");
+      }
+      setSubmitting(false);
+      return;
+    }
 
     setShowAdd(false);
     setFormData({ name: "", url: "", wp_api_url: "", wp_application_password: "" });
