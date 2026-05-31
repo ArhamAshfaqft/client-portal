@@ -108,17 +108,28 @@ export async function POST(request: Request) {
         );
       }
     } else {
+      // Check projects table first, then preview_links (for re-push of annotations
+      // that were validated via preview token during original submission)
       const { data: project } = await supabase
         .from("projects")
         .select("id")
         .eq("id", projectId)
-        .single();
+        .maybeSingle();
 
       if (!project) {
-        return NextResponse.json(
-          { error: "Invalid project ID" },
-          { status: 403, headers: corsHeaders() }
-        );
+        const { data: link } = await supabase
+          .from("preview_links")
+          .select("project_id")
+          .eq("project_id", projectId)
+          .limit(1)
+          .maybeSingle();
+
+        if (!link) {
+          return NextResponse.json(
+            { error: "Invalid project ID" },
+            { status: 403, headers: corsHeaders() }
+          );
+        }
       }
     }
 
