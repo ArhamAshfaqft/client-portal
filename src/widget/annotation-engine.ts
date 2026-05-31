@@ -498,10 +498,12 @@ export class AnnotationEngine {
   private async loadAnnotations(): Promise<void> {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+      dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
     } catch (err) {
       console.error('Failed to load annotations', err);
+      dbg('loadAnnotations: FAILED', String(err));
     }
   }
 

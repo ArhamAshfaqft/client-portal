@@ -3,14 +3,14 @@
  * Plugin Name: Feedspace Connector
  * Plugin URI: https://feedspace.io
  * Description: Connects your WordPress site to Feedspace for client feedback management. Enables media storage and API integration.
- * Version: 1.0.17
+ * Version: 1.0.18
  * Author: Feedspace
  * Text Domain: feedspace
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('FEEDSPACE_VERSION', '1.0.17');
+define('FEEDSPACE_VERSION', '1.0.18');
 define('FEEDSPACE_PLUGIN_FILE', __FILE__);
 
 class FeedspaceConnector
@@ -130,9 +130,6 @@ class FeedspaceConnector
             'wpApiKey' => $wpApiKey,
             'pageUrl' => $pageUrl,
         );
-
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions
-        error_log('[Feedspace] Widget config: projectId=' . $config['projectId'] . ' pageUrl=' . $pageUrl . ' wpApiUrl=' . $wpApiUrl);
 
         wp_enqueue_script(
             'feedspace-widget',
@@ -393,12 +390,6 @@ class FeedspaceConnector
             'callback' => array($this, 'deleteAnnotation'),
             'permission_callback' => array($this, 'checkApiAuth'),
         ));
-
-        register_rest_route('feedspace/v1', '/annotations/counts', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'getAnnotationCounts'),
-            'permission_callback' => '__return_true',
-        ));
     }
 
     public function checkApiAuth($request)
@@ -593,15 +584,25 @@ class FeedspaceConnector
 
         $wpdb->insert($tableName, $data);
 
-        $errorMessage = false;
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions
-        error_log('[Feedspace] createAnnotation insert result: ' . ($wpdb->last_error ?: 'success'));
-
         if ($wpdb->last_error) {
-            $errorMessage = $wpdb->last_error;
             return new WP_REST_Response(array(
                 'error' => 'Database error: ' . $wpdb->last_error,
             ), 500);
+        }
+
+        // Mirror to Vercel/Supabase so the dashboard shows this annotation.
+        // Fire-and-forget: if Vercel is down, the widget still works.
+        $vercelUrl = get_option('feedspace_api_url', '');
+        if ($vercelUrl) {
+            $mirrorBody = $body;
+            $mirrorBody['id'] = $annotationId;
+            $mirrorBody['createdAt'] = $now;
+            wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+                'headers' => array('Content-Type' => 'application/json'),
+                'body' => json_encode($mirrorBody),
+                'timeout' => 10,
+                'blocking' => false,
+            ));
         }
 
         return new WP_REST_Response(array(
@@ -640,17 +641,11 @@ class FeedspaceConnector
         }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
-        $this->preventCaching();
-
         if (!$projectId) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
-            error_log('[Feedspace] getAnnotations: no projectId, pageUrl=' . $pageUrl);
             return new WP_REST_Response(array(), 200);
         }
 
         if ($pageUrl) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions
-            error_log('[Feedspace] getAnnotations: projectId=' . $projectId . ' pageUrl=' . $pageUrl);
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
                 $pageUrl,
@@ -733,15 +728,7 @@ class FeedspaceConnector
         return new WP_REST_Response(array('deleted' => true), 200);
     }
 
-    private function preventCaching()
-    {
-        nocache_headers();
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Pragma: no-cache');
-        header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
-    }
-
-    public function getAnnotationCounts($request)
+    public function deleteAnnotation($request)
     {
         global $wpdb;
         $tableName = $wpdb->prefix . 'feedspace_annotations';
