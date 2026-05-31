@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getFeedbackForSite, getSiteName, getTeamMembers, getTeamMemberName, type EnrichedFeedback } from "@/lib/demo-data";
 import { MediaPreview } from "@/components/ui/media-preview";
+import { createClient } from "@/lib/supabase/client";
 import type { FeedbackStatus } from "@/types";
 import type { FeedbackMedia } from "@/types";
 import {
@@ -88,6 +89,9 @@ function getViewportLabel(width?: number | null, height?: number | null) {
   return "Mobile";
 }
 
+// Module-level singleton — stable across renders
+const supabase = createClient();
+
 export default function SiteFeedbackPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -105,69 +109,310 @@ export default function SiteFeedbackPage() {
   const [replyText, setReplyText] = useState("");
 
   const [feedback, setFeedback] = useState<EnrichedFeedback[]>([]);
+  const [loading, setLoading] = useState(!isDemo);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
-  // Sync feedback data when demo state or site id changes
+  const fetchFeedback = async () => {
+    if (isDemo) return;
+    setLoading(true);
+    try {
+      const { data: projectsData } = await supabase
+        .from("projects")
+        .select("id, name")
+        .eq("site_id", id);
+      
+      const projectList = projectsData || [];
+      const projectIds = projectList.map((p) => p.id);
+      const projectNames = Object.fromEntries(projectList.map((p) => [p.id, p.name]));
+
+      if (projectIds.length === 0) {
+        setFeedback([]);
+        return;
+      }
+
+      const { data: feedbackData, error } = await supabase
+        .from("feedback_items")
+        .select("*")
+        .in("project_id", projectIds)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const feedbackList = (feedbackData || []) as any[];
+      const parents = feedbackList.filter((item) => !item.parent_id);
+      const replies = feedbackList.filter((item) => item.parent_id);
+
+      const feedbackIds = feedbackList.map((f) => f.id);
+      let mediaMap: Record<string, any[]> = {};
+      if (feedbackIds.length > 0) {
+        const { data: mediaData } = await supabase
+          .from("feedback_media")
+          .select("*")
+          .in("feedback_item_id", feedbackIds);
+        if (mediaData) {
+          for (const m of mediaData) {
+            if (!mediaMap[m.feedback_item_id]) mediaMap[m.feedback_item_id] = [];
+            mediaMap[m.feedback_item_id].push(m);
+          }
+        }
+      }
+
+      const enriched: EnrichedFeedback[] = parents.map((item) => {
+        const itemReplies = replies
+          .filter((r) => r.parent_id === item.id)
+          .map((r) => ({
+            id: r.id,
+            project_id: r.project_id,
+            parent_id: r.parent_id,
+            type: r.type,
+            content: r.content,
+            page_url: r.page_url,
+            selector: r.selector,
+            coordinates_x: r.coordinates_x,
+            coordinates_y: r.coordinates_y,
+            coordinates_x_end: null,
+            coordinates_y_end: null,
+            width: null,
+            height: null,
+            draw_data: null,
+            element_dna: null,
+            meta_data: null,
+            viewport_width: null,
+            viewport_height: null,
+            device: null,
+            status: r.status,
+            assigned_to: r.assigned_to,
+            created_by: r.created_by,
+            created_at: r.created_at,
+            creator_name: r.created_by || "Anonymous",
+            media: mediaMap[r.id] || [],
+            replies: [],
+          }));
+
+        return {
+          id: item.id,
+          project_id: item.project_id,
+          parent_id: null,
+          type: item.type,
+          content: item.content,
+          page_url: item.page_url,
+          selector: item.selector,
+          coordinates_x: item.coordinates_x,
+          coordinates_y: item.coordinates_y,
+          coordinates_x_end: item.coordinates_x_end,
+          coordinates_y_end: item.coordinates_y_end,
+          width: item.width,
+          height: item.height,
+          draw_data: item.draw_data ? JSON.parse(item.draw_data) : null,
+          element_dna: item.element_dna ? JSON.parse(item.element_dna) : null,
+          meta_data: item.meta_data,
+          viewport_width: item.viewport_width,
+          viewport_height: item.viewport_height,
+          device: item.device,
+          status: item.status,
+          assigned_to: item.assigned_to,
+          created_by: item.created_by,
+          created_at: item.created_at,
+          creator_name: item.created_by || "Anonymous",
+          media: mediaMap[item.id] || [],
+          replies: itemReplies,
+          project_name: projectNames[item.project_id] || "General",
+          site_name: "Client Site",
+        };
+      });
+
+      setFeedback(enriched);
+    } catch (err) {
+      console.error("Error fetching feedback:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeamMembers = async () => {
+    if (isDemo) {
+      setTeamMembers(getTeamMembers());
+      return;
+    }
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, role, email");
+    if (data) {
+      setTeamMembers(data.map((p) => ({
+        id: p.user_id,
+        name: p.full_name,
+        role: p.role,
+        email: p.email,
+      })));
+    }
+  };
+
   useEffect(() => {
-    setFeedback(isDemo ? getFeedbackForSite(id) : []);
+    if (isDemo) {
+      setFeedback(getFeedbackForSite(id));
+      setLoading(false);
+    } else {
+      fetchFeedback();
+    }
   }, [isDemo, id]);
 
-  const teamMembers = useMemo(() => isDemo ? getTeamMembers() : [], [isDemo]);
+  useEffect(() => {
+    fetchTeamMembers();
+  }, [isDemo]);
 
-  const handleAssign = (feedbackId: string, userId: string) => {
-    setFeedback((prev) =>
-      prev.map((f) => (f.id === feedbackId ? { ...f, assigned_to: userId } : f))
-    );
-    setAssignOpen(null);
+  const handleAssign = async (feedbackId: string, userId: string) => {
+    if (isDemo) {
+      setFeedback((prev) =>
+        prev.map((f) => (f.id === feedbackId ? { ...f, assigned_to: userId } : f))
+      );
+      setAssignOpen(null);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("feedback_items")
+        .update({ assigned_to: userId || null })
+        .eq("id", feedbackId);
+      if (error) throw error;
+      setFeedback((prev) =>
+        prev.map((f) => (f.id === feedbackId ? { ...f, assigned_to: userId } : f))
+      );
+    } catch (err) {
+      console.error("Failed to assign feedback:", err);
+    } finally {
+      setAssignOpen(null);
+    }
   };
 
-  const handleStatusChange = (feedbackId: string, nextStatus: FeedbackStatus) => {
-    setFeedback((prev) =>
-      prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
-    );
+  const handleStatusChange = async (feedbackId: string, nextStatus: FeedbackStatus) => {
+    if (isDemo) {
+      setFeedback((prev) =>
+        prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
+      );
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("feedback_items")
+        .update({ status: nextStatus })
+        .eq("id", feedbackId);
+      if (error) throw error;
+      setFeedback((prev) =>
+        prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
+      );
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
   };
 
-  const handleReply = (feedbackId: string) => {
+  const handleReply = async (feedbackId: string) => {
     if (!replyText.trim()) return;
     const parent = feedback.find((f) => f.id === feedbackId);
-    const reply: EnrichedFeedback = {
-      id: `reply-${Date.now()}`,
-      project_id: parent?.project_id || "",
-      parent_id: feedbackId,
-      type: "comment",
-      content: replyText,
-      page_url: parent?.page_url || "",
-      selector: null,
-      coordinates_x: null,
-      coordinates_y: null,
-      coordinates_x_end: null,
-      coordinates_y_end: null,
-      width: null,
-      height: null,
-      draw_data: null,
-      element_dna: null,
-      meta_data: null,
-      viewport_width: null,
-      viewport_height: null,
-      device: null,
-      status: "open",
-      assigned_to: null,
-      created_by: profile?.user_id || "",
-      created_at: new Date().toISOString(),
-      creator_name: profile?.full_name || "Me",
-      media: [],
-      replies: [],
-      project_name: parent?.project_name || "",
-      site_name: parent?.site_name || "",
-    };
-    setFeedback((prev) =>
-      prev.map((f) =>
-        f.id === feedbackId
-          ? { ...f, replies: [...(f.replies || []), reply] }
-          : f
-      )
-    );
-    setReplyText("");
-    setReplyOpen(null);
+    if (isDemo) {
+      const reply: EnrichedFeedback = {
+        id: `reply-${Date.now()}`,
+        project_id: parent?.project_id || "",
+        parent_id: feedbackId,
+        type: "comment",
+        content: replyText,
+        page_url: parent?.page_url || "",
+        selector: null,
+        coordinates_x: null,
+        coordinates_y: null,
+        coordinates_x_end: null,
+        coordinates_y_end: null,
+        width: null,
+        height: null,
+        draw_data: null,
+        element_dna: null,
+        meta_data: null,
+        viewport_width: null,
+        viewport_height: null,
+        device: null,
+        status: "open",
+        assigned_to: null,
+        created_by: profile?.user_id || "",
+        created_at: new Date().toISOString(),
+        creator_name: profile?.full_name || "Me",
+        media: [],
+        replies: [],
+        project_name: parent?.project_name || "",
+        site_name: parent?.site_name || "",
+      };
+      setFeedback((prev) =>
+        prev.map((f) =>
+          f.id === feedbackId
+            ? { ...f, replies: [...(f.replies || []), reply] }
+            : f
+        )
+      );
+      setReplyText("");
+      setReplyOpen(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("feedback_items")
+        .insert({
+          project_id: parent?.project_id || "",
+          parent_id: feedbackId,
+          type: "comment",
+          content: replyText,
+          page_url: parent?.page_url || "",
+          status: "open",
+          created_by: profile?.full_name || "Anonymous",
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      const reply: EnrichedFeedback = {
+        id: data.id,
+        project_id: data.project_id,
+        parent_id: data.parent_id,
+        type: data.type,
+        content: data.content,
+        page_url: data.page_url,
+        selector: null,
+        coordinates_x: null,
+        coordinates_y: null,
+        coordinates_x_end: null,
+        coordinates_y_end: null,
+        width: null,
+        height: null,
+        draw_data: null,
+        element_dna: null,
+        meta_data: null,
+        viewport_width: null,
+        viewport_height: null,
+        device: null,
+        status: data.status,
+        assigned_to: null,
+        created_by: data.created_by,
+        created_at: data.created_at,
+        creator_name: data.created_by || "Anonymous",
+        media: [],
+        replies: [],
+        project_name: parent?.project_name || "",
+        site_name: parent?.site_name || "",
+      };
+
+      setFeedback((prev) =>
+        prev.map((f) =>
+          f.id === feedbackId
+            ? { ...f, replies: [...(f.replies || []), reply] }
+            : f
+        )
+      );
+    } catch (err) {
+      console.error("Failed to submit reply:", err);
+    } finally {
+      setReplyText("");
+      setReplyOpen(null);
+    }
   };
 
   const grouped = useMemo(() => {
@@ -339,8 +584,14 @@ export default function SiteFeedbackPage() {
         </div>
       </div>
 
-      {/* Results */}
-      {sortedProjects.length === 0 ? (
+      {loading ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary" />
+            <p className="mt-2 text-sm text-muted-foreground">Loading feedback...</p>
+          </CardContent>
+        </Card>
+      ) : sortedProjects.length === 0 ? (
         <Card>
           <CardContent>
             <div className="text-center py-16">

@@ -117,6 +117,19 @@ export default function SiteDetailPage() {
           linksMap[link.project_id].push(link);
         }
       }
+
+      // Fetch feedback counts for each project in non-demo mode
+      const { data: feedbackData } = await supabase
+        .from("feedback_items")
+        .select("project_id")
+        .in("project_id", projectIds);
+      if (feedbackData) {
+        const counts: Record<string, number> = {};
+        for (const item of feedbackData) {
+          counts[item.project_id] = (counts[item.project_id] || 0) + 1;
+        }
+        setFeedbackCounts(counts);
+      }
     }
     setPreviewLinks(linksMap);
     setLoading(false);
