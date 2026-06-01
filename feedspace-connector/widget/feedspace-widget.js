@@ -795,6 +795,104 @@
   cursor: crosshair;
 }
 
+/* ===== SIDEBAR CARD ENHANCEMENTS ===== */
+.fs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fs-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: #2563eb;
+}
+
+.fs-device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.fs-device-pill.desktop {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+.fs-device-pill.tablet {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+.fs-device-pill.mobile {
+  background: rgba(219, 39, 119, 0.1);
+  color: #db2777;
+}
+
+.fs-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.13);
+  color: #818cf8;
+  font-family: monospace;
+  letter-spacing: 0.3px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fs-dot-menu {
+  animation: feedspace-fade-in 0.1s ease;
+}
+.fs-menu-item:hover {
+  background: #f1f5f9;
+}
+
+.fs-reveal-btn:hover {
+  color: #2563eb !important;
+}
+
+/* Device filter row */
+.feedspace-device-filter {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+.fs-df-btn {
+  font-family: 'Poppins', -apple-system, sans-serif;
+}
+.fs-df-btn:hover {
+  opacity: 0.8;
+}
+
+/* Card highlight */
+.feedspace-feedback-item.highlight {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+
 /* ===== ANIMATIONS ===== */
 @keyframes feedspace-fade-in {
   from { opacity: 0; }
@@ -1004,6 +1102,7 @@
       this.annotations = [];
       this.callbacks = null;
       this.filter = "all";
+      this.deviceFilter = "all";
       this.selectedId = null;
     }
     init(callbacks) {
@@ -1027,13 +1126,20 @@
       this.filter = filter;
       this.renderAll();
     }
+    setDeviceFilter(device) {
+      this.deviceFilter = device;
+      this.renderAll();
+    }
     setSelected(id) {
       this.selectedId = id;
       this.renderAll();
     }
     getFiltered() {
-      if (this.filter === "all") return this.annotations;
-      return this.annotations.filter((a) => a.status === this.filter);
+      let result = this.filter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.filter);
+      if (this.deviceFilter && this.deviceFilter !== "all") {
+        result = result.filter((a) => (a.device || "desktop") === this.deviceFilter);
+      }
+      return result;
     }
     renderAll() {
       if (!this.svg) return;
@@ -1374,6 +1480,89 @@
   }
 
   // src/widget/feedback-list.ts
+  function timeAgo(date) {
+    if (!date) return "";
+    const s = Math.floor((Date.now() - new Date(date).getTime()) / 1e3);
+    const ints = [[31536e3, "y"], [2592e3, "mo"], [86400, "d"], [3600, "h"], [60, "m"]];
+    for (const [sec, l] of ints) {
+      const v = s / sec;
+      if (v > 1) return Math.floor(v) + l + " ago";
+    }
+    return "Just now";
+  }
+  function fmtSize(bytes) {
+    if (!bytes) return "";
+    const u = ["B", "KB", "MB", "GB"];
+    let i = 0, s = bytes;
+    while (s >= 1024 && i < 3) {
+      s /= 1024;
+      i++;
+    }
+    return s.toFixed(i > 0 ? 1 : 0) + " " + u[i];
+  }
+  function escHtml2(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function lightbox(atts, start) {
+    document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
+    let cur = start;
+    const ov = document.createElement("div");
+    ov.className = "fs-lb";
+    ov.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.94);display:flex;flex-direction:column;";
+    const render = () => {
+      var _a;
+      const a = atts[cur];
+      const ext = ((_a = (a.name || "").split(".").pop()) == null ? void 0 : _a.toUpperCase()) || "";
+      let c = "";
+      if (a.type === "image") {
+        c = `<img src="${escHtml2(a.url)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;">`;
+      } else if (a.type === "video") {
+        c = `<video controls style="max-width:100%;max-height:100%;border-radius:4px;" src="${escHtml2(a.url)}" preload="metadata"></video>`;
+      } else if (a.type === "audio") {
+        c = `<div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:20px;"><div style="font-size:36px;">\u{1F3B5}</div><div style="font-size:14px;color:rgba(255,255,255,0.5);">${escHtml2(a.name || "Audio")}</div><audio controls style="width:420px;max-width:85vw;" src="${escHtml2(a.url)}" preload="metadata"></audio></div>`;
+      } else {
+        c = `<div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;"><div style="width:80px;height:80px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);">${escHtml2(ext)}</div><a href="${escHtml2(a.url)}" target="_blank" style="color:#818cf8;font-size:14px;text-decoration:none;font-weight:600;">${escHtml2(a.name || "Download")}</a></div>`;
+      }
+      const pag = atts.length > 1 ? `<span style="color:rgba(255,255,255,0.35);font-size:12px;">${cur + 1} / ${atts.length}</span>` : "";
+      ov.innerHTML = `<button class="fs-lb-close" style="position:fixed;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">&times;</button>` + (atts.length > 1 ? `<button class="fs-lb-prev" style="position:fixed;left:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u2039</button>` : "") + (atts.length > 1 ? `<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u203A</button>` : "") + `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div><div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml2(a.name || "")}</span>${a.size ? `<span style="color:rgba(255,255,255,0.35);font-size:11px;">${fmtSize(a.size)}</span>` : ""}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml2(ext.substring(0, 6))}</span></div><div style="display:flex;align-items:center;gap:12px;">${pag}<a href="${escHtml2(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
+    };
+    render();
+    document.body.appendChild(ov);
+    ov.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t.classList.contains("fs-lb-close")) ov.remove();
+      else if (t.classList.contains("fs-lb-prev") && cur > 0) {
+        cur--;
+        render();
+      } else if (t.classList.contains("fs-lb-next") && cur < atts.length - 1) {
+        cur++;
+        render();
+      } else if (t === ov) ov.remove();
+    });
+    const kd = (e) => {
+      if (!document.body.contains(ov)) {
+        document.removeEventListener("keydown", kd);
+        return;
+      }
+      if (e.key === "Escape") ov.remove();
+      if (e.key === "ArrowLeft" && cur > 0) {
+        cur--;
+        render();
+        e.preventDefault();
+      }
+      if (e.key === "ArrowRight" && cur < atts.length - 1) {
+        cur++;
+        render();
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", kd);
+  }
+  var SVG_ICONS = {
+    mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15 8a5 5 0 0 1 0 8"/></svg>'
+  };
   var FeedbackListPanel = class {
     constructor() {
       this.root = null;
@@ -1381,6 +1570,8 @@
       this.callbacks = null;
       this.annotations = [];
       this.currentFilter = "all";
+      this.currentDeviceFilter = "all";
+      this.currentSort = "newest";
       this.onClose = null;
     }
     open(annotations, callbacks, onClose) {
@@ -1392,14 +1583,13 @@
     close() {
       if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
       if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
+      document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
       this.overlay = null;
       this.root = null;
     }
     updateAnnotations(annotations) {
       this.annotations = annotations;
-      if (this.root) {
-        this.renderList();
-      }
+      if (this.root) this.renderList();
     }
     render() {
       this.close();
@@ -1427,6 +1617,7 @@
         { value: "in_progress", label: "In Progress" },
         { value: "resolved", label: "Resolved" }
       ];
+      const filtersRoot = filters;
       for (const opt of filterOptions) {
         const btn = document.createElement("button");
         btn.className = `feedspace-filter-tab${this.currentFilter === opt.value ? " active" : ""}`;
@@ -1435,18 +1626,51 @@
         btn.addEventListener("click", () => {
           var _a;
           this.currentFilter = opt.value;
-          filters.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
+          filtersRoot.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           (_a = this.callbacks) == null ? void 0 : _a.onFilterChange(opt.value);
+          this.renderList();
         });
         filters.appendChild(btn);
       }
       this.root.appendChild(filters);
+      const deviceRow = document.createElement("div");
+      deviceRow.className = "feedspace-device-filter";
+      const deviceBtnHtml = (dv, label) => {
+        const active = dv === this.currentDeviceFilter;
+        return `<button class="fs-df-btn${active ? " active" : ""}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active ? "#2563eb" : "transparent"};color:${active ? "#fff" : "#64748b"};">${label} <span class="fs-df-count" style="background:${active ? "rgba(255,255,255,0.2)" : "#f1f5f9"};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
+      };
+      deviceRow.innerHTML = deviceBtnHtml("all", "All") + deviceBtnHtml("desktop", "\u{1F5A5}") + deviceBtnHtml("tablet", "\u2B1C") + deviceBtnHtml("mobile", "\u{1F4F1}") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>`;
+      this.root.appendChild(deviceRow);
       const body = document.createElement("div");
       body.className = "feedspace-panel-body";
       body.id = "feedback-list-body";
       this.root.appendChild(body);
       document.body.appendChild(this.root);
+      deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          var _a;
+          deviceRow.querySelectorAll(".fs-df-btn").forEach((b) => {
+            b.classList.remove("active");
+            b.style.background = "transparent";
+            b.style.color = "#64748b";
+          });
+          btn.classList.add("active");
+          btn.style.background = "#2563eb";
+          btn.style.color = "#fff";
+          this.currentDeviceFilter = btn.dataset.device || "all";
+          (_a = this.callbacks) == null ? void 0 : _a.onDeviceFilterChange(this.currentDeviceFilter);
+          this.renderList();
+        });
+      });
+      const sortBtn = deviceRow.querySelector(".fs-sort-btn");
+      sortBtn.addEventListener("click", () => {
+        this.currentSort = this.currentSort === "newest" ? "oldest" : "newest";
+        sortBtn.title = this.currentSort === "newest" ? "Newest first" : "Oldest first";
+        this.renderList();
+      });
       this.renderList();
     }
     renderList() {
@@ -1454,52 +1678,195 @@
       const body = (_a = this.root) == null ? void 0 : _a.querySelector("#feedback-list-body");
       if (!body) return;
       body.innerHTML = "";
-      const filtered = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      let filtered = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      if (this.currentDeviceFilter && this.currentDeviceFilter !== "all") {
+        filtered = filtered.filter((a) => (a.device || "desktop") === this.currentDeviceFilter);
+      }
+      const deviceCounts = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
+      let baseForCounts = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      baseForCounts.forEach((a) => {
+        deviceCounts.all++;
+        const d = a.device || "desktop";
+        if (deviceCounts[d] !== void 0) deviceCounts[d]++;
+      });
+      const deviceRow = (_b = this.root) == null ? void 0 : _b.querySelector(".feedspace-device-filter");
+      if (deviceRow) {
+        deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
+          const dv = btn.dataset.device || "all";
+          const countEl = btn.querySelector(".fs-df-count");
+          if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
+        });
+      }
+      filtered.sort((a, b) => {
+        const ta = new Date(a.createdAt).getTime();
+        const tb = new Date(b.createdAt).getTime();
+        return this.currentSort === "newest" ? tb - ta : ta - tb;
+      });
       if (filtered.length === 0) {
-        body.innerHTML = `
-        <div class="feedspace-empty-state">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          <p>No feedback items yet</p>
-        </div>
-      `;
+        body.innerHTML = `<div class="feedspace-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
         return;
       }
-      for (const annotation of filtered) {
-        const authorInitial = (annotation.createdBy || "A").charAt(0).toUpperCase();
-        const dateStr = new Date(annotation.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const replyCount = ((_b = annotation.replies) == null ? void 0 : _b.length) || 0;
-        const item = document.createElement("div");
-        item.className = "feedspace-feedback-item";
-        item.dataset.annotationId = annotation.id;
-        item.innerHTML = `
-        <div class="feedspace-feedback-item-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="feedspace-avatar-sm">${authorInitial}</div>
-            <div>
-              <div class="feedspace-feedback-author">${escHtml2(annotation.createdBy)}</div>
-              <div class="feedspace-feedback-meta">${dateStr}</div>
-            </div>
+      const statusLabels = { open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
+      const deviceIcons = { desktop: "\u{1F5A5}", tablet: "\u2B1C", mobile: "\u{1F4F1}" };
+      const html = filtered.map((a, idx) => {
+        var _a2, _b2, _c;
+        const initial = (a.createdBy || "A").charAt(0).toUpperCase();
+        const timeStr = timeAgo(a.createdAt);
+        const replyCount = ((_a2 = a.replies) == null ? void 0 : _a2.length) || 0;
+        const d = a.device || "desktop";
+        const deviceLabel = d.charAt(0).toUpperCase() + d.slice(1);
+        const comment = a.content || "No comment";
+        const needsReadMore = comment.length > 160;
+        const shortComment = needsReadMore ? comment.slice(0, 157) + "..." : comment;
+        let mediaHtml = "";
+        if (a.media && a.media.length > 0) {
+          const items = a.media.map((m, mi) => {
+            var _a3;
+            const ext = ((_a3 = (m.fileName || m.fileUrl).split(".").pop()) == null ? void 0 : _a3.toUpperCase()) || "";
+            let inner = "";
+            if (m.fileType.startsWith("image/")) {
+              inner = `<img src="${escHtml2(m.fileUrl)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">`;
+            } else if (m.fileType.startsWith("video/")) {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8;">\u25B6</div>`;
+            } else if (m.fileType.startsWith("audio/")) {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${SVG_ICONS.mic}</div>`;
+            } else {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml2(ext.substring(0, 4))}</div>`;
+            }
+            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
+          }).join("");
+          mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
+        }
+        const tag = ((_b2 = a.elementDna) == null ? void 0 : _b2.tag) || "";
+        const tagText = (((_c = a.elementDna) == null ? void 0 : _c.text) || "").slice(0, 22);
+        const skipTags = ["div", "section", "article", "main", "aside", "figure", "header", "footer"];
+        let tagChip = "";
+        if (tag && !skipTags.includes(tag.toLowerCase())) {
+          tagChip = `<span class="fs-tag-chip">${escHtml2(tag.toUpperCase())}${tagText ? " " + escHtml2(tagText) : ""}</span>`;
+        }
+        return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
+        <div class="fs-card-header">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span class="fs-number-badge">${idx + 1}</span>
+            <span class="fs-device-pill ${d}">${deviceIcons[d] || ""} ${deviceLabel}</span>
+            ${tagChip}
           </div>
-          <span class="feedspace-feedback-status ${annotation.status}">${annotation.status.replace("_", " ")}</span>
+          <div class="fs-dots-trigger" style="padding:4px;cursor:pointer;opacity:0.4;flex-shrink:0;line-height:1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </div>
         </div>
-        <div class="feedspace-feedback-content">${escHtml2(annotation.content)}</div>
-        ${replyCount > 0 ? `<div class="feedspace-reply-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount} ${replyCount === 1 ? "reply" : "replies"}</div>` : ""}
-      `;
-        item.addEventListener("click", () => {
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <div class="feedspace-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
+          <div style="min-width:0;flex:1;">
+            <div class="feedspace-feedback-author" style="font-size:13px;">${escHtml2(a.createdBy)}</div>
+            <div style="font-size:10px;color:#94a3b8;">${timeStr}</div>
+          </div>
+          <span class="feedspace-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
+        </div>
+        <div class="feedspace-feedback-content" style="margin-top:8px;font-size:13px;">
+          <span class="fs-comment-text">${escHtml2(needsReadMore ? shortComment : comment)}</span>
+          ${needsReadMore ? `<button class="fs-read-more" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:12px;font-weight:600;padding:0;margin-left:4px;">Read More</button>` : ""}
+        </div>
+        ${mediaHtml}
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+          ${a.elementDna && a.type === "pin" ? `<button class="fs-reveal-btn" data-id="${a.id}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#94a3b8;background:none;border:none;cursor:pointer;padding:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Reveal</button>` : ""}
+          ${replyCount > 0 ? `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount}</span>` : ""}
+        </div>
+      </div>`;
+      }).join("");
+      body.innerHTML = html;
+      body.querySelectorAll(".feedspace-feedback-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
           var _a2;
+          if (e.target.closest(".fs-dots-trigger, .fs-dot-menu, .fs-reveal-btn, .fs-read-more, .fs-att-thumb")) return;
+          const id = item.dataset.id;
           body.querySelectorAll(".feedspace-feedback-item").forEach((el) => el.classList.remove("highlight"));
           item.classList.add("highlight");
-          (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(annotation.id);
+          if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
         });
-        body.appendChild(item);
-      }
+      });
+      body.querySelectorAll(".fs-read-more").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          var _a2;
+          e.stopPropagation();
+          const parent = e.target.closest(".feedspace-feedback-content");
+          if (!parent) return;
+          const textEl = parent.querySelector(".fs-comment-text");
+          if (!textEl) return;
+          const full = e.target.dataset.fullText || textEl.textContent || "";
+          if (e.target.textContent === "Read More") {
+            e.target.dataset.fullText = textEl.textContent || "";
+            textEl.textContent = full;
+            e.target.textContent = "Show Less";
+          } else {
+            textEl.textContent = ((_a2 = e.target.dataset.fullText) == null ? void 0 : _a2.slice(0, 157)) + "...";
+            e.target.textContent = "Read More";
+          }
+        });
+      });
+      body.querySelectorAll(".fs-reveal-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          var _a2;
+          e.stopPropagation();
+          const id = e.target.dataset.id;
+          if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
+        });
+      });
+      body.querySelectorAll(".fs-dots-trigger").forEach((trigger) => {
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          document.querySelectorAll(".fs-dot-menu").forEach((m) => m.remove());
+          const item = e.target.closest(".feedspace-feedback-item");
+          const id = item == null ? void 0 : item.dataset.id;
+          const menu = document.createElement("div");
+          menu.className = "fs-dot-menu";
+          menu.style.cssText = "position:absolute;top:36px;right:8px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:100;width:130px;overflow:hidden;padding:4px;";
+          menu.innerHTML = `<div class="fs-menu-item" data-action="locate" style="padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;color:#334155;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Locate</span>
+          </div>
+          <div class="fs-menu-item" data-action="delete" style="padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;color:#ef4444;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Delete</span>
+          </div>`;
+          item.style.position = "relative";
+          item.appendChild(menu);
+          setTimeout(() => {
+            const close = (ev) => {
+              if (!menu.contains(ev.target)) {
+                menu.remove();
+                document.removeEventListener("click", close);
+              }
+            };
+            document.addEventListener("click", close);
+          }, 10);
+          menu.querySelectorAll(".fs-menu-item").forEach((el) => {
+            el.addEventListener("click", (ev) => {
+              var _a2, _b2;
+              ev.stopPropagation();
+              const action = ev.currentTarget.dataset.action;
+              menu.remove();
+              if (action === "locate" && id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
+              if (action === "delete" && id && confirm("Delete this annotation?")) (_b2 = this.callbacks) == null ? void 0 : _b2.onDeleteAnnotation(id);
+            });
+          });
+        });
+      });
+      body.querySelectorAll(".fs-att-thumb").forEach((thumb) => {
+        thumb.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const item = e.target.closest(".feedspace-feedback-item");
+          const id = item == null ? void 0 : item.dataset.id;
+          if (!id) return;
+          const a = this.annotations.find((ann) => ann.id === id);
+          if (!a || !a.media || !a.media.length) return;
+          const atts = a.media.map((m) => ({ url: m.fileUrl, type: m.fileType, name: m.fileName, size: 0 }));
+          const idx = parseInt(thumb.dataset.index || "0");
+          lightbox(atts, idx);
+        });
+      });
     }
   };
-  function escHtml2(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
 
   // src/widget/uploader.ts
   async function uploadToWordPress(wpApiUrl, wpApiKey, file, projectId) {
@@ -1526,7 +1893,7 @@
     }
     console.log("[Feedspace]", msg, data || "");
   }
-  var SVG_ICONS = {
+  var SVG_ICONS2 = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
     pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
     list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
@@ -1640,20 +2007,20 @@
       this.toolbarRoot.id = "feedspace-widget-root";
       this.toolbarRoot.innerHTML = `
       <div class="feedspace-toolbar">
-        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
-        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS2.select}</button>
+        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS2.pin}</button>
         <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS2.desktop}</button>
+        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS2.tablet}</button>
+        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS2.mobile}</button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
-          ${SVG_ICONS.list}
+          ${SVG_ICONS2.list}
           <span class="badge" id="feedspace-list-count" style="display:none">0</span>
         </button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
-          ${SVG_ICONS.submit}
+          ${SVG_ICONS2.submit}
           Finish Review
         </button>
       </div>
@@ -1671,6 +2038,10 @@
           onFilterChange: (filter) => {
             this.filterMode = filter;
             this.renderer.setFilter(filter);
+          },
+          onDeleteAnnotation: (id) => this.deleteAnnotation(id),
+          onDeviceFilterChange: (device) => {
+            this.renderer.setDeviceFilter(device);
           }
         }, () => {
         });
@@ -1850,6 +2221,18 @@
       } catch (err) {
         console.error("Failed to save annotation", err);
         this.showToast("Failed to save feedback. Please try again.");
+      }
+    }
+    async deleteAnnotation(id) {
+      try {
+        await this.api.deleteAnnotation(id);
+        this.annotations = this.annotations.filter((a) => a.id !== id);
+        this.renderer.setAnnotations(this.annotations);
+        this.updateBadge();
+        this.showToast("Annotation deleted");
+      } catch (err) {
+        console.error("Failed to delete annotation", err);
+        this.showToast("Failed to delete");
       }
     }
     async loadAnnotations() {

@@ -10,6 +10,7 @@ export class AnnotationRenderer {
   private annotations: Annotation[] = [];
   private callbacks: RendererCallbacks | null = null;
   private filter: FilterMode = 'all';
+  private deviceFilter: string = 'all';
   private selectedId: string | null = null;
 
   init(callbacks: RendererCallbacks): void {
@@ -37,14 +38,24 @@ export class AnnotationRenderer {
     this.renderAll();
   }
 
+  setDeviceFilter(device: string): void {
+    this.deviceFilter = device;
+    this.renderAll();
+  }
+
   setSelected(id: string | null): void {
     this.selectedId = id;
     this.renderAll();
   }
 
   private getFiltered(): Annotation[] {
-    if (this.filter === 'all') return this.annotations;
-    return this.annotations.filter((a) => a.status === this.filter);
+    let result = this.filter === 'all'
+      ? this.annotations
+      : this.annotations.filter((a) => a.status === this.filter);
+    if (this.deviceFilter && this.deviceFilter !== 'all') {
+      result = result.filter((a) => (a.device || 'desktop') === this.deviceFilter);
+    }
+    return result;
   }
 
   renderAll(): void {

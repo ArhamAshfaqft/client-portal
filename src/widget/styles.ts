@@ -792,6 +792,104 @@ const STYLES = `
   cursor: crosshair;
 }
 
+/* ===== SIDEBAR CARD ENHANCEMENTS ===== */
+.fs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fs-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: #2563eb;
+}
+
+.fs-device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.fs-device-pill.desktop {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+.fs-device-pill.tablet {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+.fs-device-pill.mobile {
+  background: rgba(219, 39, 119, 0.1);
+  color: #db2777;
+}
+
+.fs-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.13);
+  color: #818cf8;
+  font-family: monospace;
+  letter-spacing: 0.3px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fs-dot-menu {
+  animation: feedspace-fade-in 0.1s ease;
+}
+.fs-menu-item:hover {
+  background: #f1f5f9;
+}
+
+.fs-reveal-btn:hover {
+  color: #2563eb !important;
+}
+
+/* Device filter row */
+.feedspace-device-filter {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+.fs-df-btn {
+  font-family: 'Poppins', -apple-system, sans-serif;
+}
+.fs-df-btn:hover {
+  opacity: 0.8;
+}
+
+/* Card highlight */
+.feedspace-feedback-item.highlight {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+
 /* ===== ANIMATIONS ===== */
 @keyframes feedspace-fade-in {
   from { opacity: 0; }

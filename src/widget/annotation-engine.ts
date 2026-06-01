@@ -181,6 +181,10 @@ export class AnnotationEngine {
           this.filterMode = filter;
           this.renderer.setFilter(filter);
         },
+        onDeleteAnnotation: (id) => this.deleteAnnotation(id),
+        onDeviceFilterChange: (device) => {
+          this.renderer.setDeviceFilter(device);
+        },
       }, () => { });
     });
 
@@ -397,6 +401,19 @@ export class AnnotationEngine {
     } catch (err) {
       console.error('Failed to save annotation', err);
       this.showToast('Failed to save feedback. Please try again.');
+    }
+  }
+
+  private async deleteAnnotation(id: string): Promise<void> {
+    try {
+      await this.api.deleteAnnotation(id);
+      this.annotations = this.annotations.filter(a => a.id !== id);
+      this.renderer.setAnnotations(this.annotations);
+      this.updateBadge();
+      this.showToast('Annotation deleted');
+    } catch (err) {
+      console.error('Failed to delete annotation', err);
+      this.showToast('Failed to delete');
     }
   }
 
