@@ -761,6 +761,13 @@ class FeedspaceConnector
         $annotationId = wp_generate_uuid4();
         $now = gmdate('Y-m-d H:i:s');
 
+        self::logDebug('create_ann_start', array(
+            'body_keys' => array_keys($body),
+            'has_media' => isset($body['media']) ? count($body['media']) : 0,
+            'has_meta' => isset($body['metaData']) ? 'yes' : 'no',
+            'content' => substr($body['content'] ?? '', 0, 50),
+        ));
+
         // Merge media into meta_data.attachments (Previu pattern)
         $incomingMeta = isset($body['metaData']) && is_array($body['metaData']) ? $body['metaData'] : array();
         $rawMedia = isset($body['media']) && is_array($body['media']) ? $body['media'] : array();
@@ -803,6 +810,13 @@ class FeedspaceConnector
 
         $wpdb->insert($tableName, $data);
 
+        self::logDebug('create_ann_inserted', array(
+            'annotation_id' => $annotationId,
+            'meta_data_saved' => $data['meta_data'] ?? 'NULL',
+            'created_at' => $now,
+            'db_error' => $wpdb->last_error ?: 'none',
+        ));
+
         if ($wpdb->last_error) {
             return new WP_REST_Response(array(
                 'error' => 'Database error: ' . $wpdb->last_error,
@@ -839,6 +853,13 @@ class FeedspaceConnector
         }
 
         $attachments = isset($incomingMeta['attachments']) && is_array($incomingMeta['attachments']) ? $incomingMeta['attachments'] : array();
+
+        self::logDebug('create_ann_response', array(
+            'annotation_id' => $annotationId,
+            'media_count' => count($attachments),
+            'media_first' => !empty($attachments) ? $attachments[0]['fileUrl'] : 'none',
+            'created_at' => $now,
+        ));
 
         return new WP_REST_Response(array(
             'id' => $annotationId,
@@ -900,6 +921,14 @@ class FeedspaceConnector
 
         $annotations = array();
         foreach ($results as $row) {
+            $annMeta = $row->meta_data ? json_decode($row->meta_data, true) : null;
+            $annAtts = $annMeta['attachments'] ?? array();
+            self::logDebug('get_ann_item', array(
+                'id' => $row->annotation_id,
+                'created_at_raw' => $row->created_at,
+                'meta_data_exists' => $row->meta_data ? 'yes' : 'no',
+                'attachments_count' => count($annAtts),
+            ));
             $annotations[] = array(
                 'id' => $row->annotation_id,
                 'type' => $row->type,
@@ -921,8 +950,8 @@ class FeedspaceConnector
                 'createdBy' => $row->created_by,
                 'createdAt' => $row->created_at,
                 'replies' => array(),
-                'metaData' => $row->meta_data ? json_decode($row->meta_data, true) : new stdClass(),
-                'media' => $row->meta_data ? (json_decode($row->meta_data, true)['attachments'] ?? array()) : array(),
+                'metaData' => $annMeta ?: new stdClass(),
+                'media' => $annAtts,
             );
         }
 
@@ -1517,6 +1546,8 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
     foreach ($annotations as $row) {
         $elementDna = $row->element_dna ? json_decode($row->element_dna, true) : null;
         $drawData = $row->draw_data ? json_decode($row->draw_data, true) : null;
+        $annMeta = $row->meta_data ? json_decode($row->meta_data, true) : null;
+        $annAtts = $annMeta['attachments'] ?? array();
 
         $payload = array(
             'id' => $row->annotation_id,
@@ -1537,8 +1568,8 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
             'viewportHeight' => intval($row->viewport_height),
             'device' => $row->device ?: 'desktop',
             'createdBy' => $row->created_by ?: 'Anonymous',
-            'metaData' => $row->meta_data ? json_decode($row->meta_data, true) : new stdClass(),
-            'media' => $row->meta_data ? (json_decode($row->meta_data, true)['attachments'] ?? array()) : array(),
+            'metaData' => $annMeta ?: new stdClass(),
+            'media' => $annAtts,
         );
 
         $postUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
