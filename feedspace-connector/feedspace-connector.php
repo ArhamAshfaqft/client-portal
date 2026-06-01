@@ -105,20 +105,40 @@ class FeedspaceConnector
             return $cached;
         }
 
+        // 1. Check local WP database first
         global $wpdb;
         $tableName = $wpdb->prefix . 'feedspace_annotations';
         $row = $wpdb->get_row($wpdb->prepare("SELECT project_id FROM $tableName WHERE preview_token = %s LIMIT 1", $token));
-        if (!$row) return false;
+        if ($row) {
+            $result = array(
+                'valid' => true,
+                'projectId' => $row->project_id,
+                'primaryColor' => '#6366f1',
+                'siteName' => get_bloginfo('name'),
+            );
+            set_transient($transientKey, $result, HOUR_IN_SECONDS);
+            return $result;
+        }
 
-        $result = array(
-            'valid' => true,
-            'projectId' => $row->project_id,
-            'primaryColor' => '#6366f1',
-            'siteName' => get_bloginfo('name'),
-        );
+        // 2. Fallback: check Vercel/Supabase for legacy preview tokens
+        $apiUrl = get_option('feedspace_api_url', '');
+        if (!empty($apiUrl)) {
+            $verifyUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
+            $response = wp_remote_post($verifyUrl, array(
+                'headers' => array('Content-Type' => 'application/json'),
+                'body' => json_encode(array('token' => $token)),
+                'timeout' => 10,
+            ));
+            if (!is_wp_error($response)) {
+                $body = json_decode(wp_remote_retrieve_body($response), true);
+                if ($body && !empty($body['valid'])) {
+                    set_transient($transientKey, $body, HOUR_IN_SECONDS);
+                    return $body;
+                }
+            }
+        }
 
-        set_transient($transientKey, $result, HOUR_IN_SECONDS);
-        return $result;
+        return false;
     }
 
     private function enqueueWidgetAssets($config, $token)
