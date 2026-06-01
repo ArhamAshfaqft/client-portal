@@ -324,7 +324,7 @@ export class AnnotationEngine {
     const firstPoint = points[0];
     const rel = toRelative(el, this.drawStart!.x, this.drawStart!.y);
 
-    this.commentPanel.open(null, {
+    this.commentPanel.open(this.drawStart!.x, this.drawStart!.y, null, {
       onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
       onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
@@ -435,7 +435,18 @@ export class AnnotationEngine {
 
     this.renderer.setSelected(id);
 
-    this.commentPanel.open(annotation, {
+    // Compute popup anchor from pin position
+    let px = window.innerWidth / 2, py = 100;
+    if (annotation.elementDna) {
+      const el = findElement(annotation.elementDna);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        px = rect.left + window.scrollX + (rect.width * annotation.anchorXPct) / 100;
+        py = rect.top + window.scrollY + (rect.height * annotation.anchorYPct) / 100;
+      }
+    }
+
+    this.commentPanel.open(px, py, annotation, {
       onSubmit: async (content, files) => {
         try {
           const mediaUrls: string[] = [];
@@ -521,10 +532,10 @@ export class AnnotationEngine {
         const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1000);
         const mins = Math.floor(elapsed / 60);
         const secs = elapsed % 60;
-        const indicator = document.getElementById('feedspace-recording-indicator');
+        const indicator = document.getElementById('fs-popup-rec-indicator');
         if (indicator) {
           indicator.style.display = 'flex';
-          const timeEl = indicator.querySelector('.feedspace-recording-time');
+          const timeEl = document.getElementById('fs-popup-rec-time');
           if (timeEl) timeEl.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
         }
       }, 1000);
@@ -543,22 +554,13 @@ export class AnnotationEngine {
       this.recordingTimer = null;
     }
 
-    const indicator = document.getElementById('feedspace-recording-indicator');
+    const indicator = document.getElementById('fs-popup-rec-indicator');
     if (indicator) indicator.style.display = 'none';
 
     const blob = new Blob(this.audioChunks, { type: 'audio/webm' });
     const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
 
-    const previewContainer = document.getElementById('feedspace-file-previews');
-    if (previewContainer) {
-      const div = document.createElement('div');
-      div.className = 'feedspace-file-preview';
-      div.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-        <span>Voice recording (${(file.size / 1024).toFixed(0)} KB)</span>
-      `;
-      previewContainer.appendChild(div);
-    }
+    this.commentPanel.addFile(file);
   }
 
   private deleteRecording(): void {
@@ -571,7 +573,7 @@ export class AnnotationEngine {
       this.recordingTimer = null;
     }
     this.audioChunks = [];
-    const indicator = document.getElementById('feedspace-recording-indicator');
+    const indicator = document.getElementById('fs-popup-rec-indicator');
     if (indicator) indicator.style.display = 'none';
   }
 
