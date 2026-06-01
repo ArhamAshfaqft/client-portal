@@ -1,4 +1,4 @@
-import type { Annotation, CreateAnnotationPayload, ToolMode, DeviceMode, FilterMode, WidgetConfig, ElementDNA } from './types';
+import type { Annotation, AnnotationMedia, CreateAnnotationPayload, ToolMode, DeviceMode, FilterMode, WidgetConfig, ElementDNA } from './types';
 import type { ApiClient } from './api';
 import { AnnotationRenderer } from './annotation-renderer';
 import { CommentPanel } from './comment-panel';
@@ -379,16 +379,25 @@ export class AnnotationEngine {
     };
 
     try {
-      const mediaUrls: string[] = [];
+      const media: AnnotationMedia[] = [];
       if (files.length > 0) {
         for (const file of files) {
           try {
             const result = await uploadToWordPress(this.config.wpApiUrl, this.config.wpApiKey, file, this.config.projectId);
-            mediaUrls.push(result.url);
+            media.push({
+              id: result.id || '',
+              fileUrl: result.url,
+              fileType: file.type || '',
+              fileName: file.name || '',
+            });
           } catch (err) {
             console.error('Upload failed', err);
           }
         }
+      }
+
+      if (media.length > 0) {
+        payload.media = media;
       }
 
       const annotation = await this.api.createAnnotation(payload);

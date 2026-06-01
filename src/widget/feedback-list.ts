@@ -268,7 +268,17 @@ export class FeedbackListPanel {
       const timeStr = timeAgo(a.createdAt);
       const replyCount = a.replies?.length || 0;
           const d = a.device || 'desktop';
-      const comment = a.content || 'No comment';
+      let comment = a.content;
+      if (!comment && a.media && a.media.length > 0) {
+        const hasAudio = a.media.some(m => m.fileType.startsWith('audio/'));
+        const hasVideo = a.media.some(m => m.fileType.startsWith('video/'));
+        const hasImage = a.media.some(m => m.fileType.startsWith('image/'));
+        if (hasAudio) comment = 'Voice note';
+        else if (hasVideo) comment = 'Video note';
+        else if (hasImage) comment = 'Image feedback';
+        else comment = 'Attachment';
+      }
+      if (!comment) comment = 'No comment';
       const needsReadMore = comment.length > 160;
       const shortComment = needsReadMore ? comment.slice(0, 157) + '...' : comment;
 

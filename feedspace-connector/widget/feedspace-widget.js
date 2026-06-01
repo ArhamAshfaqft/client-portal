@@ -1699,7 +1699,17 @@
         const timeStr = timeAgo(a.createdAt);
         const replyCount = ((_a2 = a.replies) == null ? void 0 : _a2.length) || 0;
         const d = a.device || "desktop";
-        const comment = a.content || "No comment";
+        let comment = a.content;
+        if (!comment && a.media && a.media.length > 0) {
+          const hasAudio = a.media.some((m) => m.fileType.startsWith("audio/"));
+          const hasVideo = a.media.some((m) => m.fileType.startsWith("video/"));
+          const hasImage = a.media.some((m) => m.fileType.startsWith("image/"));
+          if (hasAudio) comment = "Voice note";
+          else if (hasVideo) comment = "Video note";
+          else if (hasImage) comment = "Image feedback";
+          else comment = "Attachment";
+        }
+        if (!comment) comment = "No comment";
         const needsReadMore = comment.length > 160;
         const shortComment = needsReadMore ? comment.slice(0, 157) + "..." : comment;
         let mediaHtml = "";
@@ -2184,16 +2194,24 @@
         metaData
       };
       try {
-        const mediaUrls = [];
+        const media = [];
         if (files.length > 0) {
           for (const file of files) {
             try {
               const result = await uploadToWordPress(this.config.wpApiUrl, this.config.wpApiKey, file, this.config.projectId);
-              mediaUrls.push(result.url);
+              media.push({
+                id: result.id || "",
+                fileUrl: result.url,
+                fileType: file.type || "",
+                fileName: file.name || ""
+              });
             } catch (err) {
               console.error("Upload failed", err);
             }
           }
+        }
+        if (media.length > 0) {
+          payload.media = media;
         }
         const annotation = await this.api.createAnnotation(payload);
         this.annotations.push(annotation);

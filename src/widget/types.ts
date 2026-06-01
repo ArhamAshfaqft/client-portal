@@ -74,6 +74,7 @@ export interface CreateAnnotationPayload {
   device: string;
   createdBy?: string;
   metaData: Record<string, unknown>;
+  media?: AnnotationMedia[];
 }
 
 export type ToolMode = 'select' | 'pin' | 'rect' | 'arrow' | 'draw';
