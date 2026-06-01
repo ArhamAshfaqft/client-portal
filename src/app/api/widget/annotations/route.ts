@@ -58,8 +58,24 @@ export async function GET(request: Request) {
     );
   }
 
+  // Fetch media for all feedback items in one query
+  const itemIds = (data || []).map(d => d.id);
+  let mediaByItem: Record<string, any[]> = {};
+  if (itemIds.length > 0) {
+    const { data: mediaData } = await supabase
+      .from("feedback_media")
+      .select("*")
+      .in("feedback_item_id", itemIds);
+    if (mediaData) {
+      for (const m of mediaData) {
+        if (!mediaByItem[m.feedback_item_id]) mediaByItem[m.feedback_item_id] = [];
+        mediaByItem[m.feedback_item_id].push(m);
+      }
+    }
+  }
+
   return NextResponse.json(
-    data.map(mapFeedbackItem),
+    data.map(item => mapFeedbackItem(item, mediaByItem[item.id] || [])),
     { headers: corsHeaders() }
   );
 }
@@ -78,11 +94,14 @@ export async function POST(request: Request) {
     const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;
+    const { media } = body;
     const mirrorId: string | undefined = body.id;
 
-    if (!projectId || !content) {
+    const hasContent = typeof content === "string" && content.trim().length > 0;
+    const hasMedia = Array.isArray(media) && media.length > 0;
+    if (!projectId || (!hasContent && !hasMedia)) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing content or media" },
         { status: 400, headers: corsHeaders() }
       );
     }
@@ -159,7 +178,7 @@ export async function POST(request: Request) {
       .insert({
         project_id: projectId,
         type: type || "pin",
-        content,
+        content: content || "",
         page_url: pageUrl || "",
         selector: selector || null,
         coordinates_x: coordinatesX ?? null,
@@ -188,8 +207,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Insert media records if any
+    let mediaRecords: any[] = [];
+    if (hasMedia) {
+      const mediaRows = media.map((m: any) => ({
+        feedback_item_id: feedbackItem.id,
+        file_url: m.fileUrl,
+        file_type: m.fileType || "",
+        file_name: m.fileName || "",
+        storage_type: "wordpress",
+      }));
+      const { data: inserted, error: mediaError } = await supabase
+        .from("feedback_media")
+        .insert(mediaRows)
+        .select();
+      if (mediaError) {
+        console.error("Failed to insert media:", mediaError.message);
+      } else {
+        mediaRecords = inserted || [];
+      }
+    }
+
     return NextResponse.json(
-      mapFeedbackItem(feedbackItem),
+      mapFeedbackItem(feedbackItem, mediaRecords),
       { status: 201, headers: corsHeaders() }
     );
   } catch (err: any) {
@@ -200,7 +240,7 @@ export async function POST(request: Request) {
   }
 }
 
-function mapFeedbackItem(item: any) {
+function mapFeedbackItem(item: any, mediaRecords: any[] = []) {
   return {
     id: item.id,
     type: item.type,
@@ -222,6 +262,11 @@ function mapFeedbackItem(item: any) {
     createdBy: item.created_by || "Anonymous",
     createdAt: item.created_at,
     replies: [],
-    media: [],
+    media: mediaRecords.map(m => ({
+      id: m.id,
+      fileUrl: m.file_url,
+      fileType: m.file_type,
+      fileName: m.file_name,
+    })),
   };
 }
