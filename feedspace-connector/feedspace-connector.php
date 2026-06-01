@@ -34,7 +34,7 @@ class FeedspaceConnector
         add_action('admin_menu', array($this, 'addAdminMenu'));
         add_action('admin_init', array($this, 'registerSettings'));
         add_action('admin_enqueue_scripts', array($this, 'adminEnqueueScripts'));
-        add_filter('wp_handle_upload_prefilter', array($this, 'handleUploadPrefilter'));
+        // add_filter('wp_handle_upload_prefilter', array($this, 'handleUploadPrefilter'));  // Previu pattern — not using wp_handle_upload
         add_action('plugins_loaded', array($this, 'ensureTables'));
         add_filter('cron_schedules', array($this, 'addCronInterval'));
         add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
@@ -676,51 +676,26 @@ class FeedspaceConnector
 
     private function handleUpload($file, $projectId = '')
     {
-        try {
-            require_once ABSPATH . 'wp-admin/includes/file.php';
-            require_once ABSPATH . 'wp-admin/includes/image.php';
-            require_once ABSPATH . 'wp-admin/includes/media.php';
-        } catch (\Throwable $e) {
-            return new WP_Error('include_failed', 'Failed to load required files: ' . $e->getMessage(), array('status' => 500));
+        // Previu pattern: direct file read/write — avoids wp_handle_upload/wp_insert_attachment crashes
+        $uploadDir = wp_upload_dir();
+        $mediaDir = $uploadDir['basedir'] . '/feedspace-media/';
+        if (!file_exists($mediaDir)) {
+            wp_mkdir_p($mediaDir);
         }
 
-        $override = array(
-            'test_form' => false,
-            'unique_filename_callback' => function ($dir, $name, $ext) use ($projectId) {
-                $prefix = 'feedspace_';
-                if ($projectId) {
-                    $prefix .= $projectId . '_';
-                }
-                return $prefix . uniqid() . $ext;
-            },
-        );
+        $ext = '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'feedspace_' . uniqid() . '_' . sanitize_file_name(basename($file['name']));
+        $dest = $mediaDir . $filename;
 
-        $uploaded = wp_handle_upload($file, $override);
-
-        if (isset($uploaded['error'])) {
-            return new WP_Error('upload_failed', $uploaded['error'], array('status' => 500));
+        $content = file_get_contents($file['tmp_name']);
+        if (false === $content) {
+            return new WP_Error('upload_failed', 'Failed to read uploaded file', array('status' => 500));
+        }
+        if (false === file_put_contents($dest, $content)) {
+            return new WP_Error('upload_failed', 'Failed to write file to storage', array('status' => 500));
         }
 
-        $attachmentId = 0;
-        try {
-            $attachmentId = wp_insert_attachment(array(
-                'post_title' => sanitize_file_name($file['name']),
-                'post_content' => '',
-                'post_mime_type' => $file['type'],
-                'guid' => $uploaded['url'],
-            ), $uploaded['file']);
-        } catch (\Throwable $e) {
-            // Attachment creation failed, continue without it
-        }
-
-        if ($attachmentId && !is_wp_error($attachmentId)) {
-            try {
-                $attachData = wp_generate_attachment_metadata($attachmentId, $uploaded['file']);
-                wp_update_attachment_metadata($attachmentId, $attachData);
-            } catch (\Throwable $e) {
-                // metadata generation failed
-            }
-        }
+        $url = $uploadDir['baseurl'] . '/feedspace-media/' . rawurlencode($filename);
 
         global $wpdb;
         $tableName = $wpdb->prefix . 'feedspace_feedback';
@@ -728,7 +703,7 @@ class FeedspaceConnector
 
         $wpdb->insert($tableName, array(
             'feedspace_id' => $feedspaceId,
-            'file_url' => $uploaded['url'],
+            'file_url' => $url,
             'file_type' => $file['type'],
             'file_name' => $file['name'],
             'file_size' => $file['size'],
@@ -737,9 +712,9 @@ class FeedspaceConnector
         ));
 
         return array(
-            'id' => $attachmentId,
+            'id' => 0,
             'feedspace_id' => $feedspaceId,
-            'url' => $uploaded['url'],
+            'url' => $url,
             'file_name' => $file['name'],
             'file_size' => $file['size'],
             'file_type' => $file['type'],
