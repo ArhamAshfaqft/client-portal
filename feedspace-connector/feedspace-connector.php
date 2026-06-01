@@ -392,7 +392,7 @@ class FeedspaceConnector
             'time' => current_time('mysql'),
             'event' => $event,
         ), $details);
-        $log = array_slice($log, -20);
+        $log = array_slice($log, -30);
         update_option('feedspace_debug_log', $log, false);
     }
 
@@ -1131,8 +1131,8 @@ class FeedspaceConnector
             </div>
 
             <div class="feedspace-status-card" style="margin-top:16px;">
-                <h2>Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 20 events)</span></h2>
-                <div style="max-height:300px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
+                <h2>Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 30 events)</span></h2>
+                <div style="max-height:400px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
                     <?php
                     $debugLog = get_option('feedspace_debug_log', array());
                     if (empty($debugLog)) {
@@ -1141,23 +1141,17 @@ class FeedspaceConnector
                         foreach (array_reverse($debugLog) as $entry) {
                             $time = esc_html($entry['time'] ?? '');
                             $event = esc_html($entry['event'] ?? '');
-                            $annotation_id = esc_html($entry['annotation_id'] ?? '');
-                            $projectId = esc_html($entry['projectId'] ?? '');
-                            $code = esc_html($entry['code'] ?? '');
-                            $body = esc_html(substr($entry['body'] ?? $entry['error'] ?? $entry['reason'] ?? '', 0, 300));
-                            $success = !empty($entry['success']);
-                            $url = esc_html($entry['url'] ?? '');
-                            $color = '#6b7280';
-                            if (strpos($event, 'error') !== false || strpos($event, 'fail') !== false || strpos($event, 'skipped') !== false) $color = '#dc2626';
-                            if (strpos($event, 'ok') !== false || strpos($event, 'result') !== false && $success) $color = '#059669';
-                            echo '<div style="margin-bottom:6px;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">';
-                            echo '<span style="color:' . $color . ';">[' . $time . '] ' . strtoupper($event) . '</span>';
-                            if ($annotation_id) echo ' <span style="color:#4b5563;">id=' . $annotation_id . '</span>';
-                            if ($projectId) echo ' <span style="color:#4b5563;">project=' . $projectId . '</span>';
-                            if ($code) echo ' <span style="color:#4b5563;">HTTP ' . $code . '</span>';
-                            if ($body) echo "\n" . $body;
-                            if ($url) echo "\n" . $url;
-                            echo '</div>';
+                            $line = '[' . $time . '] ' . strtoupper($event);
+                            // Show all extra fields except time/event
+                            $extra = $entry;
+                            unset($extra['time'], $extra['event']);
+                            $parts = array();
+                            foreach ($extra as $k => $v) {
+                                if (is_array($v)) $v = json_encode($v);
+                                $parts[] = $k . '=' . esc_html($v);
+                            }
+                            if (!empty($parts)) $line .= '  ' . implode('  ', $parts);
+                            echo '<div style="margin-bottom:3px;padding:2px 0;">' . $line . '</div>';
                         }
                     }
                     ?>
