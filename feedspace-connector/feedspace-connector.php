@@ -444,6 +444,7 @@ class FeedspaceConnector
                 height REAL,
                 draw_data TEXT,
                 element_dna TEXT,
+                media LONGTEXT,
                 viewport_width INT DEFAULT 0,
                 viewport_height INT DEFAULT 0,
                 device VARCHAR(20) DEFAULT 'desktop',
@@ -457,6 +458,15 @@ class FeedspaceConnector
             // phpcs:enable
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions
             error_log('[Feedspace] Created annotations table: ' . ($wpdb->last_error ?: 'ok'));
+        }
+
+        // Migration: add media column if missing (v1.1+)
+        $mediaCol = $wpdb->get_row("SHOW COLUMNS FROM $annotationsTable LIKE 'media'");
+        if (!$mediaCol) {
+            $wpdb->query("ALTER TABLE $annotationsTable ADD COLUMN media LONGTEXT AFTER element_dna");
+            if (!$wpdb->last_error) {
+                error_log('[Feedspace] Added media column to annotations table');
+            }
         }
 
         $queueTable = $wpdb->prefix . 'feedspace_sync_queue';
@@ -751,12 +761,24 @@ class FeedspaceConnector
         $annotationId = wp_generate_uuid4();
         $now = current_time('mysql');
 
+        $rawMedia = isset($body['media']) && is_array($body['media']) ? $body['media'] : array();
+        $cleanMedia = array();
+        foreach ($rawMedia as $m) {
+            $cleanMedia[] = array(
+                'id' => sanitize_text_field($m['id'] ?? ''),
+                'fileUrl' => esc_url_raw($m['fileUrl'] ?? ''),
+                'fileType' => sanitize_text_field($m['fileType'] ?? ''),
+                'fileName' => sanitize_text_field($m['fileName'] ?? ''),
+            );
+        }
+
         $data = array(
             'annotation_id' => $annotationId,
             'project_id' => sanitize_text_field($body['projectId'] ?? ''),
             'type' => sanitize_text_field($body['type'] ?? 'pin'),
             'content' => sanitize_textarea_field($body['content'] ?? ''),
             'page_url' => remove_query_arg('feedspace_preview', esc_url_raw($body['pageUrl'] ?? '')),
+            'media' => !empty($cleanMedia) ? wp_json_encode($cleanMedia) : '',
             'selector' => sanitize_text_field($body['selector'] ?? ''),
             'coordinates_x' => isset($body['coordinatesX']) ? floatval($body['coordinatesX']) : null,
             'coordinates_y' => isset($body['coordinatesY']) ? floatval($body['coordinatesY']) : null,
@@ -811,6 +833,8 @@ class FeedspaceConnector
             update_option('feedspace_last_mirror_success', false);
         }
 
+        $savedMedia = !empty($cleanMedia) ? $cleanMedia : array();
+
         return new WP_REST_Response(array(
             'id' => $annotationId,
             'type' => $data['type'],
@@ -832,7 +856,7 @@ class FeedspaceConnector
             'createdBy' => $data['created_by'],
             'createdAt' => $now,
             'replies' => array(),
-            'media' => array(),
+            'media' => $savedMedia,
             '_mirrored' => $mirrorOk,
         ), 201);
     }
@@ -891,7 +915,7 @@ class FeedspaceConnector
                 'createdBy' => $row->created_by,
                 'createdAt' => $row->created_at,
                 'replies' => array(),
-                'media' => array(),
+                'media' => $row->media ? json_decode($row->media, true) : array(),
             );
         }
 
@@ -1507,6 +1531,7 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
             'device' => $row->device ?: 'desktop',
             'createdBy' => $row->created_by ?: 'Anonymous',
             'metaData' => array(),
+            'media' => $row->media ? json_decode($row->media, true) : array(),
         );
 
         $postUrl = trailingslashit($vercelUrl) . 'api/widget/annotations';
