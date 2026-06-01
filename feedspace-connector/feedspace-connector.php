@@ -649,9 +649,13 @@ class FeedspaceConnector
 
     private function handleUpload($file, $projectId = '')
     {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        require_once ABSPATH . 'wp-admin/includes/image.php';
-        require_once ABSPATH . 'wp-admin/includes/media.php';
+        try {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+            require_once ABSPATH . 'wp-admin/includes/media.php';
+        } catch (\Throwable $e) {
+            return new WP_Error('include_failed', 'Failed to load required files: ' . $e->getMessage(), array('status' => 500));
+        }
 
         $override = array(
             'test_form' => false,
@@ -670,17 +674,25 @@ class FeedspaceConnector
             return new WP_Error('upload_failed', $uploaded['error'], array('status' => 500));
         }
 
-        $attachmentId = wp_insert_attachment(array(
-            'post_title' => sanitize_file_name($file['name']),
-            'post_content' => '',
-            'post_mime_type' => $file['type'],
-            'guid' => $uploaded['url'],
-        ), $uploaded['file']);
+        $attachmentId = 0;
+        try {
+            $attachmentId = wp_insert_attachment(array(
+                'post_title' => sanitize_file_name($file['name']),
+                'post_content' => '',
+                'post_mime_type' => $file['type'],
+                'guid' => $uploaded['url'],
+            ), $uploaded['file']);
+        } catch (\Throwable $e) {
+            // Attachment creation failed, continue without it
+        }
 
-        if (!is_wp_error($attachmentId)) {
-            $attachData = wp_generate_attachment_metadata($attachmentId, $uploaded['file']);
-            wp_update_attachment_metadata($attachmentId, $attachData);
-            wp_set_object_terms($attachmentId, 'feedspace-feedback', 'media_category', false);
+        if ($attachmentId && !is_wp_error($attachmentId)) {
+            try {
+                $attachData = wp_generate_attachment_metadata($attachmentId, $uploaded['file']);
+                wp_update_attachment_metadata($attachmentId, $attachData);
+            } catch (\Throwable $e) {
+                // metadata generation failed
+            }
         }
 
         global $wpdb;
