@@ -1494,11 +1494,11 @@
       const a = atts[cur];
       const ext = ((_a = (a.name || "").split(".").pop()) == null ? void 0 : _a.toUpperCase()) || "";
       let c = "";
-      if (a.type === "image") {
+      if (a.type.startsWith("image/")) {
         c = `<img src="${escHtml2(a.url)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;">`;
-      } else if (a.type === "video") {
+      } else if (a.type.startsWith("video/")) {
         c = `<video controls style="max-width:100%;max-height:100%;border-radius:4px;" src="${escHtml2(a.url)}" preload="metadata"></video>`;
-      } else if (a.type === "audio") {
+      } else if (a.type.startsWith("audio/")) {
         c = `<div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:20px;"><div style="width:48px;height:48px;color:rgba(255,255,255,0.3);">${SVG_ICONS2.music}</div><div style="font-size:14px;color:rgba(255,255,255,0.5);">${escHtml2(a.name || "Audio")}</div><audio controls style="width:420px;max-width:85vw;" src="${escHtml2(a.url)}" preload="metadata"></audio></div>`;
       } else {
         c = `<div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;"><div style="width:80px;height:80px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);">${escHtml2(ext)}</div><a href="${escHtml2(a.url)}" target="_blank" style="color:#818cf8;font-size:14px;text-decoration:none;font-weight:600;">${escHtml2(a.name || "Download")}</a></div>`;
