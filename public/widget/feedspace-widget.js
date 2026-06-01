@@ -27,7 +27,7 @@
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color: #0f172a;
+  color: #1f2937;
   position: fixed;
   z-index: 99999;
   bottom: 0;
@@ -42,46 +42,52 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
   padding: 6px 10px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.04);
   margin-bottom: 24px;
   pointer-events: auto;
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
+.feedspace-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
 .feedspace-toolbar-divider {
   width: 1px;
   height: 28px;
-  background: #e2e8f0;
-  margin: 0 8px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 0 6px;
 }
 
 .feedspace-tool-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   cursor: pointer;
-  color: #64748b;
-  transition: all 0.15s;
+  color: #6b7280;
+  transition: all 0.2s ease;
   position: relative;
 }
 .feedspace-tool-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366f1;
 }
 .feedspace-tool-btn.active {
-  background: #2563eb;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
-}
-.feedspace-tool-btn.active:hover {
-  background: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 .feedspace-tool-btn svg {
   width: 20px;
@@ -101,7 +107,8 @@
   text-align: center;
   padding: 0 4px;
   font-weight: 700;
-  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  border: 2px solid rgba(255,255,255,0.8);
 }
 
 .feedspace-device-btn {
@@ -111,19 +118,19 @@
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  color: #94a3b8;
-  transition: all 0.15s;
+  color: #9ca3af;
+  transition: all 0.15s ease;
 }
 .feedspace-device-btn:hover {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.06);
 }
 .feedspace-device-btn.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
 }
 .feedspace-device-btn svg {
   width: 16px;
@@ -133,24 +140,26 @@
 .feedspace-submit-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
-  padding: 8px 18px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 8px;
-  background: #2563eb;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
   font-family: inherit;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 .feedspace-submit-btn:hover {
-  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
 }
 .feedspace-submit-btn:active {
-  background: #1e40af;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
 }
 .feedspace-submit-btn svg {
   width: 16px;
@@ -159,20 +168,20 @@
 
 .feedspace-annotation-pin {
   cursor: pointer;
-  transition: transform 0.15s, filter 0.15s;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
+  transition: transform 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 .feedspace-annotation-pin:hover {
-  transform: scale(1.15);
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+  transform: scale(1.2);
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.3));
 }
 
 .feedspace-panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   z-index: 99998;
-  animation: feedspace-fade-in 0.15s;
+  animation: feedspace-fade-in 0.2s ease;
 }
 
 .feedspace-panel {
@@ -184,10 +193,10 @@
   height: 100vh;
   background: #fff;
   z-index: 99999;
-  box-shadow: -8px 0 40px rgba(0,0,0,0.1);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  animation: feedspace-slide-in 0.2s ease;
+  animation: feedspace-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .feedspace-panel-header {
@@ -195,12 +204,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f3f4f6;
 }
 .feedspace-panel-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  color: #0f172a;
+  color: #111827;
   letter-spacing: -0.01em;
 }
 .feedspace-panel-close {
@@ -210,15 +219,15 @@
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
-  color: #94a3b8;
+  color: #9ca3af;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 .feedspace-panel-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f3f4f6;
+  color: #374151;
 }
 .feedspace-panel-close svg {
   width: 18px;
@@ -233,14 +242,14 @@
 
 .feedspace-panel-footer {
   padding: 16px 24px 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #f3f4f6;
 }
 
 .feedspace-comment-input {
   width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -250,144 +259,143 @@
   transition: border-color 0.15s, box-shadow 0.15s;
   line-height: 1.5;
   background: #fff;
-  color: #0f172a;
+  color: #1f2937;
 }
 .feedspace-comment-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 .feedspace-comment-input::placeholder {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .feedspace-media-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   margin-top: 10px;
 }
 
 .feedspace-icon-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
   background: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
+  color: #6b7280;
   transition: all 0.15s;
   flex-shrink: 0;
 }
 .feedspace-icon-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #6366f1;
 }
 .feedspace-icon-btn.active {
-  background: #eff6ff;
-  border-color: #2563eb;
-  color: #2563eb;
+  background: rgba(99, 102, 241, 0.08);
+  border-color: #6366f1;
+  color: #6366f1;
 }
 .feedspace-icon-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .feedspace-avatar-sm {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: #2563eb;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .feedspace-avatar-xs {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: linear-gradient(135deg, #a5b4fc, #6366f1);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .feedspace-feedback-item {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 14px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 14px;
+  padding: 16px;
   margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.15s;
 }
 .feedspace-feedback-item:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-color: #e5e7eb;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
 }
 .feedspace-feedback-item.highlight {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .feedspace-feedback-item-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .feedspace-feedback-author {
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
-  line-height: 1.3;
+  color: #1f2937;
 }
 .feedspace-feedback-status {
-  display: inline-flex;
-  align-items: center;
   font-size: 11px;
   font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 3px 10px;
+  border-radius: 6px;
   white-space: nowrap;
 }
 .feedspace-feedback-status.open {
-  background: rgba(245, 158, 11, 0.1);
+  background: #fef3c7;
   color: #d97706;
 }
 .feedspace-feedback-status.in_progress {
-  background: rgba(37, 99, 235, 0.1);
+  background: #dbeafe;
   color: #2563eb;
 }
 .feedspace-feedback-status.resolved {
-  background: rgba(34, 197, 94, 0.1);
-  color: #16a34a;
+  background: #d1fae5;
+  color: #059669;
 }
 .feedspace-feedback-status.closed {
-  background: #f1f5f9;
-  color: #64748b;
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .feedspace-feedback-content {
   font-size: 13px;
-  color: #334155;
+  color: #374151;
   line-height: 1.6;
 }
 .feedspace-feedback-meta {
   font-size: 11px;
-  color: #94a3b8;
+  color: #9ca3af;
   margin-top: 1px;
 }
 
@@ -396,10 +404,10 @@
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #94a3b8;
+  color: #9ca3af;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid #f3f4f6;
 }
 .feedspace-reply-count svg {
   width: 12px;
@@ -408,10 +416,10 @@
 
 .feedspace-reply {
   margin-top: 10px;
-  padding: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
 }
 .feedspace-reply-header {
   display: flex;
@@ -422,22 +430,22 @@
 .feedspace-reply-author {
   font-size: 12px;
   font-weight: 600;
-  color: #0f172a;
+  color: #374151;
 }
 .feedspace-reply-text {
   font-size: 12px;
-  color: #475569;
+  color: #4b5563;
   line-height: 1.5;
 }
 .feedspace-reply-meta {
   font-size: 10px;
-  color: #94a3b8;
+  color: #9ca3af;
   margin-top: 1px;
 }
 
 .feedspace-section-divider {
   height: 1px;
-  background: #e2e8f0;
+  background: #f3f4f6;
   margin: 16px 0;
 }
 
@@ -446,12 +454,12 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 10px;
   margin-top: 8px;
   font-size: 12px;
-  color: #334155;
+  color: #374151;
 }
 .feedspace-file-thumb {
   width: 36px;
@@ -461,7 +469,7 @@
   flex-shrink: 0;
 }
 .feedspace-file-icon {
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 .feedspace-file-info {
@@ -473,11 +481,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #0f172a;
 }
 .feedspace-file-size {
   font-size: 10px;
-  color: #94a3b8;
+  color: #9ca3af;
 }
 .feedspace-file-remove {
   width: 24px;
@@ -486,7 +493,7 @@
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  color: #94a3b8;
+  color: #9ca3af;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -507,12 +514,12 @@
   align-items: center;
   gap: 8px;
   color: #ef4444;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   padding: 10px 12px;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
+  border-radius: 10px;
   margin-top: 8px;
 }
 .feedspace-recording-dot {
@@ -530,7 +537,7 @@
 .feedspace-empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #94a3b8;
+  color: #9ca3af;
 }
 .feedspace-empty-state svg {
   width: 48px;
@@ -541,14 +548,13 @@
 .feedspace-empty-state p {
   font-size: 14px;
   line-height: 1.6;
-  color: #64748b;
 }
 
 .feedspace-filter-tabs {
   display: flex;
   gap: 4px;
   padding: 0 24px 12px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #f3f4f6;
   overflow-x: auto;
 }
 .feedspace-filter-tab {
@@ -558,19 +564,19 @@
   font-weight: 500;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #6b7280;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
   font-family: inherit;
 }
 .feedspace-filter-tab:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f3f4f6;
 }
 .feedspace-filter-tab.active {
-  background: #2563eb;
+  background: #6366f1;
   color: #fff;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
 }
 
 @keyframes feedspace-fade-in {
@@ -597,48 +603,51 @@
   align-items: center;
   justify-content: center;
   z-index: 100000;
-  background: rgba(15, 23, 42, 0.4);
-  animation: feedspace-fade-in 0.15s;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: feedspace-fade-in 0.2s ease;
 }
 .feedspace-name-modal-card {
   background: #fff;
-  border-radius: 12px;
-  padding: 28px;
+  border-radius: 20px;
+  padding: 32px;
   width: 360px;
   max-width: 90vw;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.15);
-  animation: feedspace-scale-in 0.2s ease;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+  animation: feedspace-scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .feedspace-name-modal h3 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   margin-bottom: 4px;
-  color: #0f172a;
+  color: #111827;
+  letter-spacing: -0.01em;
 }
 .feedspace-name-modal p {
   font-size: 14px;
-  color: #64748b;
+  color: #6b7280;
   margin-bottom: 20px;
   line-height: 1.5;
 }
 .feedspace-name-modal input {
   width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   margin-bottom: 16px;
-  color: #0f172a;
+  color: #1f2937;
 }
 .feedspace-name-modal input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 .feedspace-name-modal input::placeholder {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 .feedspace-name-modal .actions {
   display: flex;
@@ -646,9 +655,9 @@
   gap: 8px;
 }
 .feedspace-name-modal .actions button {
-  padding: 8px 18px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   border: none;
@@ -656,24 +665,27 @@
   transition: all 0.15s;
 }
 .feedspace-name-modal .actions .cancel {
-  background: #f1f5f9;
-  color: #334155;
+  background: #f3f4f6;
+  color: #374151;
 }
 .feedspace-name-modal .actions .cancel:hover {
-  background: #e2e8f0;
+  background: #e5e7eb;
 }
 .feedspace-name-modal .actions .confirm {
-  background: #2563eb;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 .feedspace-name-modal .actions .confirm:hover {
-  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
 }
 
 .feedspace-hover-highlight {
-  outline: 2px solid #2563eb !important;
+  outline: 2px solid #6366f1 !important;
   outline-offset: 2px !important;
   border-radius: 2px;
+  transition: outline 0.1s ease;
 }
 
 [data-feedspace-tool="pin"] { cursor: crosshair; }
@@ -1505,17 +1517,25 @@
       this.toolbarRoot.id = "feedspace-widget-root";
       this.toolbarRoot.innerHTML = `
       <div class="feedspace-toolbar">
-        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
-        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+        <div class="feedspace-toolbar-group">
+          <div class="feedspace-toolbar-label">Tools</div>
+          <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
+          <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+        </div>
         <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        <div class="feedspace-toolbar-group">
+          <div class="feedspace-toolbar-label">View</div>
+          <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
+          <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
+          <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        </div>
         <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
-          ${SVG_ICONS.list}
-          <span class="badge" id="feedspace-list-count" style="display:none">0</span>
-        </button>
+        <div class="feedspace-toolbar-group">
+          <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
+            ${SVG_ICONS.list}
+            <span class="badge" id="feedspace-list-count" style="display:none">0</span>
+          </button>
+        </div>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
           ${SVG_ICONS.submit}
