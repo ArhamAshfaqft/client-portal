@@ -2,16 +2,6 @@
 (() => {
   // src/widget/styles.ts
   var STYLES = `
-#feedspace-widget-root *,
-#feedspace-widget-root *::before,
-#feedspace-widget-root *::after {
-  box-sizing: border-box !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  line-height: 1.5 !important;
-}
-
 #feedspace-overlay {
   position: absolute;
   top: 0;
@@ -26,21 +16,22 @@
 }
 
 #feedspace-widget-root {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #0f172a;
+  display: flex;
+  justify-content: center;
   position: fixed;
   z-index: 99999;
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  justify-content: center;
   pointer-events: none;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
 }
 
-.feedspace-toolbar {
+/* ===== TOOLBAR (inside #feedspace-widget-root) ===== */
+#feedspace-widget-root .feedspace-toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -51,52 +42,62 @@
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   margin-bottom: 24px;
   pointer-events: auto;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
 }
 
-.feedspace-toolbar-divider {
+#feedspace-widget-root .feedspace-toolbar-divider {
   width: 1px;
   height: 28px;
   background: #e2e8f0;
   margin: 0 8px;
+  border: none;
 }
 
-.feedspace-tool-btn {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 36px !important;
-  height: 36px !important;
-  border: none !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  cursor: pointer !important;
-  color: #64748b !important;
-  transition: all 0.15s !important;
-  position: relative !important;
-  font-size: 14px !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  outline: none !important;
+#feedspace-widget-root .feedspace-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+  position: relative;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: none;
+  margin: 0;
 }
-.feedspace-tool-btn:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
+#feedspace-widget-root .feedspace-tool-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
-.feedspace-tool-btn.active {
-  background: #2563eb !important;
-  color: #fff !important;
+#feedspace-widget-root .feedspace-tool-btn.active {
+  background: #2563eb;
+  color: #fff;
 }
-.feedspace-tool-btn.active:hover {
-  background: #1d4ed8 !important;
+#feedspace-widget-root .feedspace-tool-btn.active:hover {
+  background: #1d4ed8;
 }
-.feedspace-tool-btn svg {
-  width: 20px !important;
-  height: 20px !important;
-  display: block !important;
+#feedspace-widget-root .feedspace-tool-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
-.feedspace-tool-btn .badge {
+#feedspace-widget-root .feedspace-tool-btn .badge {
   position: absolute;
   top: -2px;
   right: -2px;
@@ -113,91 +114,138 @@
   border: 2px solid #fff;
 }
 
-.feedspace-device-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 32px !important;
-  height: 32px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  background: transparent !important;
-  cursor: pointer !important;
-  color: #94a3b8 !important;
-  transition: all 0.15s !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  box-shadow: none !important;
-  outline: none !important;
+#feedspace-widget-root .feedspace-device-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  font-size: 14px;
+  margin: 0;
 }
-.feedspace-device-btn:hover {
-  color: #2563eb !important;
-  background: #eff6ff !important;
+#feedspace-widget-root .feedspace-device-btn:hover {
+  color: #2563eb;
+  background: #eff6ff;
 }
-.feedspace-device-btn.active {
-  color: #2563eb !important;
-  background: #eff6ff !important;
+#feedspace-widget-root .feedspace-device-btn.active {
+  color: #2563eb;
+  background: #eff6ff;
 }
-.feedspace-device-btn svg {
+#feedspace-widget-root .feedspace-device-btn svg {
   width: 16px;
   height: 16px;
+  display: block;
 }
 
+#feedspace-widget-root .feedspace-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  line-height: 1.4;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: none;
+  margin: 0;
+}
+#feedspace-widget-root .feedspace-submit-btn:hover {
+  background: #1d4ed8;
+  text-decoration: none;
+}
+#feedspace-widget-root .feedspace-submit-btn:active {
+  background: #1e40af;
+}
+#feedspace-widget-root .feedspace-submit-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* Body-level submit button (inside panels, not in widget root) */
 .feedspace-submit-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  padding: 8px 18px !important;
-  border: none !important;
-  border-radius: 8px !important;
-  background: #2563eb !important;
-  color: #fff !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: all 0.15s !important;
-  font-family: 'Poppins', -apple-system, sans-serif !important;
-  line-height: 1.4 !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  outline: none !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  line-height: 1.4;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: none;
+  margin: 0;
 }
 .feedspace-submit-btn:hover {
-  background: #1d4ed8 !important;
-  text-decoration: none !important;
+  background: #1d4ed8;
+  text-decoration: none;
 }
 .feedspace-submit-btn:active {
-  background: #1e40af !important;
+  background: #1e40af;
 }
 .feedspace-submit-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-  display: block !important;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
-.feedspace-annotation-pin {
+#feedspace-widget-root .feedspace-annotation-pin {
   cursor: pointer;
   transition: transform 0.15s, filter 0.15s;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
 }
-.feedspace-annotation-pin:hover {
+#feedspace-widget-root .feedspace-annotation-pin:hover {
   transform: scale(1.15);
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
 }
 
+/* ===== PANELS (appended to document.body) ===== */
 .feedspace-panel-overlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.3);
   z-index: 99998;
   animation: feedspace-fade-in 0.15s;
+  pointer-events: auto;
 }
 
 .feedspace-panel {
+  display: flex;
+  flex-direction: column;
   position: fixed;
   top: 0;
   right: 0;
@@ -207,9 +255,12 @@
   background: #fff;
   z-index: 99999;
   box-shadow: -8px 0 40px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
   animation: feedspace-slide-in 0.2s ease;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
+  pointer-events: auto;
 }
 
 .feedspace-panel-header {
@@ -226,30 +277,33 @@
   letter-spacing: -0.01em;
 }
 .feedspace-panel-close {
-  width: 32px !important;
-  height: 32px !important;
-  border: none !important;
-  border-radius: 8px !important;
-  background: transparent !important;
-  cursor: pointer !important;
-  color: #94a3b8 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.15s !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  box-shadow: none !important;
-  outline: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  font-size: 14px;
+  margin: 0;
 }
 .feedspace-panel-close:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
+  background: #f1f5f9;
+  color: #0f172a;
 }
 .feedspace-panel-close svg {
-  width: 18px !important;
-  height: 18px !important;
-  display: block !important;
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .feedspace-panel-body {
@@ -264,12 +318,13 @@
 }
 
 .feedspace-comment-input {
+  display: block;
   width: 100%;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  font-family: inherit;
+  font-family: 'Poppins', -apple-system, sans-serif;
   outline: none;
   resize: none;
   min-height: 44px;
@@ -278,6 +333,9 @@
   line-height: 1.5;
   background: #fff;
   color: #0f172a;
+  margin: 0;
+  box-shadow: none;
+  text-shadow: none;
 }
 .feedspace-comment-input:focus {
   border-color: #2563eb;
@@ -285,6 +343,7 @@
 }
 .feedspace-comment-input::placeholder {
   color: #94a3b8;
+  opacity: 1;
 }
 
 .feedspace-media-actions {
@@ -294,37 +353,40 @@
 }
 
 .feedspace-icon-btn {
-  width: 36px !important;
-  height: 36px !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  background: #fff !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: #64748b !important;
-  transition: all 0.15s !important;
-  flex-shrink: 0 !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  box-shadow: none !important;
-  outline: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  font-size: 14px;
+  margin: 0;
 }
 .feedspace-icon-btn:hover {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 .feedspace-icon-btn.active {
-  background: #eff6ff !important;
-  border-color: #2563eb !important;
-  color: #2563eb !important;
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
 }
 .feedspace-icon-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-  display: block !important;
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .feedspace-avatar-sm {
@@ -333,7 +395,7 @@
   border-radius: 50%;
   background: #2563eb;
   color: #fff;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
@@ -347,7 +409,7 @@
   border-radius: 50%;
   background: #3b82f6;
   color: #fff;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
@@ -394,6 +456,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
+  border: none;
 }
 .feedspace-feedback-status.open {
   background: rgba(245, 158, 11, 0.1);
@@ -471,6 +534,7 @@
   height: 1px;
   background: #e2e8f0;
   margin: 16px 0;
+  border: none;
 }
 
 .feedspace-file-preview {
@@ -512,6 +576,9 @@
   color: #94a3b8;
 }
 .feedspace-file-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 24px;
   height: 24px;
   border: none;
@@ -519,11 +586,13 @@
   background: transparent;
   cursor: pointer;
   color: #94a3b8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.15s;
   flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+  margin: 0;
 }
 .feedspace-file-remove:hover {
   background: #fef2f2;
@@ -532,6 +601,7 @@
 .feedspace-file-remove svg {
   width: 14px;
   height: 14px;
+  display: block;
 }
 
 .feedspace-recording-indicator {
@@ -574,6 +644,7 @@
   font-size: 14px;
   line-height: 1.6;
   color: #64748b;
+  margin: 0;
 }
 
 .feedspace-filter-tabs {
@@ -584,6 +655,9 @@
   overflow-x: auto;
 }
 .feedspace-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 12px;
@@ -594,7 +668,14 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  line-height: 1;
+  box-shadow: none;
+  outline: none;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: none;
 }
 .feedspace-filter-tab:hover {
   background: #f1f5f9;
@@ -605,34 +686,19 @@
   color: #fff;
 }
 
-@keyframes feedspace-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes feedspace-slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-@keyframes feedspace-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-@keyframes feedspace-scale-in {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
+/* ===== NAME MODAL (appended to document.body) ===== */
 .feedspace-name-modal {
-  position: fixed;
-  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: fixed;
+  inset: 0;
   z-index: 100000;
   background: rgba(15, 23, 42, 0.4);
   animation: feedspace-fade-in 0.15s;
 }
 .feedspace-name-modal-card {
+  display: block;
   background: #fff;
   border-radius: 12px;
   padding: 28px;
@@ -640,6 +706,10 @@
   max-width: 90vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.15);
   animation: feedspace-scale-in 0.2s ease;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
 }
 .feedspace-name-modal h3 {
   font-size: 18px;
@@ -654,16 +724,20 @@
   line-height: 1.5;
 }
 .feedspace-name-modal input {
+  display: block;
   width: 100%;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 14px;
-  font-family: inherit;
+  font-family: 'Poppins', -apple-system, sans-serif;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   margin-bottom: 16px;
   color: #0f172a;
+  background: #fff;
+  box-shadow: none;
+  line-height: 1.5;
 }
 .feedspace-name-modal input:focus {
   border-color: #2563eb;
@@ -671,6 +745,7 @@
 }
 .feedspace-name-modal input::placeholder {
   color: #94a3b8;
+  opacity: 1;
 }
 .feedspace-name-modal .actions {
   display: flex;
@@ -678,14 +753,21 @@
   gap: 8px;
 }
 .feedspace-name-modal .actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 18px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   border: none;
-  font-family: inherit;
+  font-family: 'Poppins', -apple-system, sans-serif;
   transition: all 0.15s;
+  line-height: 1.4;
+  box-shadow: none;
+  outline: none;
+  margin: 0;
 }
 .feedspace-name-modal .actions .cancel {
   background: #f1f5f9;
@@ -702,13 +784,132 @@
   background: #1d4ed8;
 }
 
+/* ===== HOVER HIGHLIGHT (applied to page elements) ===== */
 .feedspace-hover-highlight {
-  outline: 2px solid #2563eb !important;
-  outline-offset: 2px !important;
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
   border-radius: 2px;
 }
 
-[data-feedspace-tool="pin"] { cursor: crosshair; }
+[data-feedspace-tool="pin"] {
+  cursor: crosshair;
+}
+
+/* ===== SIDEBAR CARD ENHANCEMENTS ===== */
+.fs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fs-number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+  background: #2563eb;
+}
+
+.fs-device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.fs-device-pill.desktop {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+.fs-device-pill.tablet {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+.fs-device-pill.mobile {
+  background: rgba(219, 39, 119, 0.1);
+  color: #db2777;
+}
+
+.fs-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.13);
+  color: #818cf8;
+  font-family: monospace;
+  letter-spacing: 0.3px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fs-dot-menu {
+  animation: feedspace-fade-in 0.1s ease;
+}
+.fs-menu-item:hover {
+  background: #f1f5f9;
+}
+
+.fs-reveal-btn:hover {
+  color: #2563eb !important;
+}
+
+/* Device filter row */
+.feedspace-device-filter {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+.fs-df-btn {
+  font-family: 'Poppins', -apple-system, sans-serif;
+}
+.fs-df-btn:hover {
+  opacity: 0.8;
+}
+
+/* Card highlight */
+.feedspace-feedback-item.highlight {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+
+/* ===== ANIMATIONS ===== */
+@keyframes feedspace-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes feedspace-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes feedspace-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes feedspace-scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 `;
   var injected = false;
   function injectStyles() {
@@ -901,6 +1102,7 @@
       this.annotations = [];
       this.callbacks = null;
       this.filter = "all";
+      this.deviceFilter = "all";
       this.selectedId = null;
     }
     init(callbacks) {
@@ -924,13 +1126,20 @@
       this.filter = filter;
       this.renderAll();
     }
+    setDeviceFilter(device) {
+      this.deviceFilter = device;
+      this.renderAll();
+    }
     setSelected(id) {
       this.selectedId = id;
       this.renderAll();
     }
     getFiltered() {
-      if (this.filter === "all") return this.annotations;
-      return this.annotations.filter((a) => a.status === this.filter);
+      let result = this.filter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.filter);
+      if (this.deviceFilter && this.deviceFilter !== "all") {
+        result = result.filter((a) => (a.device || "desktop") === this.deviceFilter);
+      }
+      return result;
     }
     renderAll() {
       if (!this.svg) return;
@@ -1036,6 +1245,28 @@
   };
 
   // src/widget/comment-panel.ts
+  function escHtml(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function posPopup(anchorX, anchorY, w, h) {
+    const pad = 12;
+    let left = anchorX + pad;
+    let top = anchorY + pad;
+    if (left + w > window.innerWidth - pad) left = anchorX - w - pad;
+    if (top + h > window.innerHeight - pad) top = anchorY - h - pad;
+    if (left < pad) left = pad;
+    if (top < pad) top = pad;
+    return { top, left };
+  }
+  var SVG_ICONS = {
+    mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
+    paperclip: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>',
+    file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    send: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+    close: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+  };
   var CommentPanel = class {
     constructor() {
       this.root = null;
@@ -1045,8 +1276,12 @@
       this.files = [];
       this.inputEl = null;
       this.onClose = null;
+      this.anchorX = 0;
+      this.anchorY = 0;
     }
-    open(annotation, callbacks, onClose) {
+    open(anchorX, anchorY, annotation, callbacks, onClose) {
+      this.anchorX = anchorX;
+      this.anchorY = anchorY;
       this.annotation = annotation;
       this.callbacks = callbacks;
       this.onClose = onClose;
@@ -1059,218 +1294,259 @@
       this.overlay = null;
       this.root = null;
     }
+    addFile(file) {
+      var _a;
+      this.files.push(file);
+      const previews = (_a = this.root) == null ? void 0 : _a.querySelector("#fs-popup-previews");
+      if (previews) this.updatePreviews(previews);
+    }
+    updateRecordingState() {
+      var _a;
+      if (!this.root) return;
+      const isRec = ((_a = this.callbacks) == null ? void 0 : _a.isRecording()) || false;
+      const indicator = this.root.querySelector("#fs-popup-rec-indicator");
+      const micBtn = this.root.querySelector("#fs-popup-mic-btn");
+      if (indicator) indicator.style.display = isRec ? "flex" : "none";
+      if (micBtn) micBtn.style.color = isRec ? "#ef4444" : "";
+    }
     render() {
       this.close();
+      const isNew = !this.annotation;
       this.overlay = document.createElement("div");
-      this.overlay.className = "feedspace-panel-overlay";
+      this.overlay.style.cssText = "position:fixed;inset:0;z-index:99998;background:transparent;";
       this.overlay.addEventListener("click", () => this.close());
       document.body.appendChild(this.overlay);
-      this.root = document.createElement("div");
-      this.root.className = "feedspace-panel";
-      const isNew = !this.annotation;
-      const title = isNew ? "Add Feedback" : "Feedback Details";
-      const header = document.createElement("div");
-      header.className = "feedspace-panel-header";
-      header.innerHTML = `
-      <span class="feedspace-panel-title">${title}</span>
-      <button class="feedspace-panel-close" id="feedspace-panel-close">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    `;
-      this.root.appendChild(header);
-      header.querySelector("#feedspace-panel-close").addEventListener("click", () => this.close());
-      const body = document.createElement("div");
-      body.className = "feedspace-panel-body";
+      let bodyHtml = "";
       if (!isNew && this.annotation) {
-        const authorInitial = (this.annotation.createdBy || "A").charAt(0).toUpperCase();
+        const initial = (this.annotation.createdBy || "A").charAt(0).toUpperCase();
         const dateStr = new Date(this.annotation.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        const info = document.createElement("div");
-        info.className = "feedspace-feedback-item";
-        info.style.cursor = "default";
-        info.innerHTML = `
-        <div class="feedspace-feedback-item-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="feedspace-avatar-sm">${escHtml(authorInitial)}</div>
-            <div>
-              <div class="feedspace-feedback-author">${escHtml(this.annotation.createdBy)}</div>
-              <div class="feedspace-feedback-meta">${dateStr}</div>
-            </div>
-          </div>
-          <span class="feedspace-feedback-status ${this.annotation.status}">${this.annotation.status.replace("_", " ")}</span>
+        const statusLabels = { open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
+        const statusLabel = statusLabels[this.annotation.status] || this.annotation.status;
+        bodyHtml += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;">${initial}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:#0f172a;">${escHtml(this.annotation.createdBy)}</div>
+          <div style="font-size:10px;color:#94a3b8;">${dateStr}</div>
         </div>
-        <div class="feedspace-feedback-content">${escHtml(this.annotation.content)}</div>
-      `;
-        body.appendChild(info);
+        <span style="display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:999px;background:rgba(37,99,235,0.1);color:#2563eb;">${statusLabel}</span>
+      </div>`;
+        bodyHtml += `<div style="font-size:13px;color:#334155;line-height:1.6;margin-bottom:12px;word-wrap:break-word;">${escHtml(this.annotation.content)}</div>`;
         if (this.annotation.replies && this.annotation.replies.length > 0) {
-          for (const reply of this.annotation.replies) {
-            const replyInitial = (reply.createdBy || "A").charAt(0).toUpperCase();
-            const replyDate = new Date(reply.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-            const r = document.createElement("div");
-            r.className = "feedspace-reply";
-            r.innerHTML = `
-            <div class="feedspace-reply-header">
-              <div class="feedspace-avatar-xs">${escHtml(replyInitial)}</div>
-              <div>
-                <div class="feedspace-reply-author">${escHtml(reply.createdBy)}</div>
-                <div class="feedspace-reply-meta">${replyDate}</div>
-              </div>
+          for (const r of this.annotation.replies) {
+            const rInit = (r.createdBy || "A").charAt(0).toUpperCase();
+            const rDate = new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+            bodyHtml += `<div style="margin-top:8px;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">${rInit}</div>
+              <div style="font-size:12px;font-weight:600;color:#0f172a;">${escHtml(r.createdBy)}</div>
+              <div style="font-size:10px;color:#94a3b8;">${rDate}</div>
             </div>
-            <div class="feedspace-reply-text">${escHtml(reply.content)}</div>
-          `;
-            body.appendChild(r);
+            <div style="font-size:12px;color:#475569;line-height:1.5;">${escHtml(r.content)}</div>
+          </div>`;
           }
+          bodyHtml += `<div style="height:1px;background:#e2e8f0;margin:12px 0;"></div>`;
         }
-        const divider = document.createElement("div");
-        divider.className = "feedspace-section-divider";
-        body.appendChild(divider);
       }
-      const input = document.createElement("textarea");
-      input.className = "feedspace-comment-input";
-      input.placeholder = isNew ? "Describe your feedback..." : "Write a reply...";
-      input.rows = 3;
-      input.style.width = "100%";
-      body.appendChild(input);
-      this.inputEl = input;
-      const mediaActions = document.createElement("div");
-      mediaActions.className = "feedspace-media-actions";
-      mediaActions.innerHTML = `
-      <button class="feedspace-icon-btn" id="feedspace-mic-btn" title="Record voice">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      bodyHtml += `<textarea id="fs-popup-input" placeholder="${isNew ? "Describe your feedback..." : "Write a reply..."}" style="display:block;width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;resize:none;min-height:44px;max-height:100px;line-height:1.5;background:#fff;color:#0f172a;box-sizing:border-box;margin:0;"></textarea>`;
+      bodyHtml += `<div style="display:flex;gap:4px;margin-top:8px;">
+      <button id="fs-popup-mic-btn" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;color:#64748b;padding:0;line-height:1;flex-shrink:0;transition:all 0.15s;" title="Record voice">${SVG_ICONS.mic}</button>
+      <button id="fs-popup-media-btn" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;color:#64748b;padding:0;line-height:1;flex-shrink:0;" title="Attach media">${SVG_ICONS.paperclip}</button>
+      <button id="fs-popup-doc-btn" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;color:#64748b;padding:0;line-height:1;flex-shrink:0;" title="Attach document">${SVG_ICONS.file}</button>
+    </div>`;
+      bodyHtml += `<div id="fs-popup-previews" style="margin-top:8px;"></div>`;
+      bodyHtml += `<div id="fs-popup-rec-indicator" style="display:none;align-items:center;gap:8px;color:#ef4444;font-size:12px;font-weight:500;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-top:8px;">
+      <span style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span>
+      <span id="fs-popup-rec-time" style="font-variant-numeric:tabular-nums;">0:00</span>
+      <button id="fs-popup-stop-rec" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid #ef4444;border-radius:6px;background:transparent;cursor:pointer;color:#ef4444;padding:0;line-height:1;flex-shrink:0;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
       </button>
-      <button class="feedspace-icon-btn" id="feedspace-media-btn" title="Attach media (images, video, audio)">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-      </button>
-      <button class="feedspace-icon-btn" id="feedspace-doc-btn" title="Attach document (PDF, DOC, CSV, etc.)">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-      </button>
-    `;
-      body.appendChild(mediaActions);
-      const mediaFileInput = document.createElement("input");
-      mediaFileInput.type = "file";
-      mediaFileInput.multiple = true;
-      mediaFileInput.style.display = "none";
-      mediaFileInput.accept = "image/*,video/*,audio/*";
-      body.appendChild(mediaFileInput);
-      const docFileInput = document.createElement("input");
-      docFileInput.type = "file";
-      docFileInput.multiple = true;
-      docFileInput.style.display = "none";
-      docFileInput.accept = ".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar,.json,.xml,.md";
-      body.appendChild(docFileInput);
-      const filePreviewContainer = document.createElement("div");
-      filePreviewContainer.id = "feedspace-file-previews";
-      body.appendChild(filePreviewContainer);
-      const recordingIndicator = document.createElement("div");
-      recordingIndicator.id = "feedspace-recording-indicator";
-      recordingIndicator.style.display = "none";
-      recordingIndicator.className = "feedspace-recording-indicator";
-      recordingIndicator.innerHTML = `
-      <span class="feedspace-recording-dot"></span>
-      <span class="feedspace-recording-time">0:00</span>
-      <button class="feedspace-icon-btn" id="feedspace-stop-recording" style="margin-left:auto;color:#ef4444;border-color:#ef4444;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-      </button>
-    `;
-      body.appendChild(recordingIndicator);
-      this.root.appendChild(body);
-      const footer = document.createElement("div");
-      footer.className = "feedspace-panel-footer";
-      const submitBtn = document.createElement("button");
-      submitBtn.className = "feedspace-submit-btn";
-      submitBtn.style.width = "100%";
-      submitBtn.style.justifyContent = "center";
-      submitBtn.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      ${isNew ? "Submit Feedback" : "Send Reply"}
-    `;
-      submitBtn.addEventListener("click", () => this.handleSubmit());
-      footer.appendChild(submitBtn);
-      this.root.appendChild(footer);
+    </div>`;
+      bodyHtml += `<button id="fs-popup-submit" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px 16px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;line-height:1.4;margin-top:10px;transition:background 0.15s;">
+      ${SVG_ICONS.send} ${isNew ? "Submit Feedback" : "Send Reply"}
+    </button>`;
+      bodyHtml += `<input type="file" id="fs-popup-media-input" multiple accept="image/*,video/*,audio/*" style="display:none;">`;
+      bodyHtml += `<input type="file" id="fs-popup-doc-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar,.json,.xml,.md" style="display:none;">`;
+      this.root = document.createElement("div");
+      this.root.id = "fs-popup-root";
+      this.root.style.cssText = "position:fixed;z-index:99999;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:16px;width:340px;max-width:90vw;font-family:'Poppins',-apple-system,sans-serif;font-size:14px;line-height:1.5;color:#0f172a;";
+      this.root.innerHTML = bodyHtml;
       document.body.appendChild(this.root);
-      mediaActions.querySelector("#feedspace-mic-btn").addEventListener("click", () => {
-        var _a, _b, _c;
-        if ((_a = this.callbacks) == null ? void 0 : _a.isRecording) {
-          (_b = this.callbacks) == null ? void 0 : _b.onStopRecording();
-        } else {
-          (_c = this.callbacks) == null ? void 0 : _c.onStartRecording();
+      const pw = this.root.offsetWidth;
+      const ph = this.root.offsetHeight;
+      const pos = posPopup(this.anchorX, this.anchorY, pw, ph);
+      this.root.style.top = pos.top + "px";
+      this.root.style.left = pos.left + "px";
+      this.inputEl = this.root.querySelector("#fs-popup-input");
+      const micBtn = this.root.querySelector("#fs-popup-mic-btn");
+      const mediaBtn = this.root.querySelector("#fs-popup-media-btn");
+      const docBtn = this.root.querySelector("#fs-popup-doc-btn");
+      const submitBtn = this.root.querySelector("#fs-popup-submit");
+      const mediaInput = this.root.querySelector("#fs-popup-media-input");
+      const docInput = this.root.querySelector("#fs-popup-doc-input");
+      const previews = this.root.querySelector("#fs-popup-previews");
+      const stopRecBtn = this.root.querySelector("#fs-popup-stop-rec");
+      this.inputEl.focus();
+      micBtn.addEventListener("click", () => {
+        var _a;
+        return (_a = this.callbacks) == null ? void 0 : _a.onToggleRecording();
+      });
+      mediaBtn.addEventListener("click", () => mediaInput.click());
+      docBtn.addEventListener("click", () => docInput.click());
+      stopRecBtn.addEventListener("click", () => {
+        var _a;
+        return (_a = this.callbacks) == null ? void 0 : _a.onToggleRecording();
+      });
+      submitBtn.addEventListener("click", () => this.handleSubmit());
+      mediaInput.addEventListener("change", () => {
+        const selected = Array.from(mediaInput.files || []);
+        this.files = [...this.files, ...selected];
+        this.updatePreviews(previews);
+        mediaInput.value = "";
+      });
+      docInput.addEventListener("change", () => {
+        const selected = Array.from(docInput.files || []);
+        this.files = [...this.files, ...selected];
+        this.updatePreviews(previews);
+        docInput.value = "";
+      });
+      this.inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          this.handleSubmit();
         }
       });
-      mediaActions.querySelector("#feedspace-media-btn").addEventListener("click", () => mediaFileInput.click());
-      mediaActions.querySelector("#feedspace-doc-btn").addEventListener("click", () => docFileInput.click());
-      mediaFileInput.addEventListener("change", () => {
-        const selected = Array.from(mediaFileInput.files || []);
-        this.files = [...this.files, ...selected];
-        this.updateFilePreviews(filePreviewContainer);
-        mediaFileInput.value = "";
-      });
-      docFileInput.addEventListener("change", () => {
-        const selected = Array.from(docFileInput.files || []);
-        this.files = [...this.files, ...selected];
-        this.updateFilePreviews(filePreviewContainer);
-        docFileInput.value = "";
-      });
-      setTimeout(() => input.focus(), 100);
+      this.updateRecordingState();
     }
-    getFileIcon(name) {
+    updatePreviews(container) {
       var _a;
-      const ext = ((_a = name.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
-      if (["jpg", "jpeg", "png", "gif", "webp", "svg", "ico", "bmp"].includes(ext)) return "\u{1F5BC}\uFE0F";
-      if (["mp4", "webm", "mov", "avi", "mkv"].includes(ext)) return "\u{1F3AC}";
-      if (["mp3", "wav", "ogg", "aac", "flac", "webm"].includes(ext)) return "\u{1F3B5}";
-      if (["pdf"].includes(ext)) return "\u{1F4C4}";
-      if (["doc", "docx"].includes(ext)) return "\u{1F4DD}";
-      if (["xls", "xlsx", "csv"].includes(ext)) return "\u{1F4CA}";
-      if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "\u{1F4E6}";
-      if (["json", "xml", "md", "txt", "log"].includes(ext)) return "\u{1F4C3}";
-      return "\u{1F4CE}";
-    }
-    updateFilePreviews(container) {
       container.innerHTML = "";
       for (let i = 0; i < this.files.length; i++) {
         const f = this.files[i];
-        const icon = this.getFileIcon(f.name);
-        const isMedia = f.type.startsWith("image/") || f.type.startsWith("video/") || f.type.startsWith("audio/");
-        const div = document.createElement("div");
-        div.className = "feedspace-file-preview";
-        let previewHtml = "";
-        if (isMedia && f.type.startsWith("image/")) {
-          const url = URL.createObjectURL(f);
-          previewHtml = `<img src="${url}" class="feedspace-file-thumb" alt="${escHtml(f.name)}">`;
-          setTimeout(() => URL.revokeObjectURL(url), 1e4);
+        const url = URL.createObjectURL(f);
+        let inner = "";
+        if (f.type.startsWith("image/")) {
+          inner = `<img src="${url}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;flex-shrink:0;">`;
+        } else if (f.type.startsWith("audio/")) {
+          inner = `<audio controls style="flex:1;height:32px;min-width:0;" src="${url}" preload="metadata"></audio>`;
+        } else if (f.type.startsWith("video/")) {
+          inner = `<video controls style="flex:1;height:36px;min-width:0;border-radius:4px;" src="${url}" preload="metadata"></video>`;
+        } else {
+          const ext = ((_a = f.name.split(".").pop()) == null ? void 0 : _a.toUpperCase()) || "FILE";
+          inner = `<span style="font-size:9px;font-weight:700;color:#94a3b8;flex-shrink:0;">${ext}</span>`;
         }
-        div.innerHTML = `
-        ${previewHtml || `<span class="feedspace-file-icon">${icon}</span>`}
-        <div class="feedspace-file-info">
-          <div class="feedspace-file-name">${escHtml(f.name)}</div>
-          <div class="feedspace-file-size">${(f.size / 1024).toFixed(0)} KB</div>
-        </div>
-        <button class="feedspace-file-remove" data-idx="${i}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      `;
-        div.querySelector(".feedspace-file-remove").addEventListener("click", () => {
-          this.files.splice(i, 1);
-          this.updateFilePreviews(container);
-        });
+        const div = document.createElement("div");
+        div.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-top:6px;";
+        div.innerHTML = inner + `<span style="flex:1;font-size:11px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">${escHtml(f.name)}</span><button class="fs-preview-remove" data-idx="${i}" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:none;border-radius:4px;background:transparent;cursor:pointer;color:#94a3b8;padding:0;flex-shrink:0;">${SVG_ICONS.close}</button>`;
         container.appendChild(div);
+        div.querySelector(".fs-preview-remove").addEventListener("click", () => {
+          URL.revokeObjectURL(url);
+          this.files.splice(i, 1);
+          this.updatePreviews(container);
+        });
       }
     }
     handleSubmit() {
-      var _a, _b;
+      var _a, _b, _c;
       const content = ((_a = this.inputEl) == null ? void 0 : _a.value.trim()) || "";
       if (!content && this.files.length === 0) return;
       (_b = this.callbacks) == null ? void 0 : _b.onSubmit(content, this.files);
       if (this.inputEl) this.inputEl.value = "";
       this.files = [];
+      const previews = (_c = this.root) == null ? void 0 : _c.querySelector("#fs-popup-previews");
+      if (previews) previews.innerHTML = "";
     }
   };
-  function escHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
 
   // src/widget/feedback-list.ts
+  function timeAgo(date) {
+    if (!date) return "";
+    const s = Math.floor((Date.now() - new Date(date).getTime()) / 1e3);
+    const ints = [[31536e3, "y"], [2592e3, "mo"], [86400, "d"], [3600, "h"], [60, "m"]];
+    for (const [sec, l] of ints) {
+      const v = s / sec;
+      if (v > 1) return Math.floor(v) + l + " ago";
+    }
+    return "Just now";
+  }
+  function fmtSize(bytes) {
+    if (!bytes) return "";
+    const u = ["B", "KB", "MB", "GB"];
+    let i = 0, s = bytes;
+    while (s >= 1024 && i < 3) {
+      s /= 1024;
+      i++;
+    }
+    return s.toFixed(i > 0 ? 1 : 0) + " " + u[i];
+  }
+  function escHtml2(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+  function lightbox(atts, start) {
+    document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
+    let cur = start;
+    const ov = document.createElement("div");
+    ov.className = "fs-lb";
+    ov.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.94);display:flex;flex-direction:column;";
+    const render = () => {
+      var _a;
+      const a = atts[cur];
+      const ext = ((_a = (a.name || "").split(".").pop()) == null ? void 0 : _a.toUpperCase()) || "";
+      let c = "";
+      if (a.type === "image") {
+        c = `<img src="${escHtml2(a.url)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;">`;
+      } else if (a.type === "video") {
+        c = `<video controls style="max-width:100%;max-height:100%;border-radius:4px;" src="${escHtml2(a.url)}" preload="metadata"></video>`;
+      } else if (a.type === "audio") {
+        c = `<div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:20px;"><div style="width:48px;height:48px;color:rgba(255,255,255,0.3);">${SVG_ICONS2.music}</div><div style="font-size:14px;color:rgba(255,255,255,0.5);">${escHtml2(a.name || "Audio")}</div><audio controls style="width:420px;max-width:85vw;" src="${escHtml2(a.url)}" preload="metadata"></audio></div>`;
+      } else {
+        c = `<div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;"><div style="width:80px;height:80px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);">${escHtml2(ext)}</div><a href="${escHtml2(a.url)}" target="_blank" style="color:#818cf8;font-size:14px;text-decoration:none;font-weight:600;">${escHtml2(a.name || "Download")}</a></div>`;
+      }
+      const pag = atts.length > 1 ? `<span style="color:rgba(255,255,255,0.35);font-size:12px;">${cur + 1} / ${atts.length}</span>` : "";
+      ov.innerHTML = `<button class="fs-lb-close" style="position:fixed;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">&times;</button>` + (atts.length > 1 ? `<button class="fs-lb-prev" style="position:fixed;left:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u2039</button>` : "") + (atts.length > 1 ? `<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u203A</button>` : "") + `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div><div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml2(a.name || "")}</span>${a.size ? `<span style="color:rgba(255,255,255,0.35);font-size:11px;">${fmtSize(a.size)}</span>` : ""}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml2(ext.substring(0, 6))}</span></div><div style="display:flex;align-items:center;gap:12px;">${pag}<a href="${escHtml2(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
+    };
+    render();
+    document.body.appendChild(ov);
+    ov.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t.classList.contains("fs-lb-close")) ov.remove();
+      else if (t.classList.contains("fs-lb-prev") && cur > 0) {
+        cur--;
+        render();
+      } else if (t.classList.contains("fs-lb-next") && cur < atts.length - 1) {
+        cur++;
+        render();
+      } else if (t === ov) ov.remove();
+    });
+    const kd = (e) => {
+      if (!document.body.contains(ov)) {
+        document.removeEventListener("keydown", kd);
+        return;
+      }
+      if (e.key === "Escape") ov.remove();
+      if (e.key === "ArrowLeft" && cur > 0) {
+        cur--;
+        render();
+        e.preventDefault();
+      }
+      if (e.key === "ArrowRight" && cur < atts.length - 1) {
+        cur++;
+        render();
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", kd);
+  }
+  var SVG_ICONS2 = {
+    mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15 8a5 5 0 0 1 0 8"/></svg>',
+    desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    tablet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="2" width="18" height="20" rx="2"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+    mobile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+    file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    music: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    play: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+  };
   var FeedbackListPanel = class {
     constructor() {
       this.root = null;
@@ -1278,6 +1554,8 @@
       this.callbacks = null;
       this.annotations = [];
       this.currentFilter = "all";
+      this.currentDeviceFilter = "all";
+      this.currentSort = "newest";
       this.onClose = null;
     }
     open(annotations, callbacks, onClose) {
@@ -1289,14 +1567,13 @@
     close() {
       if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
       if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
+      document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
       this.overlay = null;
       this.root = null;
     }
     updateAnnotations(annotations) {
       this.annotations = annotations;
-      if (this.root) {
-        this.renderList();
-      }
+      if (this.root) this.renderList();
     }
     render() {
       this.close();
@@ -1324,6 +1601,7 @@
         { value: "in_progress", label: "In Progress" },
         { value: "resolved", label: "Resolved" }
       ];
+      const filtersRoot = filters;
       for (const opt of filterOptions) {
         const btn = document.createElement("button");
         btn.className = `feedspace-filter-tab${this.currentFilter === opt.value ? " active" : ""}`;
@@ -1332,18 +1610,53 @@
         btn.addEventListener("click", () => {
           var _a;
           this.currentFilter = opt.value;
-          filters.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
+          filtersRoot.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           (_a = this.callbacks) == null ? void 0 : _a.onFilterChange(opt.value);
+          this.renderList();
         });
         filters.appendChild(btn);
       }
       this.root.appendChild(filters);
+      const deviceRow = document.createElement("div");
+      deviceRow.className = "feedspace-device-filter";
+      const deviceIcons = { desktop: SVG_ICONS2.desktop, tablet: SVG_ICONS2.tablet, mobile: SVG_ICONS2.mobile };
+      const deviceBtnHtml = (dv, label) => {
+        const active = dv === this.currentDeviceFilter;
+        const icon = dv !== "all" ? `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ""}</span>` : "";
+        return `<button class="fs-df-btn${active ? " active" : ""}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active ? "#2563eb" : "transparent"};color:${active ? "#fff" : "#64748b"};">${icon}${label} <span class="fs-df-count" style="background:${active ? "rgba(255,255,255,0.2)" : "#f1f5f9"};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
+      };
+      deviceRow.innerHTML = deviceBtnHtml("all", "All") + deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>`;
+      this.root.appendChild(deviceRow);
       const body = document.createElement("div");
       body.className = "feedspace-panel-body";
       body.id = "feedback-list-body";
       this.root.appendChild(body);
       document.body.appendChild(this.root);
+      deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          var _a;
+          deviceRow.querySelectorAll(".fs-df-btn").forEach((b) => {
+            b.classList.remove("active");
+            b.style.background = "transparent";
+            b.style.color = "#64748b";
+          });
+          btn.classList.add("active");
+          btn.style.background = "#2563eb";
+          btn.style.color = "#fff";
+          this.currentDeviceFilter = btn.dataset.device || "all";
+          (_a = this.callbacks) == null ? void 0 : _a.onDeviceFilterChange(this.currentDeviceFilter);
+          this.renderList();
+        });
+      });
+      const sortBtn = deviceRow.querySelector(".fs-sort-btn");
+      sortBtn.addEventListener("click", () => {
+        this.currentSort = this.currentSort === "newest" ? "oldest" : "newest";
+        sortBtn.title = this.currentSort === "newest" ? "Newest first" : "Oldest first";
+        this.renderList();
+      });
       this.renderList();
     }
     renderList() {
@@ -1351,52 +1664,203 @@
       const body = (_a = this.root) == null ? void 0 : _a.querySelector("#feedback-list-body");
       if (!body) return;
       body.innerHTML = "";
-      const filtered = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      let filtered = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      if (this.currentDeviceFilter && this.currentDeviceFilter !== "all") {
+        filtered = filtered.filter((a) => (a.device || "desktop") === this.currentDeviceFilter);
+      }
+      const deviceCounts = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
+      let baseForCounts = this.currentFilter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.currentFilter);
+      baseForCounts.forEach((a) => {
+        deviceCounts.all++;
+        const d = a.device || "desktop";
+        if (deviceCounts[d] !== void 0) deviceCounts[d]++;
+      });
+      const deviceRow = (_b = this.root) == null ? void 0 : _b.querySelector(".feedspace-device-filter");
+      if (deviceRow) {
+        deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
+          const dv = btn.dataset.device || "all";
+          const countEl = btn.querySelector(".fs-df-count");
+          if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
+        });
+      }
+      filtered.sort((a, b) => {
+        const ta = new Date(a.createdAt).getTime();
+        const tb = new Date(b.createdAt).getTime();
+        return this.currentSort === "newest" ? tb - ta : ta - tb;
+      });
       if (filtered.length === 0) {
-        body.innerHTML = `
-        <div class="feedspace-empty-state">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          <p>No feedback items yet</p>
-        </div>
-      `;
+        body.innerHTML = `<div class="feedspace-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
         return;
       }
-      for (const annotation of filtered) {
-        const authorInitial = (annotation.createdBy || "A").charAt(0).toUpperCase();
-        const dateStr = new Date(annotation.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const replyCount = ((_b = annotation.replies) == null ? void 0 : _b.length) || 0;
-        const item = document.createElement("div");
-        item.className = "feedspace-feedback-item";
-        item.dataset.annotationId = annotation.id;
-        item.innerHTML = `
-        <div class="feedspace-feedback-item-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="feedspace-avatar-sm">${authorInitial}</div>
-            <div>
-              <div class="feedspace-feedback-author">${escHtml2(annotation.createdBy)}</div>
-              <div class="feedspace-feedback-meta">${dateStr}</div>
-            </div>
+      const statusLabels = { open: "Open", in_progress: "In Progress", resolved: "Resolved", closed: "Closed" };
+      const html = filtered.map((a, idx) => {
+        var _a2, _b2, _c;
+        const initial = (a.createdBy || "A").charAt(0).toUpperCase();
+        const timeStr = timeAgo(a.createdAt);
+        const replyCount = ((_a2 = a.replies) == null ? void 0 : _a2.length) || 0;
+        const d = a.device || "desktop";
+        let comment = a.content;
+        if (!comment && a.media && a.media.length > 0) {
+          const hasAudio = a.media.some((m) => m.fileType.startsWith("audio/"));
+          const hasVideo = a.media.some((m) => m.fileType.startsWith("video/"));
+          const hasImage = a.media.some((m) => m.fileType.startsWith("image/"));
+          if (hasAudio) comment = "Voice note";
+          else if (hasVideo) comment = "Video note";
+          else if (hasImage) comment = "Image feedback";
+          else comment = "Attachment";
+        }
+        if (!comment) comment = "No comment";
+        const needsReadMore = comment.length > 160;
+        const shortComment = needsReadMore ? comment.slice(0, 157) + "..." : comment;
+        let mediaHtml = "";
+        if (a.media && a.media.length > 0) {
+          const items = a.media.map((m, mi) => {
+            var _a3;
+            const ext = ((_a3 = (m.fileName || m.fileUrl).split(".").pop()) == null ? void 0 : _a3.toUpperCase()) || "";
+            let inner = "";
+            if (m.fileType.startsWith("image/")) {
+              inner = `<img src="${escHtml2(m.fileUrl)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">`;
+            } else if (m.fileType.startsWith("video/")) {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#94a3b8;">\u25B6</div>`;
+            } else if (m.fileType.startsWith("audio/")) {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${SVG_ICONS2.mic}</div>`;
+            } else {
+              inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml2(ext.substring(0, 4))}</div>`;
+            }
+            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
+          }).join("");
+          mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
+        }
+        const tag = ((_b2 = a.elementDna) == null ? void 0 : _b2.tag) || "";
+        const tagText = (((_c = a.elementDna) == null ? void 0 : _c.text) || "").slice(0, 22);
+        const skipTags = ["div", "section", "article", "main", "aside", "figure", "header", "footer"];
+        let tagChip = "";
+        if (tag && !skipTags.includes(tag.toLowerCase())) {
+          tagChip = `<span class="fs-tag-chip">${escHtml2(tag.toUpperCase())}${tagText ? " " + escHtml2(tagText) : ""}</span>`;
+        }
+        return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
+        <div class="fs-card-header">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span class="fs-number-badge">${idx + 1}</span>
+            <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
+            ${tagChip}
           </div>
-          <span class="feedspace-feedback-status ${annotation.status}">${annotation.status.replace("_", " ")}</span>
+          <div class="fs-dots-trigger" style="padding:4px;cursor:pointer;opacity:0.4;flex-shrink:0;line-height:1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </div>
         </div>
-        <div class="feedspace-feedback-content">${escHtml2(annotation.content)}</div>
-        ${replyCount > 0 ? `<div class="feedspace-reply-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount} ${replyCount === 1 ? "reply" : "replies"}</div>` : ""}
-      `;
-        item.addEventListener("click", () => {
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+          <div class="feedspace-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
+          <div style="min-width:0;flex:1;">
+            <div class="feedspace-feedback-author" style="font-size:13px;">${escHtml2(a.createdBy)}</div>
+            <div style="font-size:10px;color:#94a3b8;">${timeStr}</div>
+          </div>
+          <span class="feedspace-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
+        </div>
+        <div class="feedspace-feedback-content" style="margin-top:8px;font-size:13px;">
+          <span class="fs-comment-text">${escHtml2(needsReadMore ? shortComment : comment)}</span>
+          ${needsReadMore ? `<button class="fs-read-more" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:12px;font-weight:600;padding:0;margin-left:4px;">Read More</button>` : ""}
+        </div>
+        ${mediaHtml}
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+          ${a.elementDna && a.type === "pin" ? `<button class="fs-reveal-btn" data-id="${a.id}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#94a3b8;background:none;border:none;cursor:pointer;padding:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Reveal</button>` : ""}
+          ${replyCount > 0 ? `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount}</span>` : ""}
+        </div>
+      </div>`;
+      }).join("");
+      body.innerHTML = html;
+      body.querySelectorAll(".feedspace-feedback-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
           var _a2;
+          if (e.target.closest(".fs-dots-trigger, .fs-dot-menu, .fs-reveal-btn, .fs-read-more, .fs-att-thumb")) return;
+          const id = item.dataset.id;
           body.querySelectorAll(".feedspace-feedback-item").forEach((el) => el.classList.remove("highlight"));
           item.classList.add("highlight");
-          (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(annotation.id);
+          if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
         });
-        body.appendChild(item);
-      }
+      });
+      body.querySelectorAll(".fs-read-more").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          var _a2;
+          e.stopPropagation();
+          const parent = e.target.closest(".feedspace-feedback-content");
+          if (!parent) return;
+          const textEl = parent.querySelector(".fs-comment-text");
+          if (!textEl) return;
+          const full = e.target.dataset.fullText || textEl.textContent || "";
+          if (e.target.textContent === "Read More") {
+            e.target.dataset.fullText = textEl.textContent || "";
+            textEl.textContent = full;
+            e.target.textContent = "Show Less";
+          } else {
+            textEl.textContent = ((_a2 = e.target.dataset.fullText) == null ? void 0 : _a2.slice(0, 157)) + "...";
+            e.target.textContent = "Read More";
+          }
+        });
+      });
+      body.querySelectorAll(".fs-reveal-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          var _a2;
+          e.stopPropagation();
+          const id = e.target.dataset.id;
+          if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
+        });
+      });
+      body.querySelectorAll(".fs-dots-trigger").forEach((trigger) => {
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          document.querySelectorAll(".fs-dot-menu").forEach((m) => m.remove());
+          const item = e.target.closest(".feedspace-feedback-item");
+          const id = item == null ? void 0 : item.dataset.id;
+          const menu = document.createElement("div");
+          menu.className = "fs-dot-menu";
+          menu.style.cssText = "position:absolute;top:36px;right:8px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.12);z-index:100;width:130px;overflow:hidden;padding:4px;";
+          menu.innerHTML = `<div class="fs-menu-item" data-action="locate" style="padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;color:#334155;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Locate</span>
+          </div>
+          <div class="fs-menu-item" data-action="delete" style="padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;border-radius:6px;color:#ef4444;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Delete</span>
+          </div>`;
+          item.style.position = "relative";
+          item.appendChild(menu);
+          setTimeout(() => {
+            const close = (ev) => {
+              if (!menu.contains(ev.target)) {
+                menu.remove();
+                document.removeEventListener("click", close);
+              }
+            };
+            document.addEventListener("click", close);
+          }, 10);
+          menu.querySelectorAll(".fs-menu-item").forEach((el) => {
+            el.addEventListener("click", (ev) => {
+              var _a2, _b2;
+              ev.stopPropagation();
+              const action = ev.currentTarget.dataset.action;
+              menu.remove();
+              if (action === "locate" && id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
+              if (action === "delete" && id && confirm("Delete this annotation?")) (_b2 = this.callbacks) == null ? void 0 : _b2.onDeleteAnnotation(id);
+            });
+          });
+        });
+      });
+      body.querySelectorAll(".fs-att-thumb").forEach((thumb) => {
+        thumb.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const item = e.target.closest(".feedspace-feedback-item");
+          const id = item == null ? void 0 : item.dataset.id;
+          if (!id) return;
+          const a = this.annotations.find((ann) => ann.id === id);
+          if (!a || !a.media || !a.media.length) return;
+          const atts = a.media.map((m) => ({ url: m.fileUrl, type: m.fileType, name: m.fileName, size: 0 }));
+          const idx = parseInt(thumb.dataset.index || "0");
+          lightbox(atts, idx);
+        });
+      });
     }
   };
-  function escHtml2(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
 
   // src/widget/uploader.ts
   async function uploadToWordPress(wpApiUrl, wpApiKey, file, projectId) {
@@ -1423,7 +1887,7 @@
     }
     console.log("[Feedspace]", msg, data || "");
   }
-  var SVG_ICONS = {
+  var SVG_ICONS3 = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
     pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
     list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
@@ -1537,20 +2001,20 @@
       this.toolbarRoot.id = "feedspace-widget-root";
       this.toolbarRoot.innerHTML = `
       <div class="feedspace-toolbar">
-        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
-        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS3.select}</button>
+        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
         <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
+        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
+        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS3.mobile}</button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
-          ${SVG_ICONS.list}
+          ${SVG_ICONS3.list}
           <span class="badge" id="feedspace-list-count" style="display:none">0</span>
         </button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
-          ${SVG_ICONS.submit}
+          ${SVG_ICONS3.submit}
           Finish Review
         </button>
       </div>
@@ -1568,6 +2032,10 @@
           onFilterChange: (filter) => {
             this.filterMode = filter;
             this.renderer.setFilter(filter);
+          },
+          onDeleteAnnotation: (id) => this.deleteAnnotation(id),
+          onDeviceFilterChange: (device) => {
+            this.renderer.setDeviceFilter(device);
           }
         }, () => {
         });
@@ -1682,14 +2150,14 @@
     finishDrawing(el, startDna, points) {
       const firstPoint = points[0];
       const rel = toRelative(el, this.drawStart.x, this.drawStart.y);
-      this.commentPanel.open(null, {
+      this.commentPanel.open(this.drawStart.x, this.drawStart.y, null, {
         onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
-        onStartRecording: () => this.startRecording(),
-        onStopRecording: () => this.stopRecording(),
+        onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
-        isRecording: this.isRecording
+        isRecording: () => this.isRecording
       }, () => {
       });
+      this.setTool("select");
       this.cleanupDrawState();
     }
     cleanupDrawState() {
@@ -1726,16 +2194,24 @@
         metaData
       };
       try {
-        const mediaUrls = [];
+        const media = [];
         if (files.length > 0) {
           for (const file of files) {
             try {
               const result = await uploadToWordPress(this.config.wpApiUrl, this.config.wpApiKey, file, this.config.projectId);
-              mediaUrls.push(result.url);
+              media.push({
+                id: result.id || "",
+                fileUrl: result.url,
+                fileType: file.type || "",
+                fileName: file.name || ""
+              });
             } catch (err) {
               console.error("Upload failed", err);
             }
           }
+        }
+        if (media.length > 0) {
+          payload.media = media;
         }
         const annotation = await this.api.createAnnotation(payload);
         this.annotations.push(annotation);
@@ -1747,6 +2223,18 @@
       } catch (err) {
         console.error("Failed to save annotation", err);
         this.showToast("Failed to save feedback. Please try again.");
+      }
+    }
+    async deleteAnnotation(id) {
+      try {
+        await this.api.deleteAnnotation(id);
+        this.annotations = this.annotations.filter((a) => a.id !== id);
+        this.renderer.setAnnotations(this.annotations);
+        this.updateBadge();
+        this.showToast("Annotation deleted");
+      } catch (err) {
+        console.error("Failed to delete annotation", err);
+        this.showToast("Failed to delete");
       }
     }
     async loadAnnotations() {
@@ -1764,7 +2252,16 @@
       const annotation = this.annotations.find((a) => a.id === id);
       if (!annotation) return;
       this.renderer.setSelected(id);
-      this.commentPanel.open(annotation, {
+      let px = window.innerWidth / 2, py = 100;
+      if (annotation.elementDna) {
+        const el = findElement(annotation.elementDna);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          px = rect.left + window.scrollX + rect.width * annotation.anchorXPct / 100;
+          py = rect.top + window.scrollY + rect.height * annotation.anchorYPct / 100;
+        }
+      }
+      this.commentPanel.open(px, py, annotation, {
         onSubmit: async (content, files) => {
           try {
             const mediaUrls = [];
@@ -1791,10 +2288,9 @@
             console.error("Failed to add reply", err);
           }
         },
-        onStartRecording: () => this.startRecording(),
-        onStopRecording: () => this.stopRecording(),
+        onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
-        isRecording: this.isRecording
+        isRecording: () => this.isRecording
       }, () => {
         this.renderer.setSelected(null);
       });
@@ -1816,8 +2312,16 @@
       badge.textContent = String(count);
       badge.style.display = count > 0 ? "" : "none";
     }
+    toggleRecording() {
+      if (this.isRecording) {
+        this.stopRecording();
+      } else {
+        this.startRecording();
+      }
+    }
     startRecording() {
       var _a;
+      if (this.isRecording) return;
       if (!((_a = navigator.mediaDevices) == null ? void 0 : _a.getUserMedia)) return;
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         this.mediaRecorder = new MediaRecorder(stream);
@@ -1836,10 +2340,10 @@
           const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1e3);
           const mins = Math.floor(elapsed / 60);
           const secs = elapsed % 60;
-          const indicator = document.getElementById("feedspace-recording-indicator");
+          const indicator = document.getElementById("fs-popup-rec-indicator");
           if (indicator) {
             indicator.style.display = "flex";
-            const timeEl = indicator.querySelector(".feedspace-recording-time");
+            const timeEl = document.getElementById("fs-popup-rec-time");
             if (timeEl) timeEl.textContent = `${mins}:${String(secs).padStart(2, "0")}`;
           }
         }, 1e3);
@@ -1856,20 +2360,11 @@
         clearInterval(this.recordingTimer);
         this.recordingTimer = null;
       }
-      const indicator = document.getElementById("feedspace-recording-indicator");
+      const indicator = document.getElementById("fs-popup-rec-indicator");
       if (indicator) indicator.style.display = "none";
       const blob = new Blob(this.audioChunks, { type: "audio/webm" });
       const file = new File([blob], `recording-${Date.now()}.webm`, { type: "audio/webm" });
-      const previewContainer = document.getElementById("feedspace-file-previews");
-      if (previewContainer) {
-        const div = document.createElement("div");
-        div.className = "feedspace-file-preview";
-        div.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
-        <span>Voice recording (${(file.size / 1024).toFixed(0)} KB)</span>
-      `;
-        previewContainer.appendChild(div);
-      }
+      this.commentPanel.addFile(file);
     }
     deleteRecording() {
       this.isRecording = false;
@@ -1881,7 +2376,7 @@
         this.recordingTimer = null;
       }
       this.audioChunks = [];
-      const indicator = document.getElementById("feedspace-recording-indicator");
+      const indicator = document.getElementById("fs-popup-rec-indicator");
       if (indicator) indicator.style.display = "none";
     }
     showToast(message) {
