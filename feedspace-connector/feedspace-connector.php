@@ -621,9 +621,15 @@ class FeedspaceConnector
 
     public function uploadMedia($request)
     {
+        self::logDebug('media_upload_start', array(
+            'has_files' => !empty($request->get_file_params()) ? 'yes' : 'no',
+            'api_key_match' => $request->get_header('X-Feedspace-Key') === get_option('feedspace_api_key') ? 'yes' : 'no',
+        ));
+
         $files = $request->get_file_params();
 
         if (empty($files) || !isset($files['file'])) {
+            self::logDebug('media_upload_no_file', array());
             return new WP_Error('no_file', 'No file provided', array('status' => 400));
         }
 
@@ -633,9 +639,11 @@ class FeedspaceConnector
         $uploadedFile = $this->handleUpload($file, $projectId);
 
         if (is_wp_error($uploadedFile)) {
+            self::logDebug('media_upload_failed', array('error' => $uploadedFile->get_error_message()));
             return $uploadedFile;
         }
 
+        self::logDebug('media_upload_ok', array('url' => $uploadedFile['url'] ?? 'none'));
         return new WP_REST_Response($uploadedFile, 200);
     }
 

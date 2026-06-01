@@ -392,6 +392,7 @@ export class AnnotationEngine {
             });
           } catch (err) {
             console.error('Upload failed', err);
+            this.showToast('File upload failed. Pin saved without media.');
           }
         }
       }
