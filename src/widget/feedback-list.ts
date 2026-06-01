@@ -42,7 +42,7 @@ function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>,
     } else if (a.type === 'video') {
       c = `<video controls style="max-width:100%;max-height:100%;border-radius:4px;" src="${escHtml(a.url)}" preload="metadata"></video>`;
     } else if (a.type === 'audio') {
-      c = `<div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:20px;"><div style="font-size:36px;">🎵</div><div style="font-size:14px;color:rgba(255,255,255,0.5);">${escHtml(a.name||'Audio')}</div><audio controls style="width:420px;max-width:85vw;" src="${escHtml(a.url)}" preload="metadata"></audio></div>`;
+      c = `<div style="display:flex;flex-direction:column;align-items:center;gap:24px;padding:20px;"><div style="width:48px;height:48px;color:rgba(255,255,255,0.3);">${SVG_ICONS.music}</div><div style="font-size:14px;color:rgba(255,255,255,0.5);">${escHtml(a.name||'Audio')}</div><audio controls style="width:420px;max-width:85vw;" src="${escHtml(a.url)}" preload="metadata"></audio></div>`;
     } else {
       c = `<div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;"><div style="width:80px;height:80px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);">${escHtml(ext)}</div><a href="${escHtml(a.url)}" target="_blank" style="color:#818cf8;font-size:14px;text-decoration:none;font-weight:600;">${escHtml(a.name||'Download')}</a></div>`;
     }
@@ -76,6 +76,12 @@ function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>,
 
 const SVG_ICONS = {
   mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15 8a5 5 0 0 1 0 8"/></svg>',
+  desktop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+  tablet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="2" width="18" height="20" rx="2"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+  mobile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+  file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  music: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+  play: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
 };
 
 export class FeedbackListPanel {
@@ -160,15 +166,17 @@ export class FeedbackListPanel {
     // Device filter + sort
     const deviceRow = document.createElement('div');
     deviceRow.className = 'feedspace-device-filter';
+    const deviceIcons: Record<string, string> = { desktop: SVG_ICONS.desktop, tablet: SVG_ICONS.tablet, mobile: SVG_ICONS.mobile };
     const deviceBtnHtml = (dv: string, label: string) => {
       const active = dv === this.currentDeviceFilter;
-      return `<button class="fs-df-btn${active?' active':''}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active?'#2563eb':'transparent'};color:${active?'#fff':'#64748b'};">${label} <span class="fs-df-count" style="background:${active?'rgba(255,255,255,0.2)':'#f1f5f9'};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
+      const icon = dv !== 'all' ? `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ''}</span>` : '';
+      return `<button class="fs-df-btn${active?' active':''}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active?'#2563eb':'transparent'};color:${active?'#fff':'#64748b'};">${icon}${label} <span class="fs-df-count" style="background:${active?'rgba(255,255,255,0.2)':'#f1f5f9'};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
     };
     deviceRow.innerHTML =
       deviceBtnHtml('all', 'All') +
-      deviceBtnHtml('desktop', '🖥') +
-      deviceBtnHtml('tablet', '⬜') +
-      deviceBtnHtml('mobile', '📱') +
+      deviceBtnHtml('desktop', 'Desktop') +
+      deviceBtnHtml('tablet', 'Tablet') +
+      deviceBtnHtml('mobile', 'Mobile') +
       `<button class="fs-sort-btn" title="${this.currentSort === 'newest' ? 'Newest first' : 'Oldest first'}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>`;
@@ -254,14 +262,12 @@ export class FeedbackListPanel {
     }
 
     const statusLabels: Record<string, string> = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
-    const deviceIcons: Record<string, string> = { desktop: '🖥', tablet: '⬜', mobile: '📱' };
 
     const html = filtered.map((a, idx) => {
       const initial = (a.createdBy || 'A').charAt(0).toUpperCase();
       const timeStr = timeAgo(a.createdAt);
       const replyCount = a.replies?.length || 0;
-      const d = a.device || 'desktop';
-      const deviceLabel = d.charAt(0).toUpperCase() + d.slice(1);
+          const d = a.device || 'desktop';
       const comment = a.content || 'No comment';
       const needsReadMore = comment.length > 160;
       const shortComment = needsReadMore ? comment.slice(0, 157) + '...' : comment;
@@ -299,7 +305,7 @@ export class FeedbackListPanel {
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
             <span class="fs-number-badge">${idx + 1}</span>
-            <span class="fs-device-pill ${d}">${deviceIcons[d] || ''} ${deviceLabel}</span>
+            <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
             ${tagChip}
           </div>
           <div class="fs-dots-trigger" style="padding:4px;cursor:pointer;opacity:0.4;flex-shrink:0;line-height:1;">

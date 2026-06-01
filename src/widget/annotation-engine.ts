@@ -332,6 +332,7 @@ export class AnnotationEngine {
       isRecording: () => this.isRecording,
     }, () => { });
 
+    this.setTool('select');
     this.cleanupDrawState();
   }
 
