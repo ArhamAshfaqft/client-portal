@@ -2,9 +2,11 @@ const STYLES = `
 #feedspace-widget-root *,
 #feedspace-widget-root *::before,
 #feedspace-widget-root *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  line-height: 1.5 !important;
 }
 
 #feedspace-overlay {
@@ -56,33 +58,40 @@ const STYLES = `
 }
 
 .feedspace-tool-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-  color: #64748b;
-  transition: all 0.15s;
-  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: #64748b !important;
+  transition: all 0.15s !important;
+  position: relative !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline: none !important;
 }
 .feedspace-tool-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 .feedspace-tool-btn.active {
-  background: #2563eb;
-  color: #fff;
+  background: #2563eb !important;
+  color: #fff !important;
 }
 .feedspace-tool-btn.active:hover {
-  background: #1d4ed8;
+  background: #1d4ed8 !important;
 }
 .feedspace-tool-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
 }
 .feedspace-tool-btn .badge {
   position: absolute;
@@ -102,25 +111,29 @@ const STYLES = `
 }
 
 .feedspace-device-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-  color: #94a3b8;
-  transition: all 0.15s;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: #94a3b8 !important;
+  transition: all 0.15s !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 .feedspace-device-btn:hover {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #2563eb !important;
+  background: #eff6ff !important;
 }
 .feedspace-device-btn.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: #2563eb !important;
+  background: #eff6ff !important;
 }
 .feedspace-device-btn svg {
   width: 16px;
@@ -128,30 +141,39 @@ const STYLES = `
 }
 
 .feedspace-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 8px 18px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: #2563eb !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+  font-family: 'Poppins', -apple-system, sans-serif !important;
+  line-height: 1.4 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline: none !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  text-decoration: none !important;
 }
 .feedspace-submit-btn:hover {
-  background: #1d4ed8;
+  background: #1d4ed8 !important;
+  text-decoration: none !important;
 }
 .feedspace-submit-btn:active {
-  background: #1e40af;
+  background: #1e40af !important;
 }
 .feedspace-submit-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
 }
 
 .feedspace-annotation-pin {
@@ -201,25 +223,30 @@ const STYLES = `
   letter-spacing: -0.01em;
 }
 .feedspace-panel-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
+  width: 32px !important;
+  height: 32px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: #94a3b8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 .feedspace-panel-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 .feedspace-panel-close svg {
-  width: 18px;
-  height: 18px;
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
 }
 
 .feedspace-panel-body {
@@ -264,32 +291,37 @@ const STYLES = `
 }
 
 .feedspace-icon-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  transition: all 0.15s;
-  flex-shrink: 0;
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #64748b !important;
+  transition: all 0.15s !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 .feedspace-icon-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #0f172a;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
 }
 .feedspace-icon-btn.active {
-  background: #eff6ff;
-  border-color: #2563eb;
-  color: #2563eb;
+  background: #eff6ff !important;
+  border-color: #2563eb !important;
+  color: #2563eb !important;
 }
 .feedspace-icon-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
 }
 
 .feedspace-avatar-sm {

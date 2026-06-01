@@ -392,6 +392,7 @@ export class AnnotationEngine {
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
       this.commentPanel.close();
+      this.setTool('select');
       this.showToast('Feedback saved!');
     } catch (err) {
       console.error('Failed to save annotation', err);
