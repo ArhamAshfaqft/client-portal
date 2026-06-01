@@ -105,23 +105,20 @@ class FeedspaceConnector
             return $cached;
         }
 
-        $apiUrl = get_option('feedspace_api_url', '');
-        if (empty($apiUrl)) return false;
-        $verifyUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'feedspace_annotations';
+        $row = $wpdb->get_row($wpdb->prepare("SELECT project_id FROM $tableName WHERE preview_token = %s LIMIT 1", $token));
+        if (!$row) return false;
 
-        $response = wp_remote_post($verifyUrl, array(
-            'headers' => array('Content-Type' => 'application/json'),
-            'body' => json_encode(array('token' => $token)),
-            'timeout' => 15,
-        ));
+        $result = array(
+            'valid' => true,
+            'projectId' => $row->project_id,
+            'primaryColor' => '#6366f1',
+            'siteName' => get_bloginfo('name'),
+        );
 
-        if (is_wp_error($response)) return false;
-
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        if (!$body || empty($body['valid'])) return false;
-
-        set_transient($transientKey, $body, HOUR_IN_SECONDS);
-        return $body;
+        set_transient($transientKey, $result, HOUR_IN_SECONDS);
+        return $result;
     }
 
     private function enqueueWidgetAssets($config, $token)
@@ -445,6 +442,7 @@ class FeedspaceConnector
                 draw_data TEXT,
                 element_dna TEXT,
                 meta_data LONGTEXT,
+                preview_token VARCHAR(36) DEFAULT '',
                 viewport_width INT DEFAULT 0,
                 viewport_height INT DEFAULT 0,
                 device VARCHAR(20) DEFAULT 'desktop',
@@ -466,6 +464,15 @@ class FeedspaceConnector
             $wpdb->query("ALTER TABLE $annotationsTable ADD COLUMN meta_data LONGTEXT AFTER element_dna");
             if (!$wpdb->last_error) {
                 error_log('[Feedspace] Added meta_data column to annotations table');
+            }
+        }
+
+        // Migration: add preview_token column if missing
+        $ptCol = $wpdb->get_row("SHOW COLUMNS FROM $annotationsTable LIKE 'preview_token'");
+        if (!$ptCol) {
+            $wpdb->query("ALTER TABLE $annotationsTable ADD COLUMN preview_token VARCHAR(36) DEFAULT '' AFTER meta_data");
+            if (!$wpdb->last_error) {
+                error_log('[Feedspace] Added preview_token column to annotations table');
             }
         }
 
@@ -823,6 +830,7 @@ class FeedspaceConnector
             'viewport_width' => intval($body['viewportWidth'] ?? 0),
             'viewport_height' => intval($body['viewportHeight'] ?? 0),
             'device' => sanitize_text_field($body['device'] ?? 'desktop'),
+            'preview_token' => sanitize_text_field($body['previewToken'] ?? ''),
             'status' => 'open',
             'created_by' => sanitize_text_field($body['createdBy'] ?? 'Anonymous'),
             'created_at' => $now,
@@ -1286,6 +1294,21 @@ class FeedspaceConnector
         </style>
 
         <script>
+            function copyToClipboard(text) {
+                if (navigator.clipboard) {
+                    return navigator.clipboard.writeText(text);
+                }
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                return Promise.resolve();
+            }
+
             function copyFullConfig() {
                 var config = {
                     name: <?php echo json_encode(get_bloginfo('name')); ?>,
@@ -1294,7 +1317,7 @@ class FeedspaceConnector
                     wp_api_key: <?php echo json_encode($apiKey); ?>,
                     wp_application_password: null
                 };
-                navigator.clipboard.writeText(JSON.stringify(config, null, 2)).then(function() {
+                copyToClipboard(JSON.stringify(config, null, 2)).then(function() {
                     var el = document.getElementById('copy-confirm');
                     el.style.display = 'block';
                     setTimeout(function() { el.style.display = 'none'; }, 3000);
@@ -1303,7 +1326,7 @@ class FeedspaceConnector
 
             function copyApiKey() {
                 var key = document.getElementById('feedspace-api-key');
-                navigator.clipboard.writeText(key.textContent).then(function() {
+                copyToClipboard(key.textContent).then(function() {
                     alert('API key copied to clipboard');
                 });
             }
