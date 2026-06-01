@@ -759,7 +759,7 @@ class FeedspaceConnector
         $body = $request->get_json_params();
 
         $annotationId = wp_generate_uuid4();
-        $now = current_time('mysql');
+        $now = gmdate('Y-m-d H:i:s');
 
         // Merge media into meta_data.attachments (Previu pattern)
         $incomingMeta = isset($body['metaData']) && is_array($body['metaData']) ? $body['metaData'] : array();
