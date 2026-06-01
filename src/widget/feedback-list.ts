@@ -113,16 +113,26 @@ export class FeedbackListPanel {
     }
 
     for (const annotation of filtered) {
+      const authorInitial = (annotation.createdBy || 'A').charAt(0).toUpperCase();
+      const dateStr = new Date(annotation.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const replyCount = annotation.replies?.length || 0;
+
       const item = document.createElement('div');
       item.className = 'feedspace-feedback-item';
       item.dataset.annotationId = annotation.id;
       item.innerHTML = `
         <div class="feedspace-feedback-item-header">
-          <span class="feedspace-feedback-type">${annotation.type}</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="feedspace-avatar-sm">${authorInitial}</div>
+            <div>
+              <div class="feedspace-feedback-author">${escHtml(annotation.createdBy)}</div>
+              <div class="feedspace-feedback-meta">${dateStr}</div>
+            </div>
+          </div>
           <span class="feedspace-feedback-status ${annotation.status}">${annotation.status.replace('_', ' ')}</span>
         </div>
         <div class="feedspace-feedback-content">${escHtml(annotation.content)}</div>
-        <div class="feedspace-feedback-meta">${escHtml(annotation.createdBy)} · ${new Date(annotation.createdAt).toLocaleString()}</div>
+        ${replyCount > 0 ? `<div class="feedspace-reply-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}</div>` : ''}
       `;
       item.addEventListener('click', () => {
         body.querySelectorAll('.feedspace-feedback-item').forEach((el) => el.classList.remove('highlight'));
