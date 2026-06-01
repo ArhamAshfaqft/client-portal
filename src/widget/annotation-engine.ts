@@ -325,7 +325,7 @@ export class AnnotationEngine {
       onStartRecording: () => this.startRecording(),
       onStopRecording: () => this.stopRecording(),
       onDeleteRecording: () => this.deleteRecording(),
-      isRecording: this.isRecording,
+      isRecording: () => this.isRecording,
     }, () => { });
 
     this.cleanupDrawState();
@@ -448,7 +448,7 @@ export class AnnotationEngine {
       onStartRecording: () => this.startRecording(),
       onStopRecording: () => this.stopRecording(),
       onDeleteRecording: () => this.deleteRecording(),
-      isRecording: this.isRecording,
+      isRecording: () => this.isRecording,
     }, () => {
       this.renderer.setSelected(null);
     });

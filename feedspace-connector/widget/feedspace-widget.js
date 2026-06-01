@@ -1292,7 +1292,7 @@
       document.body.appendChild(this.root);
       mediaActions.querySelector("#feedspace-mic-btn").addEventListener("click", () => {
         var _a, _b, _c;
-        if ((_a = this.callbacks) == null ? void 0 : _a.isRecording) {
+        if ((_a = this.callbacks) == null ? void 0 : _a.isRecording()) {
           (_b = this.callbacks) == null ? void 0 : _b.onStopRecording();
         } else {
           (_c = this.callbacks) == null ? void 0 : _c.onStartRecording();
@@ -1790,7 +1790,7 @@
         onStartRecording: () => this.startRecording(),
         onStopRecording: () => this.stopRecording(),
         onDeleteRecording: () => this.deleteRecording(),
-        isRecording: this.isRecording
+        isRecording: () => this.isRecording
       }, () => {
       });
       this.cleanupDrawState();
@@ -1897,7 +1897,7 @@
         onStartRecording: () => this.startRecording(),
         onStopRecording: () => this.stopRecording(),
         onDeleteRecording: () => this.deleteRecording(),
-        isRecording: this.isRecording
+        isRecording: () => this.isRecording
       }, () => {
         this.renderer.setSelected(null);
       });

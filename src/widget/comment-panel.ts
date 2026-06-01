@@ -5,7 +5,7 @@ export interface PanelCallbacks {
   onStartRecording: () => void;
   onStopRecording: () => void;
   onDeleteRecording: () => void;
-  isRecording: boolean;
+  isRecording: () => boolean;
 }
 
 export class CommentPanel {
@@ -185,7 +185,7 @@ export class CommentPanel {
     document.body.appendChild(this.root);
 
     mediaActions.querySelector('#feedspace-mic-btn')!.addEventListener('click', () => {
-      if (this.callbacks?.isRecording) {
+      if (this.callbacks?.isRecording()) {
         this.callbacks?.onStopRecording();
       } else {
         this.callbacks?.onStartRecording();
