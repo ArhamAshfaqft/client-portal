@@ -1397,12 +1397,8 @@
       this.root.appendChild(footer);
       document.body.appendChild(this.root);
       mediaActions.querySelector("#feedspace-mic-btn").addEventListener("click", () => {
-        var _a, _b, _c;
-        if ((_a = this.callbacks) == null ? void 0 : _a.isRecording()) {
-          (_b = this.callbacks) == null ? void 0 : _b.onStopRecording();
-        } else {
-          (_c = this.callbacks) == null ? void 0 : _c.onStartRecording();
-        }
+        var _a;
+        (_a = this.callbacks) == null ? void 0 : _a.onToggleRecording();
       });
       mediaActions.querySelector("#feedspace-media-btn").addEventListener("click", () => mediaFileInput.click());
       mediaActions.querySelector("#feedspace-doc-btn").addEventListener("click", () => docFileInput.click());
@@ -2164,8 +2160,7 @@
       const rel = toRelative(el, this.drawStart.x, this.drawStart.y);
       this.commentPanel.open(null, {
         onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
-        onStartRecording: () => this.startRecording(),
-        onStopRecording: () => this.stopRecording(),
+        onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
         isRecording: () => this.isRecording
       }, () => {
@@ -2284,8 +2279,7 @@
             console.error("Failed to add reply", err);
           }
         },
-        onStartRecording: () => this.startRecording(),
-        onStopRecording: () => this.stopRecording(),
+        onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
         isRecording: () => this.isRecording
       }, () => {
@@ -2309,8 +2303,16 @@
       badge.textContent = String(count);
       badge.style.display = count > 0 ? "" : "none";
     }
+    toggleRecording() {
+      if (this.isRecording) {
+        this.stopRecording();
+      } else {
+        this.startRecording();
+      }
+    }
     startRecording() {
       var _a;
+      if (this.isRecording) return;
       if (!((_a = navigator.mediaDevices) == null ? void 0 : _a.getUserMedia)) return;
       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
         this.mediaRecorder = new MediaRecorder(stream);

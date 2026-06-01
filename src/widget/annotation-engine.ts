@@ -326,8 +326,7 @@ export class AnnotationEngine {
 
     this.commentPanel.open(null, {
       onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
-      onStartRecording: () => this.startRecording(),
-      onStopRecording: () => this.stopRecording(),
+      onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
       isRecording: () => this.isRecording,
     }, () => { });
@@ -463,8 +462,7 @@ export class AnnotationEngine {
           console.error('Failed to add reply', err);
         }
       },
-      onStartRecording: () => this.startRecording(),
-      onStopRecording: () => this.stopRecording(),
+      onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
       isRecording: () => this.isRecording,
     }, () => {
@@ -491,7 +489,16 @@ export class AnnotationEngine {
     badge.style.display = count > 0 ? '' : 'none';
   }
 
+  private toggleRecording(): void {
+    if (this.isRecording) {
+      this.stopRecording();
+    } else {
+      this.startRecording();
+    }
+  }
+
   private startRecording(): void {
+    if (this.isRecording) return;
     if (!navigator.mediaDevices?.getUserMedia) return;
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       this.mediaRecorder = new MediaRecorder(stream);

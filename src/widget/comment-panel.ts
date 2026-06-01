@@ -2,8 +2,7 @@ import type { Annotation } from './types';
 
 export interface PanelCallbacks {
   onSubmit: (content: string, files: File[]) => void;
-  onStartRecording: () => void;
-  onStopRecording: () => void;
+  onToggleRecording: () => void;
   onDeleteRecording: () => void;
   isRecording: () => boolean;
 }
@@ -185,11 +184,7 @@ export class CommentPanel {
     document.body.appendChild(this.root);
 
     mediaActions.querySelector('#feedspace-mic-btn')!.addEventListener('click', () => {
-      if (this.callbacks?.isRecording()) {
-        this.callbacks?.onStopRecording();
-      } else {
-        this.callbacks?.onStartRecording();
-      }
+      this.callbacks?.onToggleRecording();
     });
 
     mediaActions.querySelector('#feedspace-media-btn')!.addEventListener('click', () => mediaFileInput.click());
