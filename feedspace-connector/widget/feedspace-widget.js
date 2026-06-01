@@ -185,6 +185,44 @@
   display: block;
 }
 
+/* Body-level submit button (inside panels, not in widget root) */
+.feedspace-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Poppins', -apple-system, sans-serif;
+  line-height: 1.4;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: none;
+  margin: 0;
+}
+.feedspace-submit-btn:hover {
+  background: #1d4ed8;
+  text-decoration: none;
+}
+.feedspace-submit-btn:active {
+  background: #1e40af;
+}
+.feedspace-submit-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
 #feedspace-widget-root .feedspace-annotation-pin {
   cursor: pointer;
   transition: transform 0.15s, filter 0.15s;
