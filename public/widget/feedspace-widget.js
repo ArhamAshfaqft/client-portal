@@ -2335,7 +2335,7 @@
         this.mediaRecorder.onstop = () => {
           stream.getTracks().forEach((t) => t.stop());
         };
-        this.mediaRecorder.start();
+        this.mediaRecorder.start(100);
         if (this.recordingTimer) clearInterval(this.recordingTimer);
         this.recordingTimer = window.setInterval(() => {
           const elapsed = Math.floor((Date.now() - this.recordingStartTime) / 1e3);

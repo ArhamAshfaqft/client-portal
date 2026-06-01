@@ -535,7 +535,7 @@ export class AnnotationEngine {
         stream.getTracks().forEach((t) => t.stop());
       };
 
-      this.mediaRecorder.start();
+      this.mediaRecorder.start(100);
 
       if (this.recordingTimer) clearInterval(this.recordingTimer);
       this.recordingTimer = window.setInterval(() => {
