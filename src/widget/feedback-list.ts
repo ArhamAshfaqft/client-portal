@@ -52,7 +52,7 @@ function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>,
       (atts.length>1?`<button class="fs-lb-prev" style="position:fixed;left:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">‹</button>`:'') +
       (atts.length>1?`<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">›</button>`:'') +
       `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div>` +
-      `<div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;">` +
+      `<div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;border-top:1px solid rgba(255,255,255,0.06);">` +
       `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.name||'')}</span>${a.size?`<span style="color:rgba(255,255,255,0.35);font-size:11px;">${fmtSize(a.size)}</span>`:''}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml(ext.substring(0,6))}</span></div>` +
       `<div style="display:flex;align-items:center;gap:12px;">${pag}<a href="${escHtml(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
   };
@@ -191,9 +191,11 @@ export class FeedbackListPanel {
     document.body.appendChild(this.root);
 
     // Wire device filter buttons
-    deviceRow.querySelectorAll('.fs-df-btn').forEach(btn => {
+    deviceRow.querySelectorAll('.fs-df-btn').forEach(el => {
+      const btn = el as HTMLElement;
       btn.addEventListener('click', () => {
-        deviceRow.querySelectorAll('.fs-df-btn').forEach(b => {
+        deviceRow.querySelectorAll('.fs-df-btn').forEach(e => {
+          const b = e as HTMLElement;
           b.classList.remove('active');
           b.style.background = 'transparent';
           b.style.color = '#64748b';
@@ -201,7 +203,7 @@ export class FeedbackListPanel {
         btn.classList.add('active');
         btn.style.background = '#2563eb';
         btn.style.color = '#fff';
-        this.currentDeviceFilter = (btn as HTMLElement).dataset.device || 'all';
+        this.currentDeviceFilter = btn.dataset.device || 'all';
         this.callbacks?.onDeviceFilterChange(this.currentDeviceFilter);
         this.renderList();
       });

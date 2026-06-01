@@ -66,7 +66,7 @@ export class CommentPanel {
 
   addFile(file: File): void {
     this.files.push(file);
-    const previews = this.root?.querySelector('#fs-popup-previews');
+    const previews = this.root?.querySelector('#fs-popup-previews') as HTMLElement | null;
     if (previews) this.updatePreviews(previews);
   }
 
