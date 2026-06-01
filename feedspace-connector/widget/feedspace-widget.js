@@ -41,14 +41,14 @@
 .feedspace-toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
-  padding: 6px 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.04);
+  padding: 8px 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
   margin-bottom: 24px;
   pointer-events: auto;
   transition: transform 0.2s ease, opacity 0.2s ease;
@@ -58,6 +58,15 @@
   display: flex;
   align-items: center;
   gap: 2px;
+}
+.feedspace-toolbar-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 0 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
 }
 .feedspace-toolbar-divider {
   width: 1px;
@@ -70,19 +79,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 10px;
   background: transparent;
   cursor: pointer;
   color: #6b7280;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   position: relative;
 }
 .feedspace-tool-btn:hover {
   background: rgba(99, 102, 241, 0.08);
   color: #6366f1;
+  transform: scale(1.05);
+}
+.feedspace-tool-btn:active {
+  transform: scale(0.92);
 }
 .feedspace-tool-btn.active {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -95,20 +108,19 @@
 }
 .feedspace-tool-btn .badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
   background: #ef4444;
   color: #fff;
   font-size: 10px;
-  line-height: 18px;
+  line-height: 16px;
   text-align: center;
   padding: 0 4px;
   font-weight: 700;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
-  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
 }
 
 .feedspace-device-btn {
@@ -141,15 +153,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 20px;
+  padding: 8px 18px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
@@ -179,7 +191,7 @@
 .feedspace-panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 99998;
   animation: feedspace-fade-in 0.2s ease;
 }
@@ -188,12 +200,12 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 420px;
+  width: 400px;
   max-width: 100vw;
   height: 100vh;
   background: #fff;
   z-index: 99999;
-  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.08);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   animation: feedspace-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -210,7 +222,6 @@
   font-size: 17px;
   font-weight: 600;
   color: #111827;
-  letter-spacing: -0.01em;
 }
 .feedspace-panel-close {
   width: 32px;
@@ -245,16 +256,21 @@
   border-top: 1px solid #f3f4f6;
 }
 
+.feedspace-comment-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
 .feedspace-comment-input {
-  width: 100%;
+  flex: 1;
   border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 10px 14px;
   font-size: 13px;
   font-family: inherit;
   outline: none;
   resize: none;
-  min-height: 44px;
+  min-height: 40px;
   max-height: 120px;
   transition: border-color 0.15s, box-shadow 0.15s;
   line-height: 1.5;
@@ -267,12 +283,6 @@
 }
 .feedspace-comment-input::placeholder {
   color: #9ca3af;
-}
-
-.feedspace-media-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
 }
 
 .feedspace-icon-btn {
@@ -304,39 +314,11 @@
   height: 18px;
 }
 
-.feedspace-avatar-sm {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.feedspace-avatar-xs {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #a5b4fc, #6366f1);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
 .feedspace-feedback-item {
   background: #f9fafb;
   border: 1px solid #f3f4f6;
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 14px;
   margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.15s;
@@ -344,7 +326,7 @@
 .feedspace-feedback-item:hover {
   border-color: #e5e7eb;
   background: #fff;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
 }
 .feedspace-feedback-item.highlight {
@@ -356,20 +338,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
-
-.feedspace-feedback-author {
-  font-size: 13px;
+.feedspace-feedback-type {
+  font-size: 11px;
   font-weight: 600;
-  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #eef2ff;
+  color: #6366f1;
 }
 .feedspace-feedback-status {
   font-size: 11px;
   font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 .feedspace-feedback-status.open {
   background: #fef3c7;
@@ -392,121 +377,57 @@
   font-size: 13px;
   color: #374151;
   line-height: 1.6;
+  margin-bottom: 8px;
 }
 .feedspace-feedback-meta {
   font-size: 11px;
   color: #9ca3af;
-  margin-top: 1px;
-}
-
-.feedspace-reply-count {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: #9ca3af;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #f3f4f6;
-}
-.feedspace-reply-count svg {
-  width: 12px;
-  height: 12px;
 }
 
 .feedspace-reply {
   margin-top: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: #fff;
   border: 1px solid #f3f4f6;
-  border-radius: 12px;
-}
-.feedspace-reply-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-.feedspace-reply-author {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
+  border-radius: 8px;
 }
 .feedspace-reply-text {
   font-size: 12px;
   color: #4b5563;
-  line-height: 1.5;
 }
 .feedspace-reply-meta {
   font-size: 10px;
   color: #9ca3af;
-  margin-top: 1px;
-}
-
-.feedspace-section-divider {
-  height: 1px;
-  background: #f3f4f6;
-  margin: 16px 0;
+  margin-top: 4px;
 }
 
 .feedspace-file-preview {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 8px 10px;
   background: #f9fafb;
   border: 1px solid #f3f4f6;
-  border-radius: 10px;
-  margin-top: 8px;
+  border-radius: 8px;
+  margin-top: 6px;
   font-size: 12px;
   color: #374151;
 }
-.feedspace-file-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-.feedspace-file-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.feedspace-file-info {
-  flex: 1;
-  min-width: 0;
-}
-.feedspace-file-name {
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.feedspace-file-size {
-  font-size: 10px;
-  color: #9ca3af;
-}
-.feedspace-file-remove {
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-  color: #9ca3af;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.feedspace-file-remove:hover {
-  background: #fef2f2;
-  color: #ef4444;
-}
-.feedspace-file-remove svg {
+.feedspace-file-preview svg {
   width: 14px;
   height: 14px;
+  flex-shrink: 0;
+}
+.feedspace-file-preview .remove {
+  margin-left: auto;
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+}
+.feedspace-file-preview .remove:hover {
+  color: #dc2626;
 }
 
 .feedspace-recording-indicator {
@@ -516,11 +437,7 @@
   color: #ef4444;
   font-size: 13px;
   font-weight: 500;
-  padding: 10px 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 10px;
-  margin-top: 8px;
+  padding: 10px 0;
 }
 .feedspace-recording-dot {
   width: 8px;
@@ -531,7 +448,7 @@
 }
 .feedspace-recording-time {
   font-variant-numeric: tabular-nums;
-  color: #dc2626;
+  color: #6b7280;
 }
 
 .feedspace-empty-state {
@@ -590,6 +507,11 @@
 @keyframes feedspace-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+@keyframes feedspace-heartbeat {
+  0% { r: 10; opacity: 1; }
+  50% { r: 18; opacity: 0; }
+  100% { r: 10; opacity: 0; }
 }
 @keyframes feedspace-scale-in {
   from { transform: scale(0.95); opacity: 0; }
@@ -689,6 +611,22 @@
 }
 
 [data-feedspace-tool="pin"] { cursor: crosshair; }
+[data-feedspace-tool="rect"] { cursor: crosshair; }
+[data-feedspace-tool="arrow"] { cursor: crosshair; }
+[data-feedspace-tool="draw"] { cursor: crosshair; }
+
+.feedspace-viewport-wrapper {
+  overflow: auto;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.08);
+  min-height: 100vh;
+  transition: max-width 0.3s ease;
+}
+
+.feedspace-draw-preview {
+  pointer-events: none;
+}
 `;
   var injected = false;
   function injectStyles() {
@@ -945,9 +883,107 @@
       if (!el) return;
       const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
       const badge = this.createBadge(index + 1, annotation.id, annotation.status);
+      switch (annotation.type) {
+        case "pin":
+          this.renderPin(anchor.x, anchor.y, badge);
+          break;
+        case "rect":
+          this.renderRect(annotation, el, anchor, badge);
+          break;
+        case "arrow":
+          this.renderArrow(annotation, el, anchor, badge);
+          break;
+        case "draw":
+          this.renderDraw(annotation, el, anchor, badge);
+          break;
+      }
+    }
+    renderPin(x, y, badge) {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.appendChild(badge);
-      g.setAttribute("transform", `translate(${anchor.x}, ${anchor.y})`);
+      g.setAttribute("transform", `translate(${x}, ${y})`);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderRect(annotation, el, anchor, badge) {
+      const rect = el.getBoundingClientRect();
+      const w = annotation.widthPct ? rect.width * annotation.widthPct / 100 : 80;
+      const h = annotation.heightPct ? rect.height * annotation.heightPct / 100 : 60;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      r.setAttribute("x", String(anchor.x));
+      r.setAttribute("y", String(anchor.y));
+      r.setAttribute("width", String(w));
+      r.setAttribute("height", String(h));
+      r.setAttribute("fill", "rgba(99, 102, 241, 0.08)");
+      r.setAttribute("stroke", "#6366f1");
+      r.setAttribute("stroke-width", "2");
+      r.setAttribute("stroke-dasharray", "6,3");
+      r.setAttribute("rx", "4");
+      g.appendChild(r);
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderArrow(annotation, el, anchor, badge) {
+      let endX = anchor.x + 100;
+      let endY = anchor.y + 100;
+      if (annotation.endElementDna) {
+        const endEl = findElement(annotation.endElementDna);
+        if (endEl && annotation.endAnchorXPct != null && annotation.endAnchorYPct != null) {
+          const endPos = toAbsolute(endEl, annotation.endAnchorXPct, annotation.endAnchorYPct);
+          endX = endPos.x;
+          endY = endPos.y;
+        }
+      }
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", String(anchor.x));
+      line.setAttribute("y1", String(anchor.y));
+      line.setAttribute("x2", String(endX));
+      line.setAttribute("y2", String(endY));
+      line.setAttribute("stroke", "#6366f1");
+      line.setAttribute("stroke-width", "2");
+      line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+      g.appendChild(line);
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = "auto";
+      this.svg.appendChild(g);
+    }
+    renderDraw(annotation, el, anchor, badge) {
+      var _a, _b;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      if ((_a = annotation.drawData) == null ? void 0 : _a.pathD) {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", annotation.drawData.pathD);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#6366f1");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        g.appendChild(path);
+      }
+      if (((_b = annotation.drawData) == null ? void 0 : _b.points) && annotation.drawData.points.length > 1) {
+        const points = annotation.drawData.points;
+        const rect = el.getBoundingClientRect();
+        const pl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        const ptsStr = points.map((p) => {
+          const absX = rect.left + window.scrollX + rect.width * p.x / 100;
+          const absY = rect.top + window.scrollY + rect.height * p.y / 100;
+          return `${absX},${absY}`;
+        }).join(" ");
+        pl.setAttribute("points", ptsStr);
+        pl.setAttribute("fill", "none");
+        pl.setAttribute("stroke", "#6366f1");
+        pl.setAttribute("stroke-width", "2");
+        pl.setAttribute("stroke-linecap", "round");
+        pl.setAttribute("stroke-linejoin", "round");
+        g.appendChild(pl);
+      }
+      badge.setAttribute("transform", `translate(${anchor.x - 8}, ${anchor.y - 8})`);
+      g.appendChild(badge);
       g.style.pointerEvents = "auto";
       this.svg.appendChild(g);
     }
@@ -1062,81 +1098,62 @@
       const body = document.createElement("div");
       body.className = "feedspace-panel-body";
       if (!isNew && this.annotation) {
-        const authorInitial = (this.annotation.createdBy || "A").charAt(0).toUpperCase();
-        const dateStr = new Date(this.annotation.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
         const info = document.createElement("div");
         info.className = "feedspace-feedback-item";
         info.style.cursor = "default";
         info.innerHTML = `
         <div class="feedspace-feedback-item-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="feedspace-avatar-sm">${escHtml(authorInitial)}</div>
-            <div>
-              <div class="feedspace-feedback-author">${escHtml(this.annotation.createdBy)}</div>
-              <div class="feedspace-feedback-meta">${dateStr}</div>
-            </div>
-          </div>
+          <span class="feedspace-feedback-type">${this.annotation.type}</span>
           <span class="feedspace-feedback-status ${this.annotation.status}">${this.annotation.status.replace("_", " ")}</span>
         </div>
         <div class="feedspace-feedback-content">${escHtml(this.annotation.content)}</div>
+        <div class="feedspace-feedback-meta">${escHtml(this.annotation.createdBy)} \xB7 ${new Date(this.annotation.createdAt).toLocaleString()}</div>
       `;
         body.appendChild(info);
         if (this.annotation.replies && this.annotation.replies.length > 0) {
+          const repliesTitle = document.createElement("div");
+          repliesTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;margin:12px 0 8px;";
+          repliesTitle.textContent = "Replies";
+          body.appendChild(repliesTitle);
           for (const reply of this.annotation.replies) {
-            const replyInitial = (reply.createdBy || "A").charAt(0).toUpperCase();
-            const replyDate = new Date(reply.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
             const r = document.createElement("div");
             r.className = "feedspace-reply";
             r.innerHTML = `
-            <div class="feedspace-reply-header">
-              <div class="feedspace-avatar-xs">${escHtml(replyInitial)}</div>
-              <div>
-                <div class="feedspace-reply-author">${escHtml(reply.createdBy)}</div>
-                <div class="feedspace-reply-meta">${replyDate}</div>
-              </div>
-            </div>
             <div class="feedspace-reply-text">${escHtml(reply.content)}</div>
+            <div class="feedspace-reply-meta">${escHtml(reply.createdBy)} \xB7 ${new Date(reply.createdAt).toLocaleString()}</div>
           `;
             body.appendChild(r);
           }
         }
-        const divider = document.createElement("div");
-        divider.className = "feedspace-section-divider";
-        body.appendChild(divider);
       }
+      const replyTitle = document.createElement("div");
+      replyTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px;";
+      replyTitle.textContent = isNew ? "Add Comment" : "Reply";
+      body.appendChild(replyTitle);
       const input = document.createElement("textarea");
       input.className = "feedspace-comment-input";
-      input.placeholder = isNew ? "Describe your feedback..." : "Write a reply...";
+      input.placeholder = "Type your feedback here...";
       input.rows = 3;
       input.style.width = "100%";
       body.appendChild(input);
       this.inputEl = input;
       const mediaActions = document.createElement("div");
-      mediaActions.className = "feedspace-media-actions";
+      mediaActions.style.cssText = "display:flex;gap:8px;margin-top:12px;";
       mediaActions.innerHTML = `
-      <button class="feedspace-icon-btn" id="feedspace-mic-btn" title="Record voice">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-      </button>
-      <button class="feedspace-icon-btn" id="feedspace-media-btn" title="Attach media (images, video, audio)">
+      <button class="feedspace-icon-btn" id="feedspace-attach-btn" title="Attach file">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
       </button>
-      <button class="feedspace-icon-btn" id="feedspace-doc-btn" title="Attach document (PDF, DOC, CSV, etc.)">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <button class="feedspace-icon-btn" id="feedspace-record-btn" title="Record voice">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
       </button>
     `;
       body.appendChild(mediaActions);
-      const mediaFileInput = document.createElement("input");
-      mediaFileInput.type = "file";
-      mediaFileInput.multiple = true;
-      mediaFileInput.style.display = "none";
-      mediaFileInput.accept = "image/*,video/*,audio/*";
-      body.appendChild(mediaFileInput);
-      const docFileInput = document.createElement("input");
-      docFileInput.type = "file";
-      docFileInput.multiple = true;
-      docFileInput.style.display = "none";
-      docFileInput.accept = ".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar,.json,.xml,.md";
-      body.appendChild(docFileInput);
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      fileInput.accept = "image/*,video/*,audio/*,.pdf,.doc,.docx";
+      body.appendChild(fileInput);
       const filePreviewContainer = document.createElement("div");
       filePreviewContainer.id = "feedspace-file-previews";
       body.appendChild(filePreviewContainer);
@@ -1167,7 +1184,8 @@
       footer.appendChild(submitBtn);
       this.root.appendChild(footer);
       document.body.appendChild(this.root);
-      mediaActions.querySelector("#feedspace-mic-btn").addEventListener("click", () => {
+      mediaActions.querySelector("#feedspace-attach-btn").addEventListener("click", () => fileInput.click());
+      mediaActions.querySelector("#feedspace-record-btn").addEventListener("click", () => {
         var _a, _b, _c;
         if ((_a = this.callbacks) == null ? void 0 : _a.isRecording) {
           (_b = this.callbacks) == null ? void 0 : _b.onStopRecording();
@@ -1175,62 +1193,28 @@
           (_c = this.callbacks) == null ? void 0 : _c.onStartRecording();
         }
       });
-      mediaActions.querySelector("#feedspace-media-btn").addEventListener("click", () => mediaFileInput.click());
-      mediaActions.querySelector("#feedspace-doc-btn").addEventListener("click", () => docFileInput.click());
-      mediaFileInput.addEventListener("change", () => {
-        const selected = Array.from(mediaFileInput.files || []);
+      fileInput.addEventListener("change", () => {
+        const selected = Array.from(fileInput.files || []);
         this.files = [...this.files, ...selected];
-        this.updateFilePreviews(filePreviewContainer);
-        mediaFileInput.value = "";
-      });
-      docFileInput.addEventListener("change", () => {
-        const selected = Array.from(docFileInput.files || []);
-        this.files = [...this.files, ...selected];
-        this.updateFilePreviews(filePreviewContainer);
-        docFileInput.value = "";
+        this.updateFilePreviews(filePreviewContainer, fileInput);
+        fileInput.value = "";
       });
       setTimeout(() => input.focus(), 100);
     }
-    getFileIcon(name) {
-      var _a;
-      const ext = ((_a = name.split(".").pop()) == null ? void 0 : _a.toLowerCase()) || "";
-      if (["jpg", "jpeg", "png", "gif", "webp", "svg", "ico", "bmp"].includes(ext)) return "\u{1F5BC}\uFE0F";
-      if (["mp4", "webm", "mov", "avi", "mkv"].includes(ext)) return "\u{1F3AC}";
-      if (["mp3", "wav", "ogg", "aac", "flac", "webm"].includes(ext)) return "\u{1F3B5}";
-      if (["pdf"].includes(ext)) return "\u{1F4C4}";
-      if (["doc", "docx"].includes(ext)) return "\u{1F4DD}";
-      if (["xls", "xlsx", "csv"].includes(ext)) return "\u{1F4CA}";
-      if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "\u{1F4E6}";
-      if (["json", "xml", "md", "txt", "log"].includes(ext)) return "\u{1F4C3}";
-      return "\u{1F4CE}";
-    }
-    updateFilePreviews(container) {
+    updateFilePreviews(container, fileInput) {
       container.innerHTML = "";
       for (let i = 0; i < this.files.length; i++) {
         const f = this.files[i];
-        const icon = this.getFileIcon(f.name);
-        const isMedia = f.type.startsWith("image/") || f.type.startsWith("video/") || f.type.startsWith("audio/");
         const div = document.createElement("div");
         div.className = "feedspace-file-preview";
-        let previewHtml = "";
-        if (isMedia && f.type.startsWith("image/")) {
-          const url = URL.createObjectURL(f);
-          previewHtml = `<img src="${url}" class="feedspace-file-thumb" alt="${escHtml(f.name)}">`;
-          setTimeout(() => URL.revokeObjectURL(url), 1e4);
-        }
         div.innerHTML = `
-        ${previewHtml || `<span class="feedspace-file-icon">${icon}</span>`}
-        <div class="feedspace-file-info">
-          <div class="feedspace-file-name">${escHtml(f.name)}</div>
-          <div class="feedspace-file-size">${(f.size / 1024).toFixed(0)} KB</div>
-        </div>
-        <button class="feedspace-file-remove" data-idx="${i}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>${escHtml(f.name)} (${(f.size / 1024).toFixed(0)} KB)</span>
+        <span class="remove" data-idx="${i}">&times;</span>
       `;
-        div.querySelector(".feedspace-file-remove").addEventListener("click", () => {
+        div.querySelector(".remove").addEventListener("click", () => {
           this.files.splice(i, 1);
-          this.updateFilePreviews(container);
+          this.updateFilePreviews(container, fileInput);
         });
         container.appendChild(div);
       }
@@ -1327,7 +1311,7 @@
       this.renderList();
     }
     renderList() {
-      var _a, _b;
+      var _a;
       const body = (_a = this.root) == null ? void 0 : _a.querySelector("#feedback-list-body");
       if (!body) return;
       body.innerHTML = "";
@@ -1342,25 +1326,16 @@
         return;
       }
       for (const annotation of filtered) {
-        const authorInitial = (annotation.createdBy || "A").charAt(0).toUpperCase();
-        const dateStr = new Date(annotation.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-        const replyCount = ((_b = annotation.replies) == null ? void 0 : _b.length) || 0;
         const item = document.createElement("div");
         item.className = "feedspace-feedback-item";
         item.dataset.annotationId = annotation.id;
         item.innerHTML = `
         <div class="feedspace-feedback-item-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="feedspace-avatar-sm">${authorInitial}</div>
-            <div>
-              <div class="feedspace-feedback-author">${escHtml2(annotation.createdBy)}</div>
-              <div class="feedspace-feedback-meta">${dateStr}</div>
-            </div>
-          </div>
+          <span class="feedspace-feedback-type">${annotation.type}</span>
           <span class="feedspace-feedback-status ${annotation.status}">${annotation.status.replace("_", " ")}</span>
         </div>
         <div class="feedspace-feedback-content">${escHtml2(annotation.content)}</div>
-        ${replyCount > 0 ? `<div class="feedspace-reply-count"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount} ${replyCount === 1 ? "reply" : "replies"}</div>` : ""}
+        <div class="feedspace-feedback-meta">${escHtml2(annotation.createdBy)} \xB7 ${new Date(annotation.createdAt).toLocaleString()}</div>
       `;
         item.addEventListener("click", () => {
           var _a2;
@@ -1406,14 +1381,14 @@
   var SVG_ICONS = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
     pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+    rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>',
+    arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+    draw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
     list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
     desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
     tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
     mobile: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
-    submit: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-    mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
-    paperclip: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>',
-    file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    submit: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'
   };
   var AnnotationEngine = class {
     constructor(config, api) {
@@ -1521,6 +1496,9 @@
           <div class="feedspace-toolbar-label">Tools</div>
           <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
           <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+          <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
+          <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
+          <button class="feedspace-tool-btn" data-tool="draw" title="Freehand Draw">${SVG_ICONS.draw}</button>
         </div>
         <div class="feedspace-toolbar-divider"></div>
         <div class="feedspace-toolbar-group">
@@ -1648,6 +1626,63 @@
         this.updateHoverHighlight(e);
         return;
       }
+      const overlay = document.getElementById("feedspace-overlay");
+      if (!overlay) return;
+      this.removeTempPreview(overlay);
+      const el = this.drawStart.el;
+      const startRel = this.drawStart.dna;
+      const currentRel = toRelative(el, e.pageX, e.pageY);
+      if (this.currentTool === "rect") {
+        const rect = el.getBoundingClientRect();
+        const x1 = this.drawStart.x - window.scrollX;
+        const y1 = this.drawStart.y - window.scrollY;
+        const x2 = e.pageX - window.scrollX;
+        const y2 = e.pageY - window.scrollY;
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", String(Math.min(x1, x2)));
+        r.setAttribute("y", String(Math.min(y1, y2)));
+        r.setAttribute("width", String(Math.abs(x2 - x1)));
+        r.setAttribute("height", String(Math.abs(y2 - y1)));
+        r.setAttribute("fill", "rgba(99, 102, 241, 0.1)");
+        r.setAttribute("stroke", "#6366f1");
+        r.setAttribute("stroke-width", "2");
+        r.setAttribute("stroke-dasharray", "6,3");
+        r.setAttribute("rx", "4");
+        overlay.appendChild(r);
+        this.tempSvgEl = r;
+      }
+      if (this.currentTool === "arrow") {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(this.drawStart.x));
+        line.setAttribute("y1", String(this.drawStart.y));
+        line.setAttribute("x2", String(e.pageX));
+        line.setAttribute("y2", String(e.pageY));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2");
+        line.setAttribute("stroke-dasharray", "5,3");
+        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        overlay.appendChild(line);
+        this.tempSvgEl = line;
+      }
+      if (this.currentTool === "draw") {
+        const rel = toRelative(el, e.pageX, e.pageY);
+        this.drawPoints.push({ x: rel.x, y: rel.y });
+        const rect = el.getBoundingClientRect();
+        const pl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        const ptsStr = this.drawPoints.map((p) => {
+          const absX = rect.left + window.scrollX + rect.width * p.x / 100;
+          const absY = rect.top + window.scrollY + rect.height * p.y / 100;
+          return `${absX},${absY}`;
+        }).join(" ");
+        pl.setAttribute("points", ptsStr);
+        pl.setAttribute("fill", "none");
+        pl.setAttribute("stroke", "#6366f1");
+        pl.setAttribute("stroke-width", "2");
+        pl.setAttribute("stroke-linecap", "round");
+        pl.setAttribute("stroke-linejoin", "round");
+        overlay.appendChild(pl);
+        this.tempSvgEl = pl;
+      }
     }
     onMouseUp(e) {
       if (!this.isDrawing || !this.drawStart) return;
@@ -1686,27 +1721,45 @@
       this.drawPoints = [];
       this.tempSvgEl = null;
     }
-    async saveAnnotation(content, files, el, startDna, firstPoint, _points) {
+    async saveAnnotation(content, files, el, startDna, firstPoint, points) {
+      var _a, _b;
+      const rect = el.getBoundingClientRect();
+      const lastPoint = points[points.length - 1];
+      const endDna = this.currentTool === "arrow" ? getElementDNA(document.elementFromPoint(
+        ((_a = this.drawStart) == null ? void 0 : _a.x) || 0,
+        ((_b = this.drawStart) == null ? void 0 : _b.y) || 0
+      ) || el) : null;
+      let drawDataStr = null;
+      if (this.currentTool === "draw" && points.length > 1) {
+        drawDataStr = JSON.stringify({
+          pathD: "",
+          points: points.map((p) => ({
+            x: p.x,
+            y: p.y
+          }))
+        });
+      }
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
         elementText: startDna.text
       };
+      const annotationType = this.currentTool === "select" ? "pin" : this.currentTool;
       const payload = {
         projectId: this.config.projectId,
         previewToken: this.config.token,
-        type: "pin",
+        type: annotationType,
         content,
         pageUrl: this.config.pageUrl,
         selector: startDna.selector,
         elementDna: startDna,
         coordinatesX: firstPoint.x,
         coordinatesY: firstPoint.y,
-        coordinatesXEnd: null,
-        coordinatesYEnd: null,
-        width: null,
-        height: null,
-        drawData: null,
+        coordinatesXEnd: endDna && lastPoint ? lastPoint.x : null,
+        coordinatesYEnd: endDna && lastPoint ? lastPoint.y : null,
+        width: this.currentTool === "rect" ? Math.abs(lastPoint.x - firstPoint.x) : null,
+        height: this.currentTool === "rect" ? Math.abs(lastPoint.y - firstPoint.y) : null,
+        drawData: drawDataStr,
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
         device: this.deviceMode,

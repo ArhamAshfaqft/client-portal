@@ -17,14 +17,14 @@ function dbg(msg: string, data?: unknown): void {
 const SVG_ICONS = {
   select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
   pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>',
+  arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+  draw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>',
   list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
   desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
   tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
   mobile: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
   submit: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-  mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
-  paperclip: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>',
-  file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
 };
 
 export class AnnotationEngine {
@@ -149,6 +149,9 @@ export class AnnotationEngine {
           <div class="feedspace-toolbar-label">Tools</div>
           <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
           <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+          <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
+          <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
+          <button class="feedspace-tool-btn" data-tool="draw" title="Freehand Draw">${SVG_ICONS.draw}</button>
         </div>
         <div class="feedspace-toolbar-divider"></div>
         <div class="feedspace-toolbar-group">
@@ -298,6 +301,73 @@ export class AnnotationEngine {
       this.updateHoverHighlight(e);
       return;
     }
+
+    const overlay = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+    if (!overlay) return;
+
+    this.removeTempPreview(overlay);
+
+    const el = this.drawStart.el;
+    const startRel = this.drawStart.dna;
+    const currentRel = toRelative(el, e.pageX, e.pageY);
+
+    if (this.currentTool === 'rect') {
+      const rect = el.getBoundingClientRect();
+      const x1 = this.drawStart.x - window.scrollX;
+      const y1 = this.drawStart.y - window.scrollY;
+      const x2 = e.pageX - window.scrollX;
+      const y2 = e.pageY - window.scrollY;
+
+      const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      r.setAttribute('x', String(Math.min(x1, x2)));
+      r.setAttribute('y', String(Math.min(y1, y2)));
+      r.setAttribute('width', String(Math.abs(x2 - x1)));
+      r.setAttribute('height', String(Math.abs(y2 - y1)));
+      r.setAttribute('fill', 'rgba(99, 102, 241, 0.1)');
+      r.setAttribute('stroke', '#6366f1');
+      r.setAttribute('stroke-width', '2');
+      r.setAttribute('stroke-dasharray', '6,3');
+      r.setAttribute('rx', '4');
+      overlay.appendChild(r);
+      this.tempSvgEl = r;
+    }
+
+    if (this.currentTool === 'arrow') {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(this.drawStart.x));
+      line.setAttribute('y1', String(this.drawStart.y));
+      line.setAttribute('x2', String(e.pageX));
+      line.setAttribute('y2', String(e.pageY));
+      line.setAttribute('stroke', '#6366f1');
+      line.setAttribute('stroke-width', '2');
+      line.setAttribute('stroke-dasharray', '5,3');
+      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      overlay.appendChild(line);
+      this.tempSvgEl = line;
+    }
+
+    if (this.currentTool === 'draw') {
+      const rel = toRelative(el, e.pageX, e.pageY);
+      this.drawPoints.push({ x: rel.x, y: rel.y });
+
+      const rect = el.getBoundingClientRect();
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      const ptsStr = this.drawPoints
+        .map((p) => {
+          const absX = rect.left + window.scrollX + (rect.width * p.x) / 100;
+          const absY = rect.top + window.scrollY + (rect.height * p.y) / 100;
+          return `${absX},${absY}`;
+        })
+        .join(' ');
+      pl.setAttribute('points', ptsStr);
+      pl.setAttribute('fill', 'none');
+      pl.setAttribute('stroke', '#6366f1');
+      pl.setAttribute('stroke-width', '2');
+      pl.setAttribute('stroke-linecap', 'round');
+      pl.setAttribute('stroke-linejoin', 'round');
+      overlay.appendChild(pl);
+      this.tempSvgEl = pl;
+    }
   }
 
   private onMouseUp(e: MouseEvent): void {
@@ -352,29 +422,47 @@ export class AnnotationEngine {
     el: Element,
     startDna: ElementDNA,
     firstPoint: { x: number; y: number },
-    _points: Array<{ x: number; y: number }>
+    points: Array<{ x: number; y: number }>
   ): Promise<void> {
+    const rect = el.getBoundingClientRect();
+    const lastPoint = points[points.length - 1];
+    const endDna = this.currentTool === 'arrow' ? getElementDNA(document.elementFromPoint(
+      this.drawStart?.x || 0, this.drawStart?.y || 0
+    ) || el) : null;
+
+    let drawDataStr: string | null = null;
+    if (this.currentTool === 'draw' && points.length > 1) {
+      drawDataStr = JSON.stringify({
+        pathD: '',
+        points: points.map((p) => ({
+          x: p.x,
+          y: p.y,
+        })),
+      });
+    }
+
     const metaData: Record<string, unknown> = {
       device: this.deviceMode,
       elementTag: startDna.tag,
       elementText: startDna.text,
     };
 
+    const annotationType = this.currentTool === 'select' ? 'pin' : this.currentTool;
     const payload: CreateAnnotationPayload = {
       projectId: this.config.projectId,
       previewToken: this.config.token,
-      type: 'pin',
+      type: annotationType,
       content,
       pageUrl: this.config.pageUrl,
       selector: startDna.selector,
       elementDna: startDna,
       coordinatesX: firstPoint.x,
       coordinatesY: firstPoint.y,
-      coordinatesXEnd: null,
-      coordinatesYEnd: null,
-      width: null,
-      height: null,
-      drawData: null,
+      coordinatesXEnd: endDna && lastPoint ? lastPoint.x : null,
+      coordinatesYEnd: endDna && lastPoint ? lastPoint.y : null,
+      width: this.currentTool === 'rect' ? Math.abs(lastPoint.x - firstPoint.x) : null,
+      height: this.currentTool === 'rect' ? Math.abs(lastPoint.y - firstPoint.y) : null,
+      drawData: drawDataStr,
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
       device: this.deviceMode,
