@@ -13,7 +13,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root {
-  all: initial;
   display: flex !important;
   justify-content: center !important;
   position: fixed !important;
@@ -29,12 +28,10 @@ const STYLES = `
 }
 
 #feedspace-widget-root * {
-  all: revert;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 }
 
 #feedspace-widget-root .feedspace-toolbar {
-  all: initial;
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -60,7 +57,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-tool-btn {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -119,7 +115,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-device-btn {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -154,7 +149,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-submit-btn {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -202,7 +196,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-panel-overlay {
-  all: initial;
   display: block !important;
   position: fixed !important;
   inset: 0 !important;
@@ -212,7 +205,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-panel {
-  all: initial;
   display: flex !important;
   flex-direction: column !important;
   position: fixed !important;
@@ -232,7 +224,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-panel-header {
-  all: initial;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -246,7 +237,6 @@ const STYLES = `
   letter-spacing: -0.01em !important;
 }
 #feedspace-widget-root .feedspace-panel-close {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -288,7 +278,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-comment-input {
-  all: initial;
   display: block !important;
   width: 100% !important;
   border: 1px solid #e2e8f0 !important;
@@ -324,7 +313,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-icon-btn {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -627,7 +615,6 @@ const STYLES = `
   overflow-x: auto !important;
 }
 #feedspace-widget-root .feedspace-filter-tab {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -677,7 +664,6 @@ const STYLES = `
 }
 
 #feedspace-widget-root .feedspace-name-modal {
-  all: initial;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -688,7 +674,6 @@ const STYLES = `
   animation: feedspace-fade-in 0.15s !important;
 }
 #feedspace-widget-root .feedspace-name-modal-card {
-  all: initial;
   display: block !important;
   background: #fff !important;
   border-radius: 12px !important;
@@ -715,7 +700,6 @@ const STYLES = `
   line-height: 1.5 !important;
 }
 #feedspace-widget-root .feedspace-name-modal input {
-  all: initial;
   display: block !important;
   width: 100% !important;
   border: 1px solid #e2e8f0 !important;
@@ -745,7 +729,6 @@ const STYLES = `
   gap: 8px !important;
 }
 #feedspace-widget-root .feedspace-name-modal .actions button {
-  all: initial;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
