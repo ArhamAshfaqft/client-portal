@@ -1005,7 +1005,7 @@ class FeedspaceConnector
 
     public function allowAdditionalMimeTypes($mimes)
     {
-        $mimes['webm'] = 'video/webm';
+        $mimes['webm'] = 'audio/webm'; // MediaRecorder audio only
         $mimes['weba'] = 'audio/webm';
         $mimes['webp'] = 'image/webp';
         return $mimes;

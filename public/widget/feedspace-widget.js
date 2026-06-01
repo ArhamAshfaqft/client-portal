@@ -2364,7 +2364,11 @@
       const indicator = document.getElementById("fs-popup-rec-indicator");
       if (indicator) indicator.style.display = "none";
       const blob = new Blob(this.audioChunks, { type: "audio/webm" });
-      const file = new File([blob], `recording-${Date.now()}.webm`, { type: "audio/webm" });
+      if (blob.size === 0) {
+        this.showToast("Recording is empty");
+        return;
+      }
+      const file = new File([blob], `recording-${Date.now()}.weba`, { type: "audio/webm" });
       this.commentPanel.addFile(file);
     }
     deleteRecording() {
