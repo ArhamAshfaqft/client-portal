@@ -1,18 +1,45 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders });
+}
+
 export async function POST(request: Request) {
   try {
-    const { token } = await request.json();
-    if (!token) {
-      return NextResponse.json({ valid: false, error: "Missing token" }, { status: 400 });
-    }
+    const body = await request.json();
+    const { token, projectId } = body;
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { cookies: { getAll: () => [], setAll: () => {} } }
     );
+
+    // If projectId is provided directly, just look up the project name
+    if (projectId) {
+      const { data: project } = await supabase
+        .from("projects")
+        .select("name")
+        .eq("id", projectId)
+        .maybeSingle();
+
+      return NextResponse.json({
+        valid: !!project,
+        name: project?.name || null,
+      }, { headers: corsHeaders });
+    }
+
+    if (!token) {
+      return NextResponse.json({ valid: false, error: "Missing token" }, { status: 400, headers: corsHeaders });
+    }
+
     const { data: link, error } = await supabase
       .from("preview_links")
       .select("*")
@@ -20,15 +47,15 @@ export async function POST(request: Request) {
       .single();
 
     if (error || !link) {
-      return NextResponse.json({ valid: false, error: "Invalid token" }, { status: 404 });
+      return NextResponse.json({ valid: false, error: "Invalid token" }, { status: 404, headers: corsHeaders });
     }
 
     if (!link.is_active) {
-      return NextResponse.json({ valid: false, error: "Token is inactive" }, { status: 403 });
+      return NextResponse.json({ valid: false, error: "Token is inactive" }, { status: 403, headers: corsHeaders });
     }
 
     if (link.expires_at && new Date(link.expires_at) < new Date()) {
-      return NextResponse.json({ valid: false, error: "Token has expired" }, { status: 403 });
+      return NextResponse.json({ valid: false, error: "Token has expired" }, { status: 403, headers: corsHeaders });
     }
 
     const { data: project } = await supabase
@@ -52,8 +79,8 @@ export async function POST(request: Request) {
       projectId: link.project_id,
       primaryColor,
       siteName: project?.name || "Site",
-    });
+    }, { headers: corsHeaders });
   } catch (err) {
-    return NextResponse.json({ valid: false, error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ valid: false, error: "Internal error" }, { status: 500, headers: corsHeaders });
   }
 }

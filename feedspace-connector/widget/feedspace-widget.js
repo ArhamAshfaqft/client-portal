@@ -2485,7 +2485,11 @@
       const apiUrl = this.config.apiUrl.replace(/\/+$/, "");
       for (const pid of missing) {
         try {
-          const res = await fetch(`${apiUrl}/api/project-name?id=${encodeURIComponent(pid)}`);
+          const res = await fetch(`${apiUrl}/api/widget/verify-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectId: pid })
+          });
           if (res.ok) {
             const data = await res.json();
             if (data.name) {
