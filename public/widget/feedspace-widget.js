@@ -1575,18 +1575,43 @@
       this.currentFilter = "all";
       this.currentDeviceFilter = "all";
       this.currentSort = "newest";
+      this.currentProjectFilter = "";
       this.onClose = null;
+      this.siteName = "";
+      this._closeProjectMenu = null;
     }
-    open(annotations, callbacks, onClose) {
+    get distinctProjects() {
+      const seen = /* @__PURE__ */ new Set();
+      const out = [];
+      for (const a of this.annotations) {
+        const pid = a.projectId;
+        if (pid && !seen.has(pid)) {
+          seen.add(pid);
+          const name = a.projectName || "Session #" + pid.slice(0, 8);
+          out.push({ id: pid, title: name });
+        }
+      }
+      return out;
+    }
+    open(annotations, callbacks, onClose, siteName) {
       this.annotations = annotations;
       this.callbacks = callbacks;
       this.onClose = onClose;
+      if (siteName) this.siteName = siteName;
+      try {
+        const v = localStorage.getItem("fs_project_filter");
+        if (v) this.currentProjectFilter = v;
+      } catch (e) {
+      }
       this.render();
     }
     isOpen() {
       return this.root !== null;
     }
     close() {
+      const m = document.getElementById("fs-project-menu");
+      if (m) m.remove();
+      if (this._closeProjectMenu) this._closeProjectMenu();
       if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
       if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
       document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
@@ -1595,7 +1620,19 @@
     }
     updateAnnotations(annotations) {
       this.annotations = annotations;
-      if (this.root) this.renderList();
+      if (this.root) {
+        const sessBtn = this.root.querySelector("#fs-session-btn");
+        if (sessBtn) {
+          if (this.distinctProjects.length > 0) {
+            sessBtn.style.display = "flex";
+            const ap = this.distinctProjects.find((p) => p.id === this.currentProjectFilter);
+            if (ap) sessBtn.title = ap.title;
+          } else {
+            sessBtn.style.display = "none";
+          }
+        }
+        this.renderList();
+      }
     }
     render() {
       this.close();
@@ -1607,14 +1644,27 @@
       this.root.className = "feedspace-panel";
       const header = document.createElement("div");
       header.className = "feedspace-panel-header";
+      const activeProject = this.distinctProjects.find((p) => p.id === this.currentProjectFilter);
       header.innerHTML = `
       <span class="feedspace-panel-title">Feedback List</span>
+      <button class="fs-session-btn" id="fs-session-btn" title="Filter by session" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:transparent;color:#64748b;cursor:pointer;padding:0;margin-right:auto;margin-left:8px;flex-shrink:0;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
       <button class="feedspace-panel-close" id="feedback-list-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     `;
       this.root.appendChild(header);
       header.querySelector("#feedback-list-close").addEventListener("click", () => this.close());
+      const sessBtn = header.querySelector("#fs-session-btn");
+      if (this.distinctProjects.length > 0) {
+        sessBtn.style.display = "flex";
+        if (activeProject) sessBtn.title = activeProject.title;
+      }
+      sessBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.showProjectFilterMenu(sessBtn);
+      });
       const filters = document.createElement("div");
       filters.className = "feedspace-filter-tabs";
       const filterOptions = [
@@ -1682,23 +1732,91 @@
       });
       this.renderList();
     }
+    showProjectFilterMenu(btn) {
+      const existing = document.getElementById("fs-project-menu");
+      if (existing) {
+        existing.remove();
+        if (this._closeProjectMenu) this._closeProjectMenu();
+        return;
+      }
+      const menu = document.createElement("div");
+      menu.id = "fs-project-menu";
+      const rect = btn.getBoundingClientRect();
+      menu.style.cssText = "position:fixed;left:" + Math.max(10, rect.left - 160) + "px;top:" + (rect.bottom + 4) + "px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;z-index:2147483647;min-width:170px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.1);";
+      const addItem = (label, value) => {
+        const isActive = String(this.currentProjectFilter) === String(value);
+        const item = document.createElement("div");
+        item.dataset.value = value;
+        item.style.cssText = "padding:7px 12px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;cursor:pointer;border-radius:5px;color:" + (isActive ? "#fff!important;background:#2563eb;" : "#334155!important;");
+        item.innerHTML = (isActive ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>' : "") + label;
+        item.addEventListener("mouseenter", () => {
+          if (!isActive) item.style.background = "#f1f5f9";
+        });
+        item.addEventListener("mouseleave", () => {
+          if (!isActive) item.style.background = "transparent";
+        });
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          menu.remove();
+          if (this._closeProjectMenu) this._closeProjectMenu();
+          this.currentProjectFilter = value;
+          btn.title = value ? label : "Filter by session";
+          try {
+            localStorage.setItem("fs_project_filter", this.currentProjectFilter);
+          } catch (e2) {
+          }
+          this.renderList();
+        });
+        menu.appendChild(item);
+      };
+      addItem("All sessions", "");
+      for (const p of this.distinctProjects) addItem(p.title, p.id);
+      document.body.appendChild(menu);
+      const handler = (e) => {
+        if (!menu.contains(e.target) && e.target !== btn) {
+          menu.remove();
+          document.removeEventListener("click", handler);
+        }
+      };
+      if (this._closeProjectMenu) this._closeProjectMenu();
+      this._closeProjectMenu = () => document.removeEventListener("click", handler);
+      setTimeout(() => document.addEventListener("click", handler), 10);
+    }
     renderList() {
-      var _a, _b;
+      var _a, _b, _c;
       const body = (_a = this.root) == null ? void 0 : _a.querySelector("#feedback-list-body");
       if (!body) return;
       body.innerHTML = "";
+      if (this.currentProjectFilter) {
+        const projects = this.distinctProjects;
+        if (!projects.find((p) => p.id === this.currentProjectFilter)) {
+          this.currentProjectFilter = "";
+          try {
+            localStorage.removeItem("fs_project_filter");
+          } catch (e) {
+          }
+          const sessBtn = (_b = this.root) == null ? void 0 : _b.querySelector("#fs-session-btn");
+          if (sessBtn) sessBtn.title = "Filter by session";
+        }
+      }
       let filtered = this.currentFilter === "all" ? this.annotations : this.currentFilter === "pending" ? this.annotations.filter((a) => a.status === "open" || a.status === "in_progress") : this.annotations.filter((a) => a.status === this.currentFilter);
+      if (this.currentProjectFilter) {
+        filtered = filtered.filter((a) => String(a.projectId) === this.currentProjectFilter);
+      }
       if (this.currentDeviceFilter && this.currentDeviceFilter !== "all") {
         filtered = filtered.filter((a) => (a.device || "desktop") === this.currentDeviceFilter);
       }
       const deviceCounts = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
       let baseForCounts = this.currentFilter === "all" ? this.annotations : this.currentFilter === "pending" ? this.annotations.filter((a) => a.status === "open" || a.status === "in_progress") : this.annotations.filter((a) => a.status === this.currentFilter);
+      if (this.currentProjectFilter) {
+        baseForCounts = baseForCounts.filter((a) => String(a.projectId) === this.currentProjectFilter);
+      }
       baseForCounts.forEach((a) => {
         deviceCounts.all++;
         const d = a.device || "desktop";
         if (deviceCounts[d] !== void 0) deviceCounts[d]++;
       });
-      const deviceRow = (_b = this.root) == null ? void 0 : _b.querySelector(".feedspace-device-filter");
+      const deviceRow = (_c = this.root) == null ? void 0 : _c.querySelector(".feedspace-device-filter");
       if (deviceRow) {
         deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
           const dv = btn.dataset.device || "all";
@@ -1717,7 +1835,7 @@
       }
       const statusLabels = { open: "Pending", in_progress: "Pending", resolved: "Resolved", closed: "Closed" };
       const html = filtered.map((a, idx) => {
-        var _a2, _b2, _c;
+        var _a2, _b2, _c2;
         const initial = (a.createdBy || "A").charAt(0).toUpperCase();
         const timeStr = timeAgo(a.createdAt);
         const replyCount = ((_a2 = a.replies) == null ? void 0 : _a2.length) || 0;
@@ -1755,7 +1873,7 @@
           mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
         }
         const tag = ((_b2 = a.elementDna) == null ? void 0 : _b2.tag) || "";
-        const tagText = (((_c = a.elementDna) == null ? void 0 : _c.text) || "").slice(0, 22);
+        const tagText = (((_c2 = a.elementDna) == null ? void 0 : _c2.text) || "").slice(0, 22);
         const skipTags = ["div", "section", "article", "main", "aside", "figure", "header", "footer"];
         let tagChip = "";
         if (tag && !skipTags.includes(tag.toLowerCase())) {
@@ -1960,6 +2078,7 @@
       this.toolbarRoot = null;
       this.nameModal = null;
       this.hoverHighlightEl = null;
+      this.projectNameCache = {};
       this.config = config;
       this.api = api;
       this.renderer = new AnnotationRenderer();
@@ -2089,7 +2208,7 @@
           onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
           onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName)
         }, () => {
-        });
+        }, this.config.siteName);
       });
       if (dev) {
         setTimeout(() => {
@@ -2228,7 +2347,8 @@
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
-        elementText: startDna.text
+        elementText: startDna.text,
+        projectName: this.config.siteName || ""
       };
       const payload = {
         projectId: this.config.projectId,
@@ -2340,11 +2460,66 @@
       try {
         this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
+        await this.backfillProjectNames();
         this.renderer.setAnnotations(this.annotations);
         this.updateBadge();
       } catch (err) {
         console.error("Failed to load annotations", err);
         dbg("loadAnnotations: FAILED", String(err));
+      }
+    }
+    async backfillProjectNames() {
+      const seen = /* @__PURE__ */ new Set();
+      const missing = [];
+      for (const a of this.annotations) {
+        if (a.projectId && !a.projectName && !seen.has(a.projectId)) {
+          seen.add(a.projectId);
+          if (this.projectNameCache[a.projectId]) {
+            a.projectName = this.projectNameCache[a.projectId];
+          } else {
+            missing.push({ pid: a.projectId, token: a.previewToken || "" });
+          }
+        }
+      }
+      if (missing.length === 0) return;
+      const apiUrl = this.config.apiUrl.replace(/\/+$/, "");
+      for (const { pid, token } of missing) {
+        try {
+          const res = await fetch(`${apiUrl}/api/widget/verify-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectId: pid })
+          });
+          const data = await res.json();
+          console.log("[Feedspace] Project name lookup:", { projectId: pid, status: res.status, response: data });
+          if (res.ok && data.name) {
+            this.projectNameCache[pid] = data.name;
+            for (const a of this.annotations) {
+              if (a.projectId === pid && !a.projectName) a.projectName = data.name;
+            }
+            continue;
+          }
+          if (token) {
+            console.log("[Feedspace] Falling back to token lookup for", pid);
+            const tres = await fetch(`${apiUrl}/api/widget/verify-token`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token })
+            });
+            const tdata = await tres.json();
+            console.log("[Feedspace] Token lookup result:", { token, status: tres.status, response: tdata });
+            if (tres.ok && tdata.valid && tdata.siteName) {
+              this.projectNameCache[pid] = tdata.siteName;
+              for (const a of this.annotations) {
+                if (a.projectId === pid && !a.projectName) a.projectName = tdata.siteName;
+              }
+              console.log("[Feedspace] Set projectName from token fallback:", pid, "->", tdata.siteName);
+              continue;
+            }
+          }
+          console.log("[Feedspace] No name found for project", pid, "- using fallback");
+        } catch (e) {
+        }
       }
     }
     onAnnotationClick(id) {
@@ -2527,7 +2702,7 @@
       if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
       console.log("[Feedspace]", msg, data || "");
     }
-    dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey });
+    dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey, siteName: config.siteName });
     injectStyles();
     dbg2("Styles injected");
     if (config.pageUrl) {

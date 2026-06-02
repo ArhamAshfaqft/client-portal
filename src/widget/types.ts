@@ -25,6 +25,7 @@ export interface Annotation {
   content: string;
   projectId?: string;
   projectName?: string;
+  previewToken?: string;
   pageUrl: string;
   elementDna: ElementDNA | null;
   anchorXPct: number;

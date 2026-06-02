@@ -501,20 +501,20 @@ export class AnnotationEngine {
 
   private async backfillProjectNames(): Promise<void> {
     const seen = new Set<string>();
-    const missing: string[] = [];
+    const missing: { pid: string; token: string }[] = [];
     for (const a of this.annotations) {
       if (a.projectId && !a.projectName && !seen.has(a.projectId)) {
         seen.add(a.projectId);
         if (this.projectNameCache[a.projectId]) {
           a.projectName = this.projectNameCache[a.projectId];
         } else {
-          missing.push(a.projectId);
+          missing.push({ pid: a.projectId, token: a.previewToken || '' });
         }
       }
     }
     if (missing.length === 0) return;
     const apiUrl = this.config.apiUrl.replace(/\/+$/, '');
-    for (const pid of missing) {
+    for (const { pid, token } of missing) {
       try {
         const res = await fetch(`${apiUrl}/api/widget/verify-token`, {
           method: 'POST',
@@ -528,10 +528,28 @@ export class AnnotationEngine {
           for (const a of this.annotations) {
             if (a.projectId === pid && !a.projectName) a.projectName = data.name;
           }
-          console.log('[Feedspace] Set projectName for', pid, '->', data.name);
-        } else {
-          console.log('[Feedspace] No name found for project', pid, '- using fallback');
+          continue;
         }
+        // Fallback: try token-based lookup if projectId returned no name
+        if (token) {
+          console.log('[Feedspace] Falling back to token lookup for', pid);
+          const tres = await fetch(`${apiUrl}/api/widget/verify-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const tdata = await tres.json();
+          console.log('[Feedspace] Token lookup result:', { token, status: tres.status, response: tdata });
+          if (tres.ok && tdata.valid && tdata.siteName) {
+            this.projectNameCache[pid] = tdata.siteName;
+            for (const a of this.annotations) {
+              if (a.projectId === pid && !a.projectName) a.projectName = tdata.siteName;
+            }
+            console.log('[Feedspace] Set projectName from token fallback:', pid, '->', tdata.siteName);
+            continue;
+          }
+        }
+        console.log('[Feedspace] No name found for project', pid, '- using fallback');
       } catch (e) { /* ignore fetch errors */ }
     }
   }

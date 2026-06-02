@@ -2477,13 +2477,13 @@
           if (this.projectNameCache[a.projectId]) {
             a.projectName = this.projectNameCache[a.projectId];
           } else {
-            missing.push(a.projectId);
+            missing.push({ pid: a.projectId, token: a.previewToken || "" });
           }
         }
       }
       if (missing.length === 0) return;
       const apiUrl = this.config.apiUrl.replace(/\/+$/, "");
-      for (const pid of missing) {
+      for (const { pid, token } of missing) {
         try {
           const res = await fetch(`${apiUrl}/api/widget/verify-token`, {
             method: "POST",
@@ -2497,10 +2497,27 @@
             for (const a of this.annotations) {
               if (a.projectId === pid && !a.projectName) a.projectName = data.name;
             }
-            console.log("[Feedspace] Set projectName for", pid, "->", data.name);
-          } else {
-            console.log("[Feedspace] No name found for project", pid, "- using fallback");
+            continue;
           }
+          if (token) {
+            console.log("[Feedspace] Falling back to token lookup for", pid);
+            const tres = await fetch(`${apiUrl}/api/widget/verify-token`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token })
+            });
+            const tdata = await tres.json();
+            console.log("[Feedspace] Token lookup result:", { token, status: tres.status, response: tdata });
+            if (tres.ok && tdata.valid && tdata.siteName) {
+              this.projectNameCache[pid] = tdata.siteName;
+              for (const a of this.annotations) {
+                if (a.projectId === pid && !a.projectName) a.projectName = tdata.siteName;
+              }
+              console.log("[Feedspace] Set projectName from token fallback:", pid, "->", tdata.siteName);
+              continue;
+            }
+          }
+          console.log("[Feedspace] No name found for project", pid, "- using fallback");
         } catch (e) {
         }
       }
