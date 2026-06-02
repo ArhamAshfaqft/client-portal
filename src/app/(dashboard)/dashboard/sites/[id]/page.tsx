@@ -298,6 +298,14 @@ export default function SiteDetailPage() {
             <p className="text-sm text-muted-foreground">{site.url}</p>
           </div>
         </div>
+        <button
+          onClick={() => { navigator.clipboard.writeText(site.id); alert('Site token copied!'); }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          title="Copy site token for Feedspace Connector plugin"
+        >
+          <Copy className="w-3.5 h-3.5" />
+          Copy Token
+        </button>
       </div>
 
       <div className="flex items-center justify-between">
