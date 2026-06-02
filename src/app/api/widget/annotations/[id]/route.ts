@@ -97,7 +97,7 @@ export async function PATCH(
       }
     }
 
-    const supabase = anonClient();
+    const supabase = adminClient();
 
     // Try looking up by mirror_id first (WP annotation_id) if direct id fails
     let lookupId = id;
@@ -184,7 +184,7 @@ export async function DELETE(
     }
   }
 
-  const supabase = anonClient();
+  const supabase = adminClient();
   const { error } = await supabase
     .from("feedback_items")
     .delete()

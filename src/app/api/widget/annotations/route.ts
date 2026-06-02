@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
+function adminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -239,7 +246,8 @@ export async function POST(request: Request) {
       const siteName = siteResult.data?.name || "WordPress Site";
       const siteId = siteResult.data?.id || null;
 
-      void supabase.from("notifications").insert({
+      const admin = adminClient();
+      void admin.from("notifications").insert({
         agency_id: siteAgencyId,
         type: "new_feedback",
         title: `New feedback on ${siteName}`,

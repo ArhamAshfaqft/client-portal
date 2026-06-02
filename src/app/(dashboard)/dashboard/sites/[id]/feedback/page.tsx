@@ -89,7 +89,16 @@ function getViewportLabel(width?: number | null, height?: number | null) {
 }
 
 function timeAgo(dateStr: string): string {
-  const date = new Date(dateStr);
+  // Supabase TIMESTAMPTZ may return without 'Z' suffix; treat as UTC
+  let normalized = dateStr;
+  if (normalized && !normalized.endsWith("Z") && !normalized.includes("+") && !normalized.includes("T")) {
+    // Format like "2026-06-02 17:06:00" → "2026-06-02T17:06:00Z"
+    normalized = normalized.replace(" ", "T") + "Z";
+  } else if (normalized && !normalized.endsWith("Z") && !normalized.includes("+") && !/\d{2}:\d{2}$/.test(normalized.slice(-5))) {
+    // Has T but no timezone: "2026-06-02T17:06:00" → append Z
+    if (!normalized.match(/[+-]\d{2}:\d{2}$/)) normalized += "Z";
+  }
+  const date = new Date(normalized);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   if (isNaN(diff) || diff < 0) return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
