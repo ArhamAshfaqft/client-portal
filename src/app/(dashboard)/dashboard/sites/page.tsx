@@ -370,13 +370,19 @@ export default function SitesPage() {
                                     setMenuOpen(null);
                                     const newUrl = prompt('Enter new WordPress URL (e.g. https://yoursite.com):', 'https://');
                                     if (newUrl && newUrl !== 'https://') {
+                                      const apiKey = (site as any).wp_api_key || '';
+                                      console.log('[Feedspace] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
                                       fetch('/api/widget/wp-webhook', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: site.wp_api_key || '' }),
+                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: apiKey }),
                                       }).then(r => r.json()).then(d => {
-                                        alert(d.ok ? 'URL updated!' : 'Failed: ' + (d.error || d.body));
-                                      }).catch(() => alert('Failed to update URL'));
+                                        if (d.ok) {
+                                          alert('URL updated to ' + newUrl);
+                                        } else {
+                                          alert('Failed: ' + JSON.stringify(d));
+                                        }
+                                      }).catch(e => alert('Error: ' + e.message));
                                     }
                                   }}
                                   className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
