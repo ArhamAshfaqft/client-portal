@@ -39,6 +39,7 @@ class FeedspaceConnector
         add_filter('cron_schedules', array($this, 'addCronInterval'));
         add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
         add_action('admin_bar_menu', array($this, 'addAdminBarNode'), 999);
+        add_action('elementor/preview/enqueue_scripts', array($this, 'loadInElementorPreview'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
@@ -98,6 +99,34 @@ class FeedspaceConnector
         $this->enqueueWidgetAssets($config, $token);
     }
 
+    public function loadInElementorPreview()
+    {
+        if (!defined('ELEMENTOR_VERSION')) return;
+        $postId = isset($_GET['elementor-preview']) ? (int) $_GET['elementor-preview'] : 0;
+        if (!$postId) return;
+
+        $config = $this->getWidgetConfigForEditor($postId);
+        if (!$config) return;
+
+        $this->enqueueWidgetAssets($config, '', $permalink);
+    }
+
+    private function getWidgetConfigForEditor($postId)
+    {
+        $apiUrl = get_option('feedspace_api_url', '');
+        if (empty($apiUrl)) return null;
+
+        $permalink = get_permalink($postId);
+        if (!$permalink) return null;
+
+        return array(
+            'valid' => true,
+            'projectId' => (string) $postId,
+            'primaryColor' => '#6366f1',
+            'siteName' => get_bloginfo('name'),
+        );
+    }
+
     private function verifyPreviewToken($token)
     {
         $transientKey = 'feedspace_preview_' . md5($token);
@@ -142,7 +171,7 @@ class FeedspaceConnector
         return false;
     }
 
-    private function enqueueWidgetAssets($config, $token)
+    private function enqueueWidgetAssets($config, $token, $overridePageUrl = null)
     {
         $widgetPath = plugin_dir_path(__FILE__) . 'widget/feedspace-widget.js';
         $rootPath = plugin_dir_path(__FILE__) . 'feedspace-widget.js';
@@ -165,7 +194,7 @@ class FeedspaceConnector
         $apiBaseUrl = get_option('feedspace_api_url', '');
         $wpApiUrl = get_bloginfo('url');
         $wpApiKey = get_option('feedspace_api_key');
-        $pageUrl = remove_query_arg('feedspace_preview', home_url(add_query_arg(null, null)));
+        $pageUrl = $overridePageUrl ?: remove_query_arg('feedspace_preview', home_url(add_query_arg(null, null)));
         $isDebug = get_option('feedspace_debug_enabled') === '1';
 
         $configJSON = json_encode(array(
