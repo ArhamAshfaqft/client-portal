@@ -247,7 +247,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      mapFeedbackItem(feedbackItem, mediaRecords),
+      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia },
       { status: 201, headers: corsHeaders() }
     );
   } catch (err: any) {
