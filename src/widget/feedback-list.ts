@@ -141,7 +141,6 @@ export class FeedbackListPanel {
     this.callbacks = callbacks;
     this.onClose = onClose;
     if (siteName) this.siteName = siteName;
-    console.log('[Feedspace DEBUG] FeedbackListPanel.open: siteName=' + siteName + ' annotations count=' + annotations.length + ' first few projectNames=' + JSON.stringify(annotations.slice(0, 3).map(a => ({ id: a.id, projectName: a.projectName }))));
     try { const v = localStorage.getItem('fs_project_filter'); if (v) this.currentProjectFilter = v; } catch(e) {}
     this.render();
   }

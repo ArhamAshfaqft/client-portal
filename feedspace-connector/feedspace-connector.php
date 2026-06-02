@@ -1185,15 +1185,67 @@ class FeedspaceConnector
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions
         error_log('[Feedspace] getAnnotations: found ' . count($results) . ' results');
 
+        // Backfill project names from Vercel for annotations that lack projectName in meta_data
+        $projectNameMap = array();
+        $lookupProjectIds = array();
+        foreach ($results as $row) {
+            $pid = $row->project_id;
+            if (empty($pid)) continue;
+            $annMeta = $row->meta_data ? json_decode($row->meta_data, true) : null;
+            if (!isset($annMeta['projectName']) || empty($annMeta['projectName'])) {
+                $lookupProjectIds[$pid] = $pid;
+            }
+        }
+        if (!empty($lookupProjectIds)) {
+            $cachedMap = get_transient('feedspace_project_names');
+            if (!is_array($cachedMap)) $cachedMap = array();
+            $needFetch = array();
+            foreach ($lookupProjectIds as $pid) {
+                if (!isset($cachedMap[$pid])) $needFetch[] = $pid;
+            }
+            if (!empty($needFetch)) {
+                $apiUrl = get_option('feedspace_api_url', '');
+                $siteToken = get_option('feedspace_site_token', '');
+                $wpApiKey = get_option('feedspace_api_key', '');
+                foreach ($needFetch as $fetchPid) {
+                    if (!empty($apiUrl) && !empty($siteToken) && !empty($wpApiKey)) {
+                        $lookupUrl = rtrim($apiUrl, '/') . '/api/projects/lookup?projectId=' . urlencode($fetchPid);
+                        $resp = wp_remote_get($lookupUrl, array(
+                            'headers' => array(
+                                'Content-Type' => 'application/json',
+                                'X-Site-Token' => $siteToken,
+                                'X-WP-API-Key' => $wpApiKey,
+                            ),
+                            'timeout' => 5,
+                        ));
+                        if (!is_wp_error($resp)) {
+                            $body = json_decode(wp_remote_retrieve_body($resp), true);
+                            if ($body && !empty($body['name'])) {
+                                $cachedMap[$fetchPid] = $body['name'];
+                            }
+                        }
+                    }
+                }
+                set_transient('feedspace_project_names', $cachedMap, DAY_IN_SECONDS);
+            }
+            $projectNameMap = $cachedMap;
+        }
+
         $annotations = array();
         foreach ($results as $row) {
             $annMeta = $row->meta_data ? json_decode($row->meta_data, true) : null;
+            if (is_null($annMeta)) $annMeta = array();
             $annAtts = $annMeta['attachments'] ?? array();
+            // Use cached project name if annotation doesn't have one
+            if (empty($annMeta['projectName']) && !empty($row->project_id) && isset($projectNameMap[$row->project_id])) {
+                $annMeta['projectName'] = $projectNameMap[$row->project_id];
+            }
             self::logDebug('get_ann_item', array(
                 'id' => $row->annotation_id,
                 'created_at_raw' => $row->created_at,
                 'meta_data_exists' => $row->meta_data ? 'yes' : 'no',
                 'attachments_count' => count($annAtts),
+                'projectName' => $annMeta['projectName'] ?? '',
             ));
             $annotations[] = array(
                 'id' => $row->annotation_id,

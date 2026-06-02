@@ -20,7 +20,6 @@ function initWidget(config: WidgetConfig): AnnotationEngine {
   }
 
   dbg('initWidget() called with config', { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey, siteName: config.siteName });
-  console.log('[Feedspace DEBUG] siteName from config:', config.siteName);
 
   injectStyles();
   dbg('Styles injected');

@@ -364,7 +364,6 @@ export class AnnotationEngine {
     firstPoint: { x: number; y: number },
     _points: Array<{ x: number; y: number }>
   ): Promise<void> {
-    console.log('[Feedspace DEBUG] Creating annotation, this.config.siteName:', this.config.siteName);
     const metaData: Record<string, unknown> = {
       device: this.deviceMode,
       elementTag: startDna.tag,
@@ -489,7 +488,6 @@ export class AnnotationEngine {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
-      console.log('[Feedspace DEBUG] Annotations loaded:', this.annotations.map(a => ({ id: a.id, projectId: a.projectId, projectName: a.projectName })));
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
     } catch (err) {
