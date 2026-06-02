@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +14,24 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { wpRestUrl, wpApiKey, action, data } = body;
+    const { wpRestUrl, wpApiKey, action, data, _updateUrl } = body;
+
+    // Special action: update the site's WP URL in Supabase
+    if (_updateUrl) {
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { cookies: { getAll: () => [], setAll: () => {} } }
+      );
+      const { error } = await supabase
+        .from("sites")
+        .update({ wp_api_url: _updateUrl, url: _updateUrl })
+        .eq("wp_api_key", wpApiKey);
+      if (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500, headers: corsHeaders });
+      }
+      return NextResponse.json({ ok: true, message: "Site URL updated to " + _updateUrl }, { headers: corsHeaders });
+    }
 
     if (!wpRestUrl || !wpApiKey || !action) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
