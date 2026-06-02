@@ -91,6 +91,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const mirrorSecret = request.headers.get("X-Mirror-Secret");
+    const isMirror = mirrorSecret && mirrorSecret === process.env.MIRROR_SECRET;
+
     const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;
@@ -112,42 +115,43 @@ export async function POST(request: Request) {
       { cookies: { getAll: () => [], setAll: () => {} } }
     );
 
-    if (previewToken) {
-      const { data: link } = await supabase
-        .from("preview_links")
-        .select("project_id")
-        .eq("token", previewToken)
-        .eq("project_id", projectId)
-        .single();
-
-      if (!link) {
-        return NextResponse.json(
-          { error: "Invalid preview token" },
-          { status: 403, headers: corsHeaders() }
-        );
-      }
-    } else {
-      // Check projects table first, then preview_links (for re-push of annotations
-      // that were validated via preview token during original submission)
-      const { data: project } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("id", projectId)
-        .maybeSingle();
-
-      if (!project) {
+    // Mirror sync from WP plugin is pre-validated — skip Supabase auth check
+    if (!isMirror) {
+      if (previewToken) {
         const { data: link } = await supabase
           .from("preview_links")
           .select("project_id")
+          .eq("token", previewToken)
           .eq("project_id", projectId)
-          .limit(1)
-          .maybeSingle();
+          .single();
 
         if (!link) {
           return NextResponse.json(
-            { error: "Invalid project ID" },
+            { error: "Invalid preview token" },
             { status: 403, headers: corsHeaders() }
           );
+        }
+      } else {
+        const { data: project } = await supabase
+          .from("projects")
+          .select("id")
+          .eq("id", projectId)
+          .maybeSingle();
+
+        if (!project) {
+          const { data: link } = await supabase
+            .from("preview_links")
+            .select("project_id")
+            .eq("project_id", projectId)
+            .limit(1)
+            .maybeSingle();
+
+          if (!link) {
+            return NextResponse.json(
+              { error: "Invalid project ID" },
+              { status: 403, headers: corsHeaders() }
+            );
+          }
         }
       }
     }

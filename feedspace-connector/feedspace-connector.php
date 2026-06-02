@@ -350,8 +350,12 @@ class FeedspaceConnector
             $payload = json_decode($item->payload, true);
             $payload['id'] = $item->annotation_id;
 
+            $wpApiKey = get_option('feedspace_api_key', '');
             $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
-                'headers' => array('Content-Type' => 'application/json'),
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'X-Mirror-Secret' => $wpApiKey,
+                ),
                 'body' => json_encode($payload),
                 'timeout' => 15,
             ));
@@ -1245,7 +1249,14 @@ class FeedspaceConnector
                                 <input type="url" name="feedspace_api_url"
                                     value="<?php echo esc_attr(get_option('feedspace_api_url', '')); ?>"
                                 class="regular-text" />
-                                <p class="description">Your Feedspace app URL (e.g. https://your-app.vercel.app). Required for preview links to work.</p>
+                                <p class="description">Your Feedspace app URL (e.g. https://your-app.vercel.app). Required for preview links and mirror sync.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Mirror Secret</th>
+                            <td>
+                                <code style="font-size:13px;word-break:break-all;"><?php echo esc_html(get_option('feedspace_api_key')); ?></code>
+                                <p class="description">Add this as <code>MIRROR_SECRET</code> environment variable in your Vercel project settings so the mirror sync can authenticate without a preview token. <a href="https://vercel.com/docs/projects/environment-variables" target="_blank">How to add env vars</a></p>
                             </td>
                         </tr>
                         <tr>
