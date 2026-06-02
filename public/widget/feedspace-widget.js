@@ -2437,7 +2437,9 @@
     }
     async changeAnnotationStatus(id, status) {
       try {
+        console.log("[Feedspace] changeAnnotationStatus:", { id, status });
         const updated = await this.api.updateAnnotation(id, { status });
+        console.log("[Feedspace] changeAnnotationStatus response:", updated);
         const idx = this.annotations.findIndex((a) => a.id === id);
         if (idx >= 0) {
           this.annotations[idx] = { ...this.annotations[idx], ...updated, status };

@@ -1322,9 +1322,12 @@ class FeedspaceConnector
             ));
             if (is_wp_error($mirrorResp)) {
                 self::logDebug('update_mirror_error', array('id' => $id, 'error' => $mirrorResp->get_error_message()));
+                update_option('feedspace_last_mirror_status_update', 'Error: ' . $mirrorResp->get_error_message());
             } else {
                 $mirrorCode = wp_remote_retrieve_response_code($mirrorResp);
-                self::logDebug('update_mirror_result', array('id' => $id, 'status' => $mirrorCode));
+                $mirrorBody = wp_remote_retrieve_body($mirrorResp);
+                self::logDebug('update_mirror_result', array('id' => $id, 'status' => $mirrorCode, 'body' => mb_substr($mirrorBody, 0, 200)));
+                update_option('feedspace_last_mirror_status_update', $mirrorCode . ': ' . mb_substr($mirrorBody, 0, 200));
             }
         }
 
