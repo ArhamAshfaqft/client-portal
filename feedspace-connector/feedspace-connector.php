@@ -38,6 +38,8 @@ class FeedspaceConnector
         add_action('plugins_loaded', array($this, 'ensureTables'));
         add_filter('cron_schedules', array($this, 'addCronInterval'));
         add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
+        add_action('admin_bar_menu', array($this, 'addAdminBarNode'), 999);
+        add_action('wp_ajax_feedspace_dev_config', array($this, 'ajaxDevConfig'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
@@ -62,6 +64,12 @@ class FeedspaceConnector
 
     public function maybeInitPreview()
     {
+        // Dev mode: load widget on any page without preview token
+        if (isset($_GET['feedspace_dev']) && get_option('feedspace_dev_mode') === '1') {
+            $this->initDevMode();
+            return;
+        }
+
         $token = isset($_GET['feedspace_preview']) ? sanitize_text_field($_GET['feedspace_preview']) : '';
         
         // Fallback to cookie if query param is not set
@@ -95,6 +103,23 @@ class FeedspaceConnector
         }
 
         $this->enqueueWidgetAssets($config, $token);
+    }
+
+    private function initDevMode()
+    {
+        $projectId = get_option('feedspace_dev_project_id', '');
+        if (empty($projectId)) {
+            global $wpdb;
+            $row = $wpdb->get_row("SELECT project_id FROM {$wpdb->prefix}feedspace_annotations LIMIT 1");
+            $projectId = $row ? $row->project_id : 'dev';
+        }
+        $config = array(
+            'valid' => true,
+            'projectId' => $projectId,
+            'primaryColor' => '#6366f1',
+            'siteName' => get_bloginfo('name') . ' (Dev)',
+        );
+        $this->enqueueWidgetAssets($config, '');
     }
 
     private function verifyPreviewToken($token)
@@ -285,6 +310,39 @@ class FeedspaceConnector
         })();
         </script>
         <?php
+    }
+
+    public function addAdminBarNode($wp_admin_bar)
+    {
+        if (!is_admin() && get_option('feedspace_dev_mode') === '1') {
+            $wp_admin_bar->add_node(array(
+                'id' => 'feedspace-dev',
+                'title' => '<span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Feedspace</span>',
+                'href' => add_query_arg('feedspace_dev', '1'),
+                'meta' => array('title' => 'Open Feedspace widget on this page'),
+            ));
+        }
+    }
+
+    public function ajaxDevConfig()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        $projectId = get_option('feedspace_dev_project_id', '');
+        if (empty($projectId)) {
+            global $wpdb;
+            $row = $wpdb->get_row("SELECT project_id FROM {$wpdb->prefix}feedspace_annotations LIMIT 1");
+            $projectId = $row ? $row->project_id : 'dev';
+        }
+        wp_send_json(array(
+            'projectId' => $projectId,
+            'primaryColor' => '#6366f1',
+            'siteName' => get_bloginfo('name'),
+            'wpApiUrl' => get_bloginfo('url'),
+            'wpApiKey' => get_option('feedspace_api_key'),
+            'pageUrl' => esc_url_raw($_POST['pageUrl'] ?? ''),
+        ));
     }
 
     public function activate()
@@ -1042,6 +1100,8 @@ class FeedspaceConnector
             'sanitize_callback' => 'esc_url_raw',
         ));
         register_setting('feedspace_settings', 'feedspace_debug_enabled');
+        register_setting('feedspace_settings', 'feedspace_dev_mode');
+        register_setting('feedspace_settings', 'feedspace_dev_project_id');
     }
 
     public function addAdminMenu()
@@ -1245,6 +1305,26 @@ class FeedspaceConnector
                                     Show debug overlay on preview pages
                                 </label>
                                 <p class="description">Adds a floating debug panel to help diagnose widget issues.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Dev Mode</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="feedspace_dev_mode" value="1"
+                                        <?php checked(get_option('feedspace_dev_mode'), '1'); ?> />
+                                    Enable admin bar button to open widget on any page
+                                </label>
+                                <p class="description">Adds a "Feedspace" button in the WordPress admin bar (frontend only). Click it to load the widget on the current page without a preview link.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Dev Project ID</th>
+                            <td>
+                                <input type="text" name="feedspace_dev_project_id"
+                                    value="<?php echo esc_attr(get_option('feedspace_dev_project_id', '')); ?>"
+                                    placeholder="Auto-detect from first annotation" style="width:300px;" />
+                                <p class="description">Project ID to use in dev mode. Leave empty to auto-detect from existing annotations.</p>
                             </td>
                         </tr>
                     </table>
