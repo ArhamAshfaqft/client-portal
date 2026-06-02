@@ -446,6 +446,10 @@ class FeedspaceConnector
                 'response_media_count' => isset($bodyParsed['media']) ? count($bodyParsed['media']) : '?',
                 'body_truncated' => mb_substr($body, 0, 300),
             ));
+            // Store mirror debug info for visibility in settings
+            if (isset($bodyParsed['_debug'])) {
+                update_option('feedspace_last_mirror_debug', wp_json_encode($bodyParsed['_debug']));
+            }
             if ($code >= 200 && $code < 300) {
                 $wpdb->update($table, array('status' => 'done', 'updated_at' => current_time('mysql')), array('id' => $item->id));
                 self::logDebug('queue_done', array('annotation_id' => $item->annotation_id, 'code' => $code));
@@ -1465,6 +1469,10 @@ class FeedspaceConnector
                             echo ' <span style="font-size:11px;color:#6b7280;">' . esc_html($lastTime) . '</span>';
                             if ($lastBody) {
                                 echo '<br><span style="font-size:11px;color:#6b7280;">Response: ' . esc_html(substr($lastBody, 0, 200)) . '</span>';
+                            }
+                            $lastDebug = get_option('feedspace_last_mirror_debug', '');
+                            if ($lastDebug) {
+                                echo '<br><span style="font-size:11px;color:#6366f1;">Debug: ' . esc_html($lastDebug) . '</span>';
                             }
                         } else {
                             echo 'No mirror attempts yet. Submit a pin on a preview page to trigger one.';
