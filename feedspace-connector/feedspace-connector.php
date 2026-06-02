@@ -362,12 +362,13 @@ class FeedspaceConnector
             }
 
             $code = (int) wp_remote_retrieve_response_code($result);
+            $body = wp_remote_retrieve_body($result);
+            self::logDebug('queue_response', array('annotation_id' => $item->annotation_id, 'code' => $code, 'body' => mb_substr($body, 0, 200)));
             if ($code >= 200 && $code < 300) {
                 $wpdb->update($table, array('status' => 'done', 'updated_at' => current_time('mysql')), array('id' => $item->id));
                 self::logDebug('queue_done', array('annotation_id' => $item->annotation_id, 'code' => $code));
                 $processed++;
             } else {
-                $body = wp_remote_retrieve_body($result);
                 self::handleSyncFailure($item->id, "HTTP $code: $body", $item->attempts, $item->max_attempts);
             }
         }
@@ -867,8 +868,6 @@ class FeedspaceConnector
             $mirrorBody = $body;
             $mirrorBody['id'] = $annotationId;
             $mirrorBody['createdAt'] = $now;
-            // Remove previewToken for queue — will be re-validated via preview_links
-            unset($mirrorBody['previewToken']);
 
             self::enqueueSync($annotationId, $mirrorBody, 'mirror');
             self::logDebug('mirror_enqueued', array('annotation_id' => $annotationId, 'projectId' => $mirrorBody['projectId'] ?? ''));
