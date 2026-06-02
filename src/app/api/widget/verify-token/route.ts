@@ -14,13 +14,30 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { token, projectId } = body;
+    const { token, projectId, _updateUrl, _siteId, _wpApiKey } = body;
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { cookies: { getAll: () => [], setAll: () => {} } }
     );
+
+    // Special action: update the site's WP URL from the dashboard
+    if (_updateUrl) {
+      let query = supabase.from("sites").update({ wp_api_url: _updateUrl, url: _updateUrl });
+      if (_siteId) {
+        query = query.eq("id", _siteId);
+      } else if (_wpApiKey) {
+        query = query.eq("wp_api_key", _wpApiKey);
+      } else {
+        return NextResponse.json({ error: "Missing _siteId or _wpApiKey" }, { status: 400, headers: corsHeaders });
+      }
+      const { error } = await query;
+      if (error) {
+        return NextResponse.json({ ok: false, error: error.message }, { status: 500, headers: corsHeaders });
+      }
+      return NextResponse.json({ ok: true, message: "Site URL updated to " + _updateUrl }, { headers: corsHeaders });
+    }
 
     // If projectId is provided directly, just look up the project name
     if (projectId) {

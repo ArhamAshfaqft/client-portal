@@ -372,10 +372,10 @@ export default function SitesPage() {
                                     if (newUrl && newUrl !== 'https://') {
                                       const apiKey = (site as any).wp_api_key || '';
                                       console.log('[Feedspace] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
-                                      fetch('/api/widget/wp-webhook', {
+                                      fetch('/api/widget/verify-token', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: apiKey, siteId: site.id }),
+                                        body: JSON.stringify({ _updateUrl: newUrl, _siteId: site.id, _wpApiKey: apiKey }),
                                       }).then(r => r.json()).then(d => {
                                         if (d.ok) {
                                           alert('URL updated to ' + newUrl);
