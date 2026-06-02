@@ -488,11 +488,45 @@ export class AnnotationEngine {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
+      await this.backfillProjectNames();
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
     } catch (err) {
       console.error('Failed to load annotations', err);
       dbg('loadAnnotations: FAILED', String(err));
+    }
+  }
+
+  private projectNameCache: Record<string, string> = {};
+
+  private async backfillProjectNames(): Promise<void> {
+    const seen = new Set<string>();
+    const missing: string[] = [];
+    for (const a of this.annotations) {
+      if (a.projectId && !a.projectName && !seen.has(a.projectId)) {
+        seen.add(a.projectId);
+        if (this.projectNameCache[a.projectId]) {
+          a.projectName = this.projectNameCache[a.projectId];
+        } else {
+          missing.push(a.projectId);
+        }
+      }
+    }
+    if (missing.length === 0) return;
+    const apiUrl = this.config.apiUrl.replace(/\/+$/, '');
+    for (const pid of missing) {
+      try {
+        const res = await fetch(`${apiUrl}/api/projects/name?id=${encodeURIComponent(pid)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.name) {
+            this.projectNameCache[pid] = data.name;
+            for (const a of this.annotations) {
+              if (a.projectId === pid && !a.projectName) a.projectName = data.name;
+            }
+          }
+        }
+      } catch (e) { /* ignore fetch errors */ }
     }
   }
 
