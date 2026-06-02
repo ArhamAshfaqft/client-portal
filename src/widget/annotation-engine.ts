@@ -489,7 +489,7 @@ export class AnnotationEngine {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
-      console.log('[Feedspace DEBUG] Annotations loaded:', this.annotations.map(a => ({ id: a.id, projectId: a.projectId, projectName: (a as any).projectName })));
+      console.log('[Feedspace DEBUG] Annotations loaded:', this.annotations.map(a => ({ id: a.id, projectId: a.projectId, projectName: a.projectName })));
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
     } catch (err) {

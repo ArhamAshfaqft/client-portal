@@ -126,12 +126,14 @@ class FeedspaceConnector
             $projectId = 'elementor-' . $postId;
         }
         $siteName = get_bloginfo('name');
+        self::logDebug('getWidgetConfigForEditor', array('projectId' => $projectId, 'siteToken_exists' => !empty(get_option('feedspace_site_token', '')) ? 'yes' : 'no'));
         // Try to fetch the real project name from Vercel
         $apiUrl = get_option('feedspace_api_url', '');
         $siteToken = get_option('feedspace_site_token', '');
         $wpApiKey = get_option('feedspace_api_key', '');
         if (!empty($apiUrl) && !empty($siteToken) && !empty($wpApiKey) && !empty($projectId) && strpos($projectId, 'elementor-') !== 0) {
             $lookupUrl = rtrim($apiUrl, '/') . '/api/projects/lookup?projectId=' . urlencode($projectId);
+            self::logDebug('lookup_project_call', array('url' => $lookupUrl, 'siteToken' => $siteToken));
             $response = wp_remote_get($lookupUrl, array(
                 'headers' => array(
                     'Content-Type' => 'application/json',
@@ -141,11 +143,17 @@ class FeedspaceConnector
                 'timeout' => 5,
             ));
             if (!is_wp_error($response)) {
+                $code = wp_remote_retrieve_response_code($response);
                 $body = json_decode(wp_remote_retrieve_body($response), true);
+                self::logDebug('lookup_project_response', array('code' => $code, 'body' => $body));
                 if ($body && !empty($body['name'])) {
                     $siteName = $body['name'];
                 }
+            } else {
+                self::logDebug('lookup_project_error', array('error' => $response->get_error_message()));
             }
+        } else {
+            self::logDebug('lookup_project_skipped', array('apiUrl' => !empty($apiUrl) ? 'set' : 'empty', 'siteToken' => !empty($siteToken) ? 'set' : 'empty', 'wpApiKey' => !empty($wpApiKey) ? 'set' : 'empty', 'projectId' => $projectId));
         }
         return array(
             'valid' => true,
