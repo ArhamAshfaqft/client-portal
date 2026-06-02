@@ -12,6 +12,9 @@ import {
   Globe,
   User,
   Save,
+  Key,
+  Copy,
+  Check,
 } from "lucide-react";
 
 const DEMO_SETTINGS = {
@@ -29,6 +32,8 @@ export default function SettingsPage() {
   const { profile, refreshProfile, isDemo } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [agencyToken, setAgencyToken] = useState("");
+  const [tokenCopied, setTokenCopied] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -57,6 +62,7 @@ export default function SettingsPage() {
         .eq("id", profile.agency_id)
         .single();
       if (data) {
+        setAgencyToken(data.agency_token || "");
         setFormData({
           fullName: profile?.full_name || "",
           primaryColor: data.primary_color,
@@ -68,6 +74,15 @@ export default function SettingsPage() {
     } catch {
       // keep defaults
     }
+  };
+
+  const handleCopyToken = async () => {
+    if (!agencyToken) return;
+    try {
+      await navigator.clipboard.writeText(agencyToken);
+      setTokenCopied(true);
+      setTimeout(() => setTokenCopied(false), 3000);
+    } catch {}
   };
 
   const handleSave = async () => {
@@ -262,6 +277,49 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Key className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <h3 className="font-semibold text-foreground">
+                Auto-Connect
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Use this token in your Feedspace WP plugin to auto-register sites
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {agencyToken ? (
+            <div className="flex items-center gap-2">
+              <code className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-muted font-mono break-all">
+                {agencyToken}
+              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyToken}
+              >
+                {tokenCopied ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Creating agency token...
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Paste this token into any WP site's Feedspace settings to auto-connect without manual site creation or token copying.
+          </p>
         </CardContent>
       </Card>
 

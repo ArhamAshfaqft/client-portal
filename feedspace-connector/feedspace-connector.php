@@ -1061,13 +1061,16 @@ class FeedspaceConnector
         register_setting('feedspace_settings', 'feedspace_api_url', array(
             'sanitize_callback' => 'esc_url_raw',
         ));
-        register_setting('feedspace_settings', 'feedspace_debug_enabled');
         register_setting('feedspace_settings', 'feedspace_dashboard_url', array(
             'sanitize_callback' => 'esc_url_raw',
+        ));
+        register_setting('feedspace_settings', 'feedspace_agency_token', array(
+            'sanitize_callback' => 'sanitize_text_field',
         ));
         register_setting('feedspace_settings', 'feedspace_site_token', array(
             'sanitize_callback' => 'sanitize_text_field',
         ));
+        register_setting('feedspace_settings', 'feedspace_debug_enabled');
     }
 
     public function addAdminMenu()
@@ -1252,30 +1255,21 @@ class FeedspaceConnector
                     <?php settings_fields('feedspace_settings'); ?>
                     <table class="form-table">
                         <tr>
-                            <th>Feedspace API URL</th>
-                            <td>
-                                <input type="url" name="feedspace_api_url"
-                                    value="<?php echo esc_attr(get_option('feedspace_api_url', '')); ?>"
-                                class="regular-text" />
-                                <p class="description">Your Vercel app URL (e.g. https://your-app.vercel.app). Required for preview link verification (fallback).</p>
-                            </td>
-                        </tr>
-                        <tr>
                             <th>Dashboard URL</th>
                             <td>
                                 <input type="url" name="feedspace_dashboard_url"
                                     value="<?php echo esc_attr(get_option('feedspace_dashboard_url', '')); ?>"
-                                class="regular-text" placeholder="https://your-app.vercel.app" />
-                                <p class="description">Your Feedspace dashboard URL. Used for mirror sync.</p>
+                                class="regular-text" placeholder="https://your-app.vercel.app" required />
+                                <p class="description">Your Feedspace dashboard URL. Used for all API calls and mirror sync.</p>
                             </td>
                         </tr>
                         <tr>
-                            <th>Site Token</th>
+                            <th>Agency Token</th>
                             <td>
-                                <input type="text" name="feedspace_site_token"
-                                    value="<?php echo esc_attr(get_option('feedspace_site_token', '')); ?>"
-                                class="regular-text" placeholder="Paste site token from dashboard" />
-                                <p class="description">Found in your Feedspace dashboard → Sites → your site → Copy Token. <button type="button" class="button button-small" onclick="connectSite()">Test Connection</button> <span id="feedspace-connect-result" style="color:#6b7280;font-size:12px;"></span></p>
+                                <input type="text" name="feedspace_agency_token"
+                                    value="<?php echo esc_attr(get_option('feedspace_agency_token', '')); ?>"
+                                class="regular-text" placeholder="Paste agency token from dashboard Settings" />
+                                <p class="description">Found in your Feedspace dashboard → Settings → Auto-Connect section. <button type="button" class="button button-small" onclick="autoConnect()">Auto-Connect</button> <span id="feedspace-connect-result" style="color:#6b7280;font-size:12px;"></span></p>
                             </td>
                         </tr>
                         <tr>
@@ -1515,8 +1509,8 @@ class FeedspaceConnector
                 });
             }
 
-            function connectSite() {
-                var btn = document.querySelector('[onclick="connectSite()"]');
+            function autoConnect() {
+                var btn = document.querySelector('[onclick="autoConnect()"]');
                 var result = document.getElementById('feedspace-connect-result');
                 if (btn) btn.disabled = true;
                 result.textContent = 'Connecting...';
@@ -1656,46 +1650,25 @@ add_action('wp_ajax_feedspace_connect_site', function () {
         wp_die('Unauthorized');
     }
     $dashboardUrl = untrailingslashit(get_option('feedspace_dashboard_url', ''));
-    $siteToken = get_option('feedspace_site_token', '');
+    $agencyToken = get_option('feedspace_agency_token', '');
     $apiKey = get_option('feedspace_api_key', '');
-    $wpUrl = get_bloginfo('url');
+    $siteName = get_bloginfo('name');
+    $siteUrl = get_bloginfo('url');
 
-    if (!$dashboardUrl || !$siteToken || !$apiKey) {
-        wp_send_json_error(array('error' => 'Dashboard URL, Site Token, and API Key are required.'));
+    if (!$dashboardUrl || !$agencyToken || !$apiKey) {
+        wp_send_json_error(array('error' => 'Dashboard URL, Agency Token, and API Key are required.'));
         return;
     }
 
-    $requestUrl = $dashboardUrl . '/api/connect-site';
-
-    // Phase 1: test POST endpoint works at all
-    FeedspaceConnector::logDebug('connect_phase1_test', array('url' => $requestUrl));
-    $testResponse = wp_remote_post($requestUrl, array(
-        'headers' => array('Content-Type' => 'application/json'),
-        'body' => json_encode(array('_test' => true)),
-        'timeout' => 15,
-    ));
-    if (is_wp_error($testResponse)) {
-        FeedspaceConnector::logDebug('connect_phase1_error', array('error' => $testResponse->get_error_message()));
-        wp_send_json_error(array('error' => 'POST test failed: ' . $testResponse->get_error_message()));
-        return;
-    }
-    $testCode = wp_remote_retrieve_response_code($testResponse);
-    $testBody = wp_remote_retrieve_body($testResponse);
-    FeedspaceConnector::logDebug('connect_phase1_response', array('code' => $testCode, 'body' => $testBody));
-    $testJson = json_decode($testBody, true);
-    if (!$testJson || !isset($testJson['ok']) || $testJson['ok'] !== true) {
-        wp_send_json_error(array('error' => "POST endpoint test failed (HTTP $testCode): " . substr($testBody, 0, 200)));
-        return;
-    }
-
-    // Phase 2: actual connection
+    $requestUrl = $dashboardUrl . '/api/auto-register';
     $requestBody = json_encode(array(
-        'token' => $siteToken,
+        'agencyToken' => $agencyToken,
+        'siteName' => $siteName,
+        'siteUrl' => $siteUrl,
         'apiKey' => $apiKey,
-        'wpUrl' => $wpUrl,
     ));
 
-    FeedspaceConnector::logDebug('connect_phase2_request', array(
+    FeedspaceConnector::logDebug('auto_register_request', array(
         'url' => $requestUrl,
         'body' => $requestBody,
     ));
@@ -1707,7 +1680,7 @@ add_action('wp_ajax_feedspace_connect_site', function () {
     ));
 
     if (is_wp_error($response)) {
-        FeedspaceConnector::logDebug('connect_phase2_error', array('error' => $response->get_error_message()));
+        FeedspaceConnector::logDebug('auto_register_error', array('error' => $response->get_error_message()));
         wp_send_json_error(array('error' => $response->get_error_message()));
         return;
     }
@@ -1715,7 +1688,7 @@ add_action('wp_ajax_feedspace_connect_site', function () {
     $code = wp_remote_retrieve_response_code($response);
     $respBody = wp_remote_retrieve_body($response);
 
-    FeedspaceConnector::logDebug('connect_phase2_response', array(
+    FeedspaceConnector::logDebug('auto_register_response', array(
         'code' => $code,
         'body' => $respBody,
     ));
@@ -1723,8 +1696,10 @@ add_action('wp_ajax_feedspace_connect_site', function () {
     $body = json_decode($respBody, true);
 
     if ($code >= 200 && $code < 300 && !empty($body['connected'])) {
+        update_option('feedspace_site_token', $body['siteId']);
         update_option('feedspace_site_connected', true);
-        FeedspaceConnector::logDebug('connect_phase2_success', array('site_id' => $body['siteId']));
+        update_option('feedspace_api_url', $dashboardUrl);
+        FeedspaceConnector::logDebug('auto_register_success', array('site_id' => $body['siteId']));
         wp_send_json_success(array('site_id' => $body['siteId']));
     } else {
         wp_send_json_error(array('error' => $body['error'] ?? ($body['message'] ?? "HTTP $code")));
