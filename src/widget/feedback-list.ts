@@ -119,7 +119,6 @@ export class FeedbackListPanel {
   private currentDeviceFilter: string = 'all';
   private currentSort: 'newest' | 'oldest' = 'newest';
   private currentProjectFilter: string = '';
-  private defaultProjectFilter: string = '';
   private onClose: (() => void) | null = null;
   private siteName: string = '';
 
@@ -142,7 +141,7 @@ export class FeedbackListPanel {
     this.callbacks = callbacks;
     this.onClose = onClose;
     if (siteName) this.siteName = siteName;
-    try { const v = localStorage.getItem('fs_project_filter'); if (v) { this.currentProjectFilter = v; } else if (defaultProjectId && !this.defaultProjectFilter) { this.currentProjectFilter = defaultProjectId; this.defaultProjectFilter = defaultProjectId; } } catch(e) {}
+    try { const v = localStorage.getItem('fs_project_filter'); if (v && this.distinctProjects.some(p => p.id === v)) { this.currentProjectFilter = v; } else if (defaultProjectId && this.distinctProjects.some(p => p.id === defaultProjectId)) { this.currentProjectFilter = defaultProjectId; } else { this.currentProjectFilter = ''; } } catch(e) {}
     this.render();
   }
 

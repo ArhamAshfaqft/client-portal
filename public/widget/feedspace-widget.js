@@ -1576,7 +1576,6 @@
       this.currentDeviceFilter = "all";
       this.currentSort = "newest";
       this.currentProjectFilter = "";
-      this.defaultProjectFilter = "";
       this.onClose = null;
       this.siteName = "";
       this._closeProjectMenu = null;
@@ -1601,11 +1600,12 @@
       if (siteName) this.siteName = siteName;
       try {
         const v = localStorage.getItem("fs_project_filter");
-        if (v) {
+        if (v && this.distinctProjects.some((p) => p.id === v)) {
           this.currentProjectFilter = v;
-        } else if (defaultProjectId && !this.defaultProjectFilter) {
+        } else if (defaultProjectId && this.distinctProjects.some((p) => p.id === defaultProjectId)) {
           this.currentProjectFilter = defaultProjectId;
-          this.defaultProjectFilter = defaultProjectId;
+        } else {
+          this.currentProjectFilter = "";
         }
       } catch (e) {
       }
