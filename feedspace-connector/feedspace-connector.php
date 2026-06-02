@@ -1303,6 +1303,23 @@ class FeedspaceConnector
             $wpdb->update($tableName, $data, array('annotation_id' => $id));
         }
 
+        // Mirror status/content change to Vercel
+        $vercelUrl = get_option('feedspace_api_url', '');
+        if ($vercelUrl && !empty($data)) {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT preview_token FROM $tableName WHERE annotation_id = %s", $id));
+            $mirrorPayload = $data;
+            if ($row && !empty($row->preview_token)) {
+                $mirrorPayload['previewToken'] = $row->preview_token;
+            }
+            wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations/' . $id, array(
+                'method' => 'PATCH',
+                'headers' => array('Content-Type' => 'application/json'),
+                'body' => json_encode($mirrorPayload),
+                'timeout' => 5,
+                'blocking' => false,
+            ));
+        }
+
         return new WP_REST_Response(array('id' => $id, 'updated' => true), 200);
     }
 

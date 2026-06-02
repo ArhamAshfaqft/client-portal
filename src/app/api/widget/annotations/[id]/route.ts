@@ -9,10 +9,18 @@ function anonClient() {
   );
 }
 
+function adminClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
+  );
+}
+
 // Best-effort: push mutation back to the WordPress site
 async function notifySiteWebhook(feedbackItemId: string, action: string, data: Record<string, any>) {
   try {
-    const supabase = anonClient();
+    const supabase = adminClient();
     const { data: item } = await supabase
       .from("feedback_items")
       .select("project_id, mirror_id")
@@ -90,6 +98,18 @@ export async function PATCH(
     }
 
     const supabase = anonClient();
+
+    // Try looking up by mirror_id first (WP annotation_id) if direct id fails
+    let lookupId = id;
+    const { data: mirrorItem } = await supabase
+      .from("feedback_items")
+      .select("id")
+      .eq("mirror_id", id)
+      .maybeSingle();
+    if (mirrorItem) {
+      lookupId = mirrorItem.id;
+    }
+
     const updates: Record<string, any> = {};
 
     if (body.content !== undefined) updates.content = body.content;
@@ -99,7 +119,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from("feedback_items")
       .update(updates)
-      .eq("id", id)
+      .eq("id", lookupId)
       .select()
       .single();
 
@@ -110,7 +130,7 @@ export async function PATCH(
       );
     }
 
-    notifySiteWebhook(id, "update_status", { id, status: updates.status });
+    notifySiteWebhook(lookupId, "update_status", { id, status: updates.status });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal error" },
