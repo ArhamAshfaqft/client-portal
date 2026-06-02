@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
 function corsHeaders() {
   return {
@@ -58,7 +59,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // Fetch media for all feedback items in one query
   const itemIds = (data || []).map(d => d.id);
   let mediaByItem: Record<string, any[]> = {};
   if (itemIds.length > 0) {
@@ -84,7 +84,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Auto-register from WP plugin
     if (body.agencyToken) {
       return handleAutoRegister(body);
     }
@@ -100,13 +99,12 @@ export async function POST(request: Request) {
     const wpApiKey = request.headers.get("X-WP-API-Key");
     let isMirror = false;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  );
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    );
 
-    // Mirror sync from WP plugin: validate against stored wp_api_key
     if (siteToken && wpApiKey) {
       const { data: site } = await supabase
         .from("sites")
@@ -174,7 +172,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check for existing annotation by mirror_id to prevent duplicates
     if (mirrorId) {
       const { data: existing } = await supabase
         .from("feedback_items")
@@ -229,7 +226,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert media records if any
     let mediaRecords: any[] = [];
     if (hasMedia) {
       const mediaRows = media.map((m: any) => ({
@@ -271,10 +267,9 @@ async function handleAutoRegister(body: any) {
     );
   }
 
-  const supabase = createServerClient(
+  const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data: agency, error: agencyError } = await supabase
