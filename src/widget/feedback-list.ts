@@ -129,10 +129,12 @@ export class FeedbackListPanel {
       const pid = a.projectId;
       if (pid && !seen.has(pid)) {
         seen.add(pid);
-        const name = a.projectName || this.siteName || 'Session #' + pid.slice(0, 8);
+        const name = (a as any).projectName || this.siteName || 'Session #' + pid.slice(0, 8);
+        console.log('[Feedspace DEBUG] distinctProjects: pid=' + pid + ' projectName=' + (a as any).projectName + ' siteName=' + this.siteName + ' => title=' + name);
         out.push({ id: pid, title: name });
       }
     }
+    console.log('[Feedspace DEBUG] distinctProjects result:', JSON.stringify(out));
     return out;
   }
 
@@ -141,6 +143,7 @@ export class FeedbackListPanel {
     this.callbacks = callbacks;
     this.onClose = onClose;
     if (siteName) this.siteName = siteName;
+    console.log('[Feedspace DEBUG] FeedbackListPanel.open: siteName=' + siteName + ' annotations count=' + annotations.length + ' first few projectNames=' + JSON.stringify(annotations.slice(0, 3).map(a => ({ id: a.id, projectName: (a as any).projectName }))));
     try { const v = localStorage.getItem('fs_project_filter'); if (v) this.currentProjectFilter = v; } catch(e) {}
     this.render();
   }

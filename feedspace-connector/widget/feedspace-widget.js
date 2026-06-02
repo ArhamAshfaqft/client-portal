@@ -1588,9 +1588,11 @@
         if (pid && !seen.has(pid)) {
           seen.add(pid);
           const name = a.projectName || this.siteName || "Session #" + pid.slice(0, 8);
+          console.log("[Feedspace DEBUG] distinctProjects: pid=" + pid + " projectName=" + a.projectName + " siteName=" + this.siteName + " => title=" + name);
           out.push({ id: pid, title: name });
         }
       }
+      console.log("[Feedspace DEBUG] distinctProjects result:", JSON.stringify(out));
       return out;
     }
     open(annotations, callbacks, onClose, siteName) {
@@ -1598,6 +1600,7 @@
       this.callbacks = callbacks;
       this.onClose = onClose;
       if (siteName) this.siteName = siteName;
+      console.log("[Feedspace DEBUG] FeedbackListPanel.open: siteName=" + siteName + " annotations count=" + annotations.length + " first few projectNames=" + JSON.stringify(annotations.slice(0, 3).map((a) => ({ id: a.id, projectName: a.projectName }))));
       try {
         const v = localStorage.getItem("fs_project_filter");
         if (v) this.currentProjectFilter = v;
@@ -2343,6 +2346,7 @@
       this.tempSvgEl = null;
     }
     async saveAnnotation(content, files, el, startDna, firstPoint, _points) {
+      console.log("[Feedspace DEBUG] Creating annotation, this.config.siteName:", this.config.siteName);
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
@@ -2459,6 +2463,7 @@
       try {
         this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
+        console.log("[Feedspace DEBUG] Annotations loaded:", this.annotations.map((a) => ({ id: a.id, projectId: a.projectId, projectName: a.projectName })));
         this.renderer.setAnnotations(this.annotations);
         this.updateBadge();
       } catch (err) {
@@ -2646,7 +2651,8 @@
       if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
       console.log("[Feedspace]", msg, data || "");
     }
-    dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey });
+    dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey, siteName: config.siteName });
+    console.log("[Feedspace DEBUG] siteName from config:", config.siteName);
     injectStyles();
     dbg2("Styles injected");
     if (config.pageUrl) {
