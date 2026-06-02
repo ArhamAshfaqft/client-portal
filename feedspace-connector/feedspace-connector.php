@@ -350,12 +350,15 @@ class FeedspaceConnector
             $payload = json_decode($item->payload, true);
             $payload['id'] = $item->annotation_id;
 
+            $siteToken = get_option('feedspace_site_token', '');
             $wpApiKey = get_option('feedspace_api_key', '');
+            $headers = array('Content-Type' => 'application/json');
+            if ($siteToken && $wpApiKey) {
+                $headers['X-Site-Token'] = $siteToken;
+                $headers['X-WP-API-Key'] = $wpApiKey;
+            }
             $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
-                'headers' => array(
-                    'Content-Type' => 'application/json',
-                    'X-Mirror-Secret' => $wpApiKey,
-                ),
+                'headers' => $headers,
                 'body' => json_encode($payload),
                 'timeout' => 15,
             ));
@@ -1059,7 +1062,12 @@ class FeedspaceConnector
             'sanitize_callback' => 'esc_url_raw',
         ));
         register_setting('feedspace_settings', 'feedspace_debug_enabled');
-        register_setting('feedspace_settings', 'feedspace_dev_mode');
+        register_setting('feedspace_settings', 'feedspace_dashboard_url', array(
+            'sanitize_callback' => 'esc_url_raw',
+        ));
+        register_setting('feedspace_settings', 'feedspace_site_token', array(
+            'sanitize_callback' => 'sanitize_text_field',
+        ));
     }
 
     public function addAdminMenu()
@@ -1249,14 +1257,25 @@ class FeedspaceConnector
                                 <input type="url" name="feedspace_api_url"
                                     value="<?php echo esc_attr(get_option('feedspace_api_url', '')); ?>"
                                 class="regular-text" />
-                                <p class="description">Your Feedspace app URL (e.g. https://your-app.vercel.app). Required for preview links and mirror sync.</p>
+                                <p class="description">Your Vercel app URL (e.g. https://your-app.vercel.app). Required for preview link verification (fallback).</p>
                             </td>
                         </tr>
                         <tr>
-                            <th>Mirror Secret</th>
+                            <th>Dashboard URL</th>
                             <td>
-                                <code style="font-size:13px;word-break:break-all;"><?php echo esc_html(get_option('feedspace_api_key')); ?></code>
-                                <p class="description">Add this as <code>MIRROR_SECRET</code> environment variable in your Vercel project settings so the mirror sync can authenticate without a preview token. <a href="https://vercel.com/docs/projects/environment-variables" target="_blank">How to add env vars</a></p>
+                                <input type="url" name="feedspace_dashboard_url"
+                                    value="<?php echo esc_attr(get_option('feedspace_dashboard_url', '')); ?>"
+                                class="regular-text" placeholder="https://your-app.vercel.app" />
+                                <p class="description">Your Feedspace dashboard URL. Used for mirror sync.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Site Token</th>
+                            <td>
+                                <input type="text" name="feedspace_site_token"
+                                    value="<?php echo esc_attr(get_option('feedspace_site_token', '')); ?>"
+                                class="regular-text" placeholder="Paste site token from dashboard" />
+                                <p class="description">Found in your Feedspace dashboard → Sites → your site → Copy Token. <button type="button" class="button button-small" onclick="connectSite()">Test Connection</button> <span id="feedspace-connect-result" style="color:#6b7280;font-size:12px;"></span></p>
                             </td>
                         </tr>
                         <tr>
@@ -1495,6 +1514,31 @@ class FeedspaceConnector
                     result.textContent = 'ERROR: ' + e.message;
                 });
             }
+
+            function connectSite() {
+                var btn = document.querySelector('[onclick="connectSite()"]');
+                var result = document.getElementById('feedspace-connect-result');
+                if (btn) btn.disabled = true;
+                result.textContent = 'Connecting...';
+                fetch(ajaxurl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=feedspace_connect_site'
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    if (btn) btn.disabled = false;
+                    if (d.success) {
+                        result.style.color = '#059669';
+                        result.textContent = 'Connected! Site ID: ' + d.data.site_id;
+                    } else {
+                        result.style.color = '#dc2626';
+                        result.textContent = 'Failed: ' + (d.data && d.data.error ? d.data.error : 'Unknown error');
+                    }
+                }).catch(function(e) {
+                    if (btn) btn.disabled = false;
+                    result.style.color = '#dc2626';
+                    result.textContent = 'Error: ' + e.message;
+                });
+            }
         </script>
         <?php
     }
@@ -1605,6 +1649,46 @@ add_action('wp_ajax_feedspace_regenerate_key', function () {
     $newKey = wp_generate_password(32, false);
     update_option('feedspace_api_key', $newKey);
     wp_send_json_success(array('key' => $newKey));
+});
+
+add_action('wp_ajax_feedspace_connect_site', function () {
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+    $dashboardUrl = untrailingslashit(get_option('feedspace_dashboard_url', ''));
+    $siteToken = get_option('feedspace_site_token', '');
+    $apiKey = get_option('feedspace_api_key', '');
+    $wpUrl = get_bloginfo('url');
+
+    if (!$dashboardUrl || !$siteToken || !$apiKey) {
+        wp_send_json_error(array('error' => 'Dashboard URL, Site Token, and API Key are required.'));
+        return;
+    }
+
+    $response = wp_remote_post($dashboardUrl . '/api/sites/connect', array(
+        'headers' => array('Content-Type' => 'application/json'),
+        'body' => json_encode(array(
+            'token' => $siteToken,
+            'apiKey' => $apiKey,
+            'wpUrl' => $wpUrl,
+        )),
+        'timeout' => 15,
+    ));
+
+    if (is_wp_error($response)) {
+        wp_send_json_error(array('error' => $response->get_error_message()));
+        return;
+    }
+
+    $code = wp_remote_retrieve_response_code($response);
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+
+    if ($code >= 200 && $code < 300 && !empty($body['connected'])) {
+        update_option('feedspace_site_connected', true);
+        wp_send_json_success(array('site_id' => $body['siteId']));
+    } else {
+        wp_send_json_error(array('error' => $body['error'] ?? "HTTP $code"));
+    }
 });
 
 add_action('wp_ajax_feedspace_test_mirroring', function () {

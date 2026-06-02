@@ -91,8 +91,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const mirrorSecret = request.headers.get("X-Mirror-Secret");
-    const isMirror = mirrorSecret && mirrorSecret === process.env.MIRROR_SECRET;
+    const siteToken = request.headers.get("X-Site-Token");
+    const wpApiKey = request.headers.get("X-WP-API-Key");
+    let isMirror = false;
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    );
+
+    // Mirror sync from WP plugin: validate against stored wp_api_key
+    if (siteToken && wpApiKey) {
+      const { data: site } = await supabase
+        .from("sites")
+        .select("wp_api_key")
+        .eq("id", siteToken)
+        .eq("wp_connected", true)
+        .maybeSingle();
+      if (site && site.wp_api_key === wpApiKey) {
+        isMirror = true;
+      }
+    }
 
     const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
@@ -109,13 +129,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    );
-
-    // Mirror sync from WP plugin is pre-validated — skip Supabase auth check
     if (!isMirror) {
       if (previewToken) {
         const { data: link } = await supabase
