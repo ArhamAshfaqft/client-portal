@@ -1311,13 +1311,19 @@ class FeedspaceConnector
             if ($row && !empty($row->preview_token)) {
                 $mirrorPayload['previewToken'] = $row->preview_token;
             }
-            wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations/' . $id, array(
+            $mirrorResp = wp_remote_request(trailingslashit($vercelUrl) . 'api/widget/annotations/' . $id, array(
                 'method' => 'PATCH',
                 'headers' => array('Content-Type' => 'application/json'),
                 'body' => json_encode($mirrorPayload),
-                'timeout' => 5,
-                'blocking' => false,
+                'timeout' => 10,
+                'blocking' => true,
             ));
+            if (is_wp_error($mirrorResp)) {
+                self::logDebug('update_mirror_error', array('id' => $id, 'error' => $mirrorResp->get_error_message()));
+            } else {
+                $mirrorCode = wp_remote_retrieve_response_code($mirrorResp);
+                self::logDebug('update_mirror_result', array('id' => $id, 'status' => $mirrorCode));
+            }
         }
 
         return new WP_REST_Response(array('id' => $id, 'updated' => true), 200);

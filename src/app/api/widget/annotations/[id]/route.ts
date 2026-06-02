@@ -130,7 +130,10 @@ export async function PATCH(
       );
     }
 
+    // Fire webhook in background (best-effort, don't await or block)
     notifySiteWebhook(lookupId, "update_status", { id, status: updates.status });
+
+    return NextResponse.json({ id: lookupId, updated: true }, { headers: corsHeaders() });
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || "Internal error" },
