@@ -235,14 +235,18 @@ export async function POST(request: Request) {
         file_name: m.fileName || "",
         storage_type: "wordpress",
       }));
-      const { data: inserted, error: mediaError } = await supabase
+      const { error: mediaError } = await supabase
         .from("feedback_media")
-        .insert(mediaRows)
-        .select();
+        .insert(mediaRows);
       if (mediaError) {
         console.error("Failed to insert media:", mediaError.message);
       } else {
-        mediaRecords = inserted || [];
+        mediaRecords = mediaRows.map((r: any) => ({
+          id: r.feedback_item_id + "_media",
+          file_url: r.file_url,
+          file_type: r.file_type,
+          file_name: r.file_name,
+        }));
       }
     }
 
