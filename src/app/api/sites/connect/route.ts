@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200 });
+}
+
 export async function POST(request: Request) {
   try {
     const { token, apiKey, wpUrl } = await request.json();
