@@ -1665,7 +1665,7 @@ add_action('wp_ajax_feedspace_connect_site', function () {
         return;
     }
 
-    $response = wp_remote_post($dashboardUrl . '/api/sites/connect', array(
+    $response = wp_remote_post($dashboardUrl . '/api/connect-site', array(
         'headers' => array('Content-Type' => 'application/json'),
         'body' => json_encode(array(
             'token' => $siteToken,
