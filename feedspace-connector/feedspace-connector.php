@@ -39,8 +39,6 @@ class FeedspaceConnector
         add_filter('cron_schedules', array($this, 'addCronInterval'));
         add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
         add_action('admin_bar_menu', array($this, 'addAdminBarNode'), 999);
-        add_action('wp_footer', array($this, 'bootDevScript'));
-        add_action('admin_footer', array($this, 'bootDevScript'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
@@ -295,60 +293,12 @@ class FeedspaceConnector
     {
         if (get_option('feedspace_dev_mode') !== '1') return;
 
-        $pageUrl = '';
-        if (is_admin()) {
-            $screen = get_current_screen();
-            if ($screen && $screen->base === 'post' && ($postId = intval($_GET['post'] ?? 0))) {
-                $pageUrl = get_permalink($postId);
-            }
-        }
-
         $wp_admin_bar->add_node(array(
-            'id' => 'feedspace-dev',
+            'id' => 'feedspace-annotations',
             'title' => '<span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Feedspace</span>',
-            'href' => '#',
-            'meta' => array('title' => 'Toggle Feedspace widget on this page', 'onclick' => 'event.preventDefault();__feedspaceBootDev(' . json_encode($pageUrl) . ');'),
+            'href' => admin_url('admin.php?page=feedspace-annotations'),
+            'meta' => array('title' => 'View all annotations'),
         ));
-    }
-
-    public function bootDevScript()
-    {
-        if (get_option('feedspace_dev_mode') !== '1') return;
-        $projectId = get_option('feedspace_dev_project_id', '');
-        if (empty($projectId)) {
-            global $wpdb;
-            $row = $wpdb->get_row("SELECT project_id FROM {$wpdb->prefix}feedspace_annotations LIMIT 1");
-            $projectId = $row ? $row->project_id : 'dev';
-        }
-        $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
-        $wpApiUrl = get_bloginfo('url');
-        $wpApiKey = get_option('feedspace_api_key');
-        ?>
-        <script>
-        function __feedspaceBootDev(pageUrl) {
-            if (window.__feedspaceLoaded) { document.getElementById('feedspace-widget-root')?.remove(); window.__feedspaceLoaded = false; return; }
-            pageUrl = pageUrl || window.location.href;
-            var s = document.createElement('script');
-            s.src = <?php echo json_encode($widgetUrl); ?>;
-            s.onload = function() {
-                if (window.FeedspaceWidget) {
-                    window.FeedspaceWidget.init({
-                        apiUrl: '',
-                        token: '',
-                        projectId: <?php echo json_encode($projectId); ?>,
-                        primaryColor: '#6366f1',
-                        wpApiUrl: <?php echo json_encode($wpApiUrl); ?>,
-                        wpApiKey: <?php echo json_encode($wpApiKey); ?>,
-                        pageUrl: pageUrl,
-                        devMode: true
-                    });
-                    window.__feedspaceLoaded = true;
-                }
-            };
-            document.head.appendChild(s);
-        }
-        </script>
-        <?php
     }
 
     public function activate()
@@ -1107,7 +1057,6 @@ class FeedspaceConnector
         ));
         register_setting('feedspace_settings', 'feedspace_debug_enabled');
         register_setting('feedspace_settings', 'feedspace_dev_mode');
-        register_setting('feedspace_settings', 'feedspace_dev_project_id');
     }
 
     public function addAdminMenu()
@@ -1121,11 +1070,19 @@ class FeedspaceConnector
             'dashicons-feedback',
             30
         );
+        add_submenu_page(
+            'feedspace',
+            'Annotations',
+            'Annotations',
+            'manage_options',
+            'feedspace-annotations',
+            array($this, 'renderAnnotationsPage')
+        );
     }
 
     public function adminEnqueueScripts($hook)
     {
-        if ($hook !== 'toplevel_page_feedspace') return;
+        if ($hook !== 'toplevel_page_feedspace' && $hook !== 'feedspace_page_feedspace-annotations') return;
 
         wp_enqueue_style(
             'feedspace-admin',
@@ -1311,26 +1268,6 @@ class FeedspaceConnector
                                     Show debug overlay on preview pages
                                 </label>
                                 <p class="description">Adds a floating debug panel to help diagnose widget issues.</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Dev Mode</th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="feedspace_dev_mode" value="1"
-                                        <?php checked(get_option('feedspace_dev_mode'), '1'); ?> />
-                                    Enable admin bar button to open widget on any page
-                                </label>
-                                <p class="description">Adds a "Feedspace" button in the WordPress admin bar (frontend only). Click it to load the widget on the current page without a preview link.</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Dev Project ID</th>
-                            <td>
-                                <input type="text" name="feedspace_dev_project_id"
-                                    value="<?php echo esc_attr(get_option('feedspace_dev_project_id', '')); ?>"
-                                    placeholder="Auto-detect from first annotation" style="width:300px;" />
-                                <p class="description">Project ID to use in dev mode. Leave empty to auto-detect from existing annotations.</p>
                             </td>
                         </tr>
                     </table>
@@ -1549,6 +1486,102 @@ class FeedspaceConnector
                 });
             }
         </script>
+        <?php
+    }
+
+    public function renderAnnotationsPage()
+    {
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'feedspace_annotations';
+        $statusFilter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+        $urlFilter = isset($_GET['page_url']) ? esc_url_raw($_GET['page_url']) : '';
+
+        $where = array('1=1');
+        $params = array();
+        if (!empty($statusFilter)) {
+            $where[] = 'status = %s';
+            $params[] = $statusFilter;
+        }
+        if (!empty($urlFilter)) {
+            $where[] = 'page_url = %s';
+            $params[] = $urlFilter;
+        }
+
+        $whereSql = implode(' AND ', $where);
+        $sql = "SELECT * FROM $tableName WHERE $whereSql ORDER BY created_at DESC";
+        $results = !empty($params) ? $wpdb->get_results($wpdb->prepare($sql, $params)) : $wpdb->get_results($sql);
+
+        $pageUrls = $wpdb->get_col("SELECT DISTINCT page_url FROM $tableName ORDER BY page_url ASC");
+        ?>
+        <div class="wrap">
+            <h1>Feedspace Annotations</h1>
+            <form method="get" style="margin:16px 0;display:flex;gap:8px;align-items:center;">
+                <input type="hidden" name="page" value="feedspace-annotations" />
+                <select name="status">
+                    <option value="">All statuses</option>
+                    <option value="open" <?php selected($statusFilter, 'open'); ?>>Open</option>
+                    <option value="in_progress" <?php selected($statusFilter, 'in_progress'); ?>>In Progress</option>
+                    <option value="resolved" <?php selected($statusFilter, 'resolved'); ?>>Resolved</option>
+                    <option value="closed" <?php selected($statusFilter, 'closed'); ?>>Closed</option>
+                </select>
+                <select name="page_url" style="min-width:200px;">
+                    <option value="">All pages</option>
+                    <?php foreach ($pageUrls as $pu): ?>
+                        <option value="<?php echo esc_attr($pu); ?>" <?php selected($urlFilter, $pu); ?>><?php echo esc_html($pu); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="button">Filter</button>
+                <a href="<?php echo admin_url('admin.php?page=feedspace-annotations'); ?>" class="button">Reset</a>
+            </form>
+
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>Page / URL</th>
+                        <th>Content</th>
+                        <th style="width:60px;">Media</th>
+                        <th style="width:90px;">Status</th>
+                        <th style="width:60px;">Device</th>
+                        <th style="width:100px;">Created by</th>
+                        <th style="width:130px;">Date</th>
+                        <th style="width:70px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($results)): ?>
+                    <tr><td colspan="9" style="text-align:center;padding:30px;color:#94a3b8;">No annotations found.</td></tr>
+                <?php else: $idx = 0; foreach ($results as $row): $idx++;
+                    $meta = $row->meta_data ? json_decode($row->meta_data, true) : array();
+                    $atts = $meta['attachments'] ?? array();
+                    $mediaCount = count($atts);
+                    $previewUrl = add_query_arg('feedspace_dev', '1', $row->page_url);
+                ?>
+                    <tr>
+                        <td><?php echo $idx; ?></td>
+                        <td>
+                            <a href="<?php echo esc_url($row->page_url); ?>" target="_blank" title="View page"><?php echo esc_html(parse_url($row->page_url, PHP_URL_PATH) ?: $row->page_url); ?></a>
+                            <div style="font-size:11px;color:#94a3b8;word-break:break-all;"><?php echo esc_html($row->page_url); ?></div>
+                        </td>
+                        <td><?php echo esc_html(mb_substr($row->content, 0, 100)); ?></td>
+                        <td style="text-align:center;"><?php echo $mediaCount > 0 ? '<span title="' . esc_attr($mediaCount . ' file(s)') . '">📎 ' . $mediaCount . '</span>' : '—'; ?></td>
+                        <td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:<?php echo $row->status === 'open' ? '#fef3c7' : ($row->status === 'resolved' ? '#d1fae5' : '#e2e8f0'); ?>;color:<?php echo $row->status === 'open' ? '#92400e' : ($row->status === 'resolved' ? '#065f46' : '#475569'); ?>;"><?php echo esc_html($row->status); ?></span></td>
+                        <td><?php echo esc_html($row->device); ?></td>
+                        <td><?php echo esc_html($row->created_by); ?></td>
+                        <td><?php echo esc_html($row->created_at); ?></td>
+                        <td>
+                            <a href="<?php echo esc_url($previewUrl); ?>" target="_blank" class="button button-small" title="View on page">👁</a>
+                        </td>
+                    </tr>
+                <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <style>
+            .wp-list-table th { font-weight:600; }
+            .wp-list-table td { vertical-align:middle; }
+            .button-small { padding:0 6px !important; min-height:28px; line-height:28px; font-size:12px; }
+        </style>
         <?php
     }
 }
