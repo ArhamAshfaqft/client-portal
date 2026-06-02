@@ -884,7 +884,7 @@ export default function SiteFeedbackPage() {
                                   )}
                                 </div>
 
-                                {profile?.role === "developer" && action && (
+                                {isOwner && action && (
                                   <Button
                                     size="sm"
                                     variant={item.status === "resolved" ? "outline" : "primary"}
