@@ -1758,7 +1758,7 @@ class FeedspaceConnector
                         <td><?php echo esc_html(mb_substr($row->content, 0, 100)); ?></td>
                         <td style="text-align:center;">
                             <?php if ($mediaCount > 0): ?>
-                                <span title="<?php echo esc_attr($mediaCount . ' file(s)'); ?>">📎 <?php echo $mediaCount; ?></span>
+                                <span title="<?php echo esc_attr($mediaCount . ' file(s)'); ?>"><?php echo $mediaCount; ?></span>
                             <?php else: ?>
                                 —
                             <?php endif; ?>
@@ -1768,9 +1768,9 @@ class FeedspaceConnector
                         <td><?php echo esc_html($row->created_by); ?></td>
                         <td><?php echo esc_html($row->created_at); ?></td>
                         <td style="white-space:nowrap;">
-                            <a href="<?php echo esc_url($previewUrl); ?>" target="_blank" class="button button-small" title="View on page">👁</a>
+                            <a href="<?php echo esc_url($previewUrl); ?>" target="_blank" class="button button-small" title="View on page">View</a>
                             <?php if ($mediaCount > 0): ?>
-                                <button class="button button-small feedspace-save-library" data-annotation-id="<?php echo esc_attr($row->annotation_id); ?>" title="Save all media to Media Library">📥</button>
+                                <button class="button button-small feedspace-save-library" data-annotation-id="<?php echo esc_attr($row->annotation_id); ?>" title="Save all media to Media Library">Save</button>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -1791,7 +1791,7 @@ class FeedspaceConnector
                     var self = this;
                     var annotationId = this.dataset.annotationId;
                     if (!annotationId || this.classList.contains('fs-library-done')) return;
-                    this.textContent = '⏳';
+                    this.textContent = '...';
                     fetch('<?php echo esc_url(rest_url('feedspace/v1/media/save-to-library')); ?>', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-Feedspace-Key': '<?php echo esc_js(get_option('feedspace_api_key')); ?>' },
@@ -1800,11 +1800,11 @@ class FeedspaceConnector
                     .then(function(r){ return r.json(); })
                     .then(function(data){
                         if (data.saved_count > 0) {
-                            self.textContent = '✅';
+                            self.textContent = 'Done';
                             self.classList.add('fs-library-done');
                             self.title = 'Saved ' + data.saved_count + ' file(s) to Media Library';
                         } else {
-                            self.textContent = '❌';
+                            self.textContent = 'Err';
                             alert('Failed: ' + (data.message || JSON.stringify(data)));
                         }
                     })
