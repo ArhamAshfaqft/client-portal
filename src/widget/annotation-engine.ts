@@ -521,14 +521,16 @@ export class AnnotationEngine {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ projectId: pid }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.name) {
-            this.projectNameCache[pid] = data.name;
-            for (const a of this.annotations) {
-              if (a.projectId === pid && !a.projectName) a.projectName = data.name;
-            }
+        const data = await res.json();
+        console.log('[Feedspace] Project name lookup:', { projectId: pid, status: res.status, response: data });
+        if (res.ok && data.name) {
+          this.projectNameCache[pid] = data.name;
+          for (const a of this.annotations) {
+            if (a.projectId === pid && !a.projectName) a.projectName = data.name;
           }
+          console.log('[Feedspace] Set projectName for', pid, '->', data.name);
+        } else {
+          console.log('[Feedspace] No name found for project', pid, '- using fallback');
         }
       } catch (e) { /* ignore fetch errors */ }
     }
