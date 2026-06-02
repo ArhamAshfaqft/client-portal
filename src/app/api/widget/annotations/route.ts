@@ -239,7 +239,10 @@ export async function POST(request: Request) {
     // from the project chain (project -> site -> agency) using the service-role
     // client so this works for EVERY synced pin — not just ones whose WP
     // credentials happen to match the strict "mirror" check above.
-    {
+    let _notifStatus = 'skipped';
+    let _agencyId: string | null = null;
+    let _siteResolved: string | null = null;
+    if (1) {
       const admin = adminClient();
       let resolvedAgencyId: string | null = siteAgencyId;
       let resolvedSiteId: string | null = siteToken || null;
@@ -268,6 +271,10 @@ export async function POST(request: Request) {
           resolvedAgencyId = s.agency_id || resolvedAgencyId;
         }
       }
+
+      _notifStatus = resolvedAgencyId ? 'created' : 'skipped';
+      _agencyId = resolvedAgencyId;
+      _siteResolved = resolvedSiteId;
 
       if (resolvedAgencyId) {
         void admin.from("notifications").insert({
@@ -306,7 +313,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia, _debug: { notif: resolvedAgencyId ? 'created' : 'skipped', agencyId: resolvedAgencyId || null, siteId: resolvedSiteId || null, projectId, siteToken: siteToken || null } },
+      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia, _debug: { notif: _notifStatus, agencyId: _agencyId, siteId: _siteResolved, projectId, siteToken: siteToken || null } },
       { status: 201, headers: corsHeaders() }
     );
   } catch (err: any) {
