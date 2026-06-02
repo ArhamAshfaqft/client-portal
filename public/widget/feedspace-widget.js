@@ -1103,6 +1103,7 @@
       this.callbacks = null;
       this.filter = "all";
       this.deviceFilter = "all";
+      this.projectFilter = "";
       this.selectedId = null;
     }
     init(callbacks) {
@@ -1130,6 +1131,10 @@
       this.deviceFilter = device;
       this.renderAll();
     }
+    setProjectFilter(projectId) {
+      this.projectFilter = projectId;
+      this.renderAll();
+    }
     setSelected(id) {
       this.selectedId = id;
       this.renderAll();
@@ -1138,6 +1143,9 @@
       let result = this.filter === "all" ? this.annotations : this.annotations.filter((a) => a.status === this.filter);
       if (this.deviceFilter && this.deviceFilter !== "all") {
         result = result.filter((a) => (a.device || "desktop") === this.deviceFilter);
+      }
+      if (this.projectFilter) {
+        result = result.filter((a) => a.projectId === this.projectFilter);
       }
       return result;
     }
@@ -1594,6 +1602,7 @@
       return out;
     }
     open(annotations, callbacks, onClose, siteName, defaultProjectId) {
+      var _a, _b;
       this.annotations = annotations;
       this.callbacks = callbacks;
       this.onClose = onClose;
@@ -1607,6 +1616,7 @@
         } else {
           this.currentProjectFilter = "";
         }
+        (_b = (_a = this.callbacks) == null ? void 0 : _a.onProjectFilterChange) == null ? void 0 : _b.call(_a, this.currentProjectFilter);
       } catch (e) {
       }
       this.render();
@@ -1762,6 +1772,7 @@
           if (!isActive) item.style.background = "transparent";
         });
         item.addEventListener("click", (e) => {
+          var _a, _b;
           e.stopPropagation();
           menu.remove();
           if (this._closeProjectMenu) this._closeProjectMenu();
@@ -1772,6 +1783,7 @@
           } catch (e2) {
           }
           this.renderList();
+          (_b = (_a = this.callbacks) == null ? void 0 : _a.onProjectFilterChange) == null ? void 0 : _b.call(_a, value);
         });
         menu.appendChild(item);
       };
@@ -2206,6 +2218,9 @@
           onFilterChange: (filter) => {
             this.filterMode = filter;
             this.renderer.setFilter(filter);
+          },
+          onProjectFilterChange: (projectId) => {
+            this.renderer.setProjectFilter(projectId);
           },
           onDeleteAnnotation: (id) => this.deleteAnnotation(id),
           onDeviceFilterChange: (device) => {

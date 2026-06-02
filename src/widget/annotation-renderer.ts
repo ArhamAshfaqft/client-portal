@@ -11,6 +11,7 @@ export class AnnotationRenderer {
   private callbacks: RendererCallbacks | null = null;
   private filter: FilterMode = 'all';
   private deviceFilter: string = 'all';
+  private projectFilter: string = '';
   private selectedId: string | null = null;
 
   init(callbacks: RendererCallbacks): void {
@@ -43,6 +44,11 @@ export class AnnotationRenderer {
     this.renderAll();
   }
 
+  setProjectFilter(projectId: string): void {
+    this.projectFilter = projectId;
+    this.renderAll();
+  }
+
   setSelected(id: string | null): void {
     this.selectedId = id;
     this.renderAll();
@@ -54,6 +60,9 @@ export class AnnotationRenderer {
       : this.annotations.filter((a) => a.status === this.filter);
     if (this.deviceFilter && this.deviceFilter !== 'all') {
       result = result.filter((a) => (a.device || 'desktop') === this.deviceFilter);
+    }
+    if (this.projectFilter) {
+      result = result.filter((a) => a.projectId === this.projectFilter);
     }
     return result;
   }

@@ -6,6 +6,7 @@ export interface FeedbackListCallbacks {
   onDeleteAnnotation: (id: string) => void;
   onDeviceFilterChange: (device: string) => void;
   onStatusChange: (id: string, status: string) => void;
+  onProjectFilterChange?: (projectId: string) => void;
   onSaveToLibrary?: (fileUrl: string, fileName: string) => Promise<boolean>;
 }
 
@@ -141,7 +142,7 @@ export class FeedbackListPanel {
     this.callbacks = callbacks;
     this.onClose = onClose;
     if (siteName) this.siteName = siteName;
-    try { const v = localStorage.getItem('fs_project_filter'); if (v && this.distinctProjects.some(p => p.id === v)) { this.currentProjectFilter = v; } else if (defaultProjectId && this.distinctProjects.some(p => p.id === defaultProjectId)) { this.currentProjectFilter = defaultProjectId; } else { this.currentProjectFilter = ''; } } catch(e) {}
+    try { const v = localStorage.getItem('fs_project_filter'); if (v && this.distinctProjects.some(p => p.id === v)) { this.currentProjectFilter = v; } else if (defaultProjectId && this.distinctProjects.some(p => p.id === defaultProjectId)) { this.currentProjectFilter = defaultProjectId; } else { this.currentProjectFilter = ''; } this.callbacks?.onProjectFilterChange?.(this.currentProjectFilter); } catch(e) {}
     this.render();
   }
 
@@ -317,6 +318,7 @@ export class FeedbackListPanel {
         btn.title = value ? label : 'Filter by session';
         try { localStorage.setItem('fs_project_filter', this.currentProjectFilter); } catch(e) {}
         this.renderList();
+        this.callbacks?.onProjectFilterChange?.(value);
       });
       menu.appendChild(item);
     };

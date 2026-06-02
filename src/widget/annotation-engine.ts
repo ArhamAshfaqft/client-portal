@@ -187,6 +187,9 @@ export class AnnotationEngine {
           this.filterMode = filter;
           this.renderer.setFilter(filter);
         },
+        onProjectFilterChange: (projectId) => {
+          this.renderer.setProjectFilter(projectId);
+        },
         onDeleteAnnotation: (id) => this.deleteAnnotation(id),
         onDeviceFilterChange: (device) => {
           this.renderer.setDeviceFilter(device);
