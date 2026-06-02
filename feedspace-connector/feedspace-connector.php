@@ -39,7 +39,8 @@ class FeedspaceConnector
         add_filter('cron_schedules', array($this, 'addCronInterval'));
         add_action('feedspace_process_queue', array(__CLASS__, 'processSyncQueue'));
         add_action('admin_bar_menu', array($this, 'addAdminBarNode'), 999);
-        add_action('wp_ajax_feedspace_dev_config', array($this, 'ajaxDevConfig'));
+        add_action('wp_footer', array($this, 'bootDevScript'));
+        add_action('admin_footer', array($this, 'bootDevScript'));
 
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
@@ -64,12 +65,6 @@ class FeedspaceConnector
 
     public function maybeInitPreview()
     {
-        // Dev mode: load widget on any page without preview token
-        if (isset($_GET['feedspace_dev']) && get_option('feedspace_dev_mode') === '1') {
-            $this->initDevMode();
-            return;
-        }
-
         $token = isset($_GET['feedspace_preview']) ? sanitize_text_field($_GET['feedspace_preview']) : '';
         
         // Fallback to cookie if query param is not set
@@ -103,23 +98,6 @@ class FeedspaceConnector
         }
 
         $this->enqueueWidgetAssets($config, $token);
-    }
-
-    private function initDevMode()
-    {
-        $projectId = get_option('feedspace_dev_project_id', '');
-        if (empty($projectId)) {
-            global $wpdb;
-            $row = $wpdb->get_row("SELECT project_id FROM {$wpdb->prefix}feedspace_annotations LIMIT 1");
-            $projectId = $row ? $row->project_id : 'dev';
-        }
-        $config = array(
-            'valid' => true,
-            'projectId' => $projectId,
-            'primaryColor' => '#6366f1',
-            'siteName' => get_bloginfo('name') . ' (Dev)',
-        );
-        $this->enqueueWidgetAssets($config, '');
     }
 
     private function verifyPreviewToken($token)
@@ -317,46 +295,60 @@ class FeedspaceConnector
     {
         if (get_option('feedspace_dev_mode') !== '1') return;
 
-        $href = '';
+        $pageUrl = '';
         if (is_admin()) {
-            // On a post edit screen — link to the frontend page with dev mode
             $screen = get_current_screen();
             if ($screen && $screen->base === 'post' && ($postId = intval($_GET['post'] ?? 0))) {
-                $href = add_query_arg('feedspace_dev', '1', get_permalink($postId));
+                $pageUrl = get_permalink($postId);
             }
-        } else {
-            $href = add_query_arg('feedspace_dev', '1');
         }
 
-        if (!empty($href)) {
-            $wp_admin_bar->add_node(array(
-                'id' => 'feedspace-dev',
-                'title' => '<span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Feedspace</span>',
-                'href' => $href,
-                'meta' => array('title' => 'Open Feedspace widget on this page', 'target' => '_blank'),
-            ));
-        }
+        $wp_admin_bar->add_node(array(
+            'id' => 'feedspace-dev',
+            'title' => '<span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Feedspace</span>',
+            'href' => '#',
+            'meta' => array('title' => 'Toggle Feedspace widget on this page', 'onclick' => 'event.preventDefault();__feedspaceBootDev(' . json_encode($pageUrl) . ');'),
+        ));
     }
 
-    public function ajaxDevConfig()
+    public function bootDevScript()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die('Unauthorized');
-        }
+        if (get_option('feedspace_dev_mode') !== '1') return;
         $projectId = get_option('feedspace_dev_project_id', '');
         if (empty($projectId)) {
             global $wpdb;
             $row = $wpdb->get_row("SELECT project_id FROM {$wpdb->prefix}feedspace_annotations LIMIT 1");
             $projectId = $row ? $row->project_id : 'dev';
         }
-        wp_send_json(array(
-            'projectId' => $projectId,
-            'primaryColor' => '#6366f1',
-            'siteName' => get_bloginfo('name'),
-            'wpApiUrl' => get_bloginfo('url'),
-            'wpApiKey' => get_option('feedspace_api_key'),
-            'pageUrl' => esc_url_raw($_POST['pageUrl'] ?? ''),
-        ));
+        $widgetUrl = plugin_dir_url(__FILE__) . 'widget/feedspace-widget.js';
+        $wpApiUrl = get_bloginfo('url');
+        $wpApiKey = get_option('feedspace_api_key');
+        ?>
+        <script>
+        function __feedspaceBootDev(pageUrl) {
+            if (window.__feedspaceLoaded) { document.getElementById('feedspace-widget-root')?.remove(); window.__feedspaceLoaded = false; return; }
+            pageUrl = pageUrl || window.location.href;
+            var s = document.createElement('script');
+            s.src = <?php echo json_encode($widgetUrl); ?>;
+            s.onload = function() {
+                if (window.FeedspaceWidget) {
+                    window.FeedspaceWidget.init({
+                        apiUrl: '',
+                        token: '',
+                        projectId: <?php echo json_encode($projectId); ?>,
+                        primaryColor: '#6366f1',
+                        wpApiUrl: <?php echo json_encode($wpApiUrl); ?>,
+                        wpApiKey: <?php echo json_encode($wpApiKey); ?>,
+                        pageUrl: pageUrl,
+                        devMode: true
+                    });
+                    window.__feedspaceLoaded = true;
+                }
+            };
+            document.head.appendChild(s);
+        }
+        </script>
+        <?php
     }
 
     public function activate()
