@@ -376,11 +376,13 @@ export default function SitesPage() {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ _updateUrl: newUrl, _siteId: site.id, _wpApiKey: apiKey }),
-                                      }).then(r => r.json()).then(d => {
-                                        if (d.ok) {
-                                          alert('URL updated to ' + newUrl);
-                                        } else {
-                                          alert('Failed: ' + JSON.stringify(d));
+                                      }).then(r => r.text()).then(text => {
+                                        console.log('[Feedspace] URL update response:', text);
+                                        try {
+                                          const d = JSON.parse(text);
+                                          alert(d.ok ? 'URL updated!' : 'Failed: ' + JSON.stringify(d));
+                                        } catch {
+                                          alert('Response (not JSON): ' + text.substring(0, 200));
                                         }
                                       }).catch(e => alert('Error: ' + e.message));
                                     }
