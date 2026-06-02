@@ -2485,7 +2485,7 @@
       const apiUrl = this.config.apiUrl.replace(/\/+$/, "");
       for (const pid of missing) {
         try {
-          const res = await fetch(`${apiUrl}/api/projects/name?id=${encodeURIComponent(pid)}`);
+          const res = await fetch(`${apiUrl}/api/project-name?id=${encodeURIComponent(pid)}`);
           if (res.ok) {
             const data = await res.json();
             if (data.name) {
