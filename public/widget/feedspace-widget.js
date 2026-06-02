@@ -1728,7 +1728,9 @@
             } else {
               inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml2(ext.substring(0, 4))}</div>`;
             }
-            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
+            const mediaUrl = m.fileUrl;
+            const saveBtn = `<button class="fs-save-library" data-url="${escHtml2(mediaUrl)}" data-name="${escHtml2(m.fileName || "")}" title="Save to Media Library" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:4px;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">\u{1F4E5}</button>`;
+            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}${saveBtn}</div>`;
           }).join("");
           mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
         }
@@ -1823,6 +1825,23 @@
           e.stopPropagation();
           const id = e.currentTarget.dataset.id;
           if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onStatusChange(id, "open");
+        });
+      });
+      body.querySelectorAll(".fs-save-library").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          var _a2;
+          e.stopPropagation();
+          const el = e.currentTarget;
+          const url = el.dataset.url;
+          const name = el.dataset.name || "";
+          if (url && ((_a2 = this.callbacks) == null ? void 0 : _a2.onSaveToLibrary)) {
+            el.textContent = "\u23F3";
+            this.callbacks.onSaveToLibrary(url, name);
+            el.textContent = "\u2705";
+            setTimeout(() => {
+              el.textContent = "\u{1F4E5}";
+            }, 2e3);
+          }
         });
       });
       body.querySelectorAll(".fs-dots-trigger").forEach((trigger) => {
@@ -2059,7 +2078,8 @@
           onDeviceFilterChange: (device) => {
             this.renderer.setDeviceFilter(device);
           },
-          onStatusChange: (id, status) => this.changeAnnotationStatus(id, status)
+          onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
+          onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName)
         }, () => {
         });
       });
@@ -2270,6 +2290,27 @@
       } catch (err) {
         console.error("Failed to update annotation status", err);
         this.showToast("Failed to update status");
+      }
+    }
+    async saveToLibrary(fileUrl, fileName) {
+      try {
+        const wpUrl = this.config.wpApiUrl.replace(/\/+$/, "");
+        const res = await fetch(`${wpUrl}/feedspace/v1/media/save-to-library`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Feedspace-Key": this.config.wpApiKey
+          },
+          body: JSON.stringify({ file_url: fileUrl, file_name: fileName })
+        });
+        const data = await res.json();
+        if (data.saved_count > 0) {
+          dbg("save_to_library_ok", data);
+        } else {
+          dbg("save_to_library_failed", data);
+        }
+      } catch (err) {
+        dbg("save_to_library_error", err);
       }
     }
     async deleteAnnotation(id) {

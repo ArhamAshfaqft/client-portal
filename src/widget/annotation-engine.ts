@@ -188,6 +188,7 @@ export class AnnotationEngine {
           this.renderer.setDeviceFilter(device);
         },
         onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
+        onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName),
       }, () => { });
     });
 
@@ -437,6 +438,28 @@ export class AnnotationEngine {
     } catch (err) {
       console.error('Failed to update annotation status', err);
       this.showToast('Failed to update status');
+    }
+  }
+
+  private async saveToLibrary(fileUrl: string, fileName: string): Promise<void> {
+    try {
+      const wpUrl = this.config.wpApiUrl.replace(/\/+$/, '');
+      const res = await fetch(`${wpUrl}/feedspace/v1/media/save-to-library`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Feedspace-Key': this.config.wpApiKey,
+        },
+        body: JSON.stringify({ file_url: fileUrl, file_name: fileName }),
+      });
+      const data = await res.json();
+      if (data.saved_count > 0) {
+        dbg('save_to_library_ok', data);
+      } else {
+        dbg('save_to_library_failed', data);
+      }
+    } catch (err) {
+      dbg('save_to_library_error', err);
     }
   }
 

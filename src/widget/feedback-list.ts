@@ -6,6 +6,7 @@ export interface FeedbackListCallbacks {
   onDeleteAnnotation: (id: string) => void;
   onDeviceFilterChange: (device: string) => void;
   onStatusChange: (id: string, status: string) => void;
+  onSaveToLibrary?: (fileUrl: string, fileName: string) => void;
 }
 
 function timeAgo(date: string): string {
@@ -303,7 +304,9 @@ export class FeedbackListPanel {
           } else {
             inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml(ext.substring(0, 4))}</div>`;
           }
-          return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
+          const mediaUrl = m.fileUrl;
+          const saveBtn = `<button class="fs-save-library" data-url="${escHtml(mediaUrl)}" data-name="${escHtml(m.fileName || '')}" title="Save to Media Library" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:4px;border:none;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📥</button>`;
+          return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}${saveBtn}</div>`;
         }).join('');
         mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
       }
@@ -410,6 +413,22 @@ export class FeedbackListPanel {
         e.stopPropagation();
         const id = (e.currentTarget as HTMLElement).dataset.id;
         if (id) this.callbacks?.onStatusChange(id, 'open');
+      });
+    });
+
+    // Save to library button
+    body.querySelectorAll('.fs-save-library').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const el = e.currentTarget as HTMLElement;
+        const url = el.dataset.url;
+        const name = el.dataset.name || '';
+        if (url && this.callbacks?.onSaveToLibrary) {
+          el.textContent = '⏳';
+          this.callbacks.onSaveToLibrary(url, name);
+          el.textContent = '✅';
+          setTimeout(() => { el.textContent = '📥'; }, 2000);
+        }
       });
     });
 

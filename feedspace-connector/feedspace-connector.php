@@ -568,6 +568,12 @@ class FeedspaceConnector
             'permission_callback' => array($this, 'checkApiAuth'),
         ));
 
+        register_rest_route('feedspace/v1', '/media/save-to-library', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'saveMediaToLibrary'),
+            'permission_callback' => array($this, 'checkApiAuth'),
+        ));
+
         register_rest_route('feedspace/v1', '/cleanup', array(
             'methods' => 'POST',
             'callback' => array($this, 'cleanupOldMedia'),
@@ -702,6 +708,131 @@ class FeedspaceConnector
 
         self::logDebug('media_upload_ok', array('url' => $uploadedFile['url'] ?? 'none'));
         return new WP_REST_Response($uploadedFile, 200);
+    }
+
+    public function saveMediaToLibrary($request)
+    {
+        global $wpdb;
+        $body = $request->get_json_params();
+        $fileUrl = $body['file_url'] ?? '';
+        $annotationId = $body['annotation_id'] ?? '';
+
+        self::logDebug('save_to_library_start', array(
+            'file_url' => $fileUrl ?: '(all from annotation)',
+            'annotation_id' => $annotationId,
+        ));
+
+        $uploadDir = wp_upload_dir();
+        $feedspaceDir = $uploadDir['basedir'] . '/feedspace-media/';
+
+        $filesToSave = array();
+
+        if (!empty($fileUrl)) {
+            $filesToSave[] = array('url' => $fileUrl, 'name' => basename($fileUrl));
+        } elseif (!empty($annotationId)) {
+            $tableName = $wpdb->prefix . 'feedspace_annotations';
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT meta_data FROM $tableName WHERE annotation_id = %s", $annotationId
+            ));
+            if ($existing) {
+                $meta = json_decode($existing, true) ?: array();
+                $atts = $meta['attachments'] ?? array();
+                $savedUrls = array();
+                foreach (($meta['saved_to_library'] ?? array()) as $s) {
+                    $savedUrls[] = $s['file_url'];
+                }
+                foreach ($atts as $att) {
+                    if (!in_array($att['fileUrl'] ?? '', $savedUrls)) {
+                        $filesToSave[] = array('url' => $att['fileUrl'], 'name' => $att['fileName'] ?? basename($att['fileUrl']));
+                    }
+                }
+            }
+        }
+
+        if (empty($filesToSave)) {
+            return new WP_Error('nothing_to_save', 'No new media files to save', array('status' => 200));
+        }
+
+        $results = array();
+
+        foreach ($filesToSave as $fileInfo) {
+            $fileUrl = $fileInfo['url'];
+            $fileName = $fileInfo['name'];
+            if (empty($fileName)) $fileName = basename($fileUrl);
+
+            $parsedUrl = parse_url($fileUrl);
+            $relativePath = ltrim($parsedUrl['path'] ?? '', '/');
+            $sourcePath = ABSPATH . $relativePath;
+
+            if (!file_exists($sourcePath)) {
+                $basename = basename($fileUrl);
+                $altPath = $feedspaceDir . $basename;
+                if (file_exists($altPath)) {
+                    $sourcePath = $altPath;
+                } else {
+                    self::logDebug('save_to_library_skip', array('file' => $fileUrl, 'reason' => 'not found'));
+                    continue;
+                }
+            }
+
+            $wpFiletype = wp_check_filetype($fileName);
+            $subdir = date('Y/m');
+            $destDir = $uploadDir['basedir'] . '/' . $subdir;
+            if (!file_exists($destDir)) wp_mkdir_p($destDir);
+
+            $uniqueName = wp_unique_filename($destDir, sanitize_file_name($fileName));
+            $destPath = $destDir . '/' . $uniqueName;
+
+            if (!copy($sourcePath, $destPath)) continue;
+
+            $attachment = array(
+                'guid'           => $uploadDir['baseurl'] . '/' . $subdir . '/' . $uniqueName,
+                'post_mime_type' => $wpFiletype['type'] ?: 'application/octet-stream',
+                'post_title'     => sanitize_file_name(pathinfo($fileName, PATHINFO_FILENAME)),
+                'post_content'   => '',
+                'post_status'    => 'inherit',
+            );
+
+            $attachId = wp_insert_attachment($attachment, $destPath);
+            if (is_wp_error($attachId)) continue;
+
+            require_once ABSPATH . 'wp-admin/includes/image.php';
+            $attachData = wp_generate_attachment_metadata($attachId, $destPath);
+            wp_update_attachment_metadata($attachId, $attachData);
+
+            $wpUrl = wp_get_attachment_url($attachId);
+            $results[] = array(
+                'attachment_id' => $attachId,
+                'file_url' => $fileUrl,
+                'wp_url' => $wpUrl,
+                'edit_url' => admin_url('upload.php?item=' . $attachId),
+            );
+
+            if (!empty($annotationId)) {
+                $existingMeta = $wpdb->get_var($wpdb->prepare(
+                    "SELECT meta_data FROM $tableName WHERE annotation_id = %s", $annotationId
+                ));
+                if ($existingMeta) {
+                    $metaData = json_decode($existingMeta, true) ?: array();
+                    $saved = $metaData['saved_to_library'] ?? array();
+                    $saved[] = array('attachment_id' => $attachId, 'file_url' => $fileUrl, 'wp_url' => $wpUrl);
+                    $metaData['saved_to_library'] = $saved;
+                    $wpdb->update($tableName, array('meta_data' => json_encode($metaData)), array('annotation_id' => $annotationId));
+                }
+            }
+        }
+
+        self::logDebug('save_to_library_done', array('saved' => count($results)));
+
+        if (empty($results)) {
+            return new WP_Error('save_failed', 'Could not save any files to Media Library', array('status' => 500));
+        }
+
+        return new WP_REST_Response(array(
+            'saved_count' => count($results),
+            'results' => $results,
+            'edit_url' => admin_url('upload.php'),
+        ), 200);
     }
 
     private function handleUpload($file, $projectId = '')
@@ -1554,9 +1685,16 @@ class FeedspaceConnector
 
         $where = array('1=1');
         $params = array();
+        $statusLabels = array('open' => 'Pending', 'in_progress' => 'Pending', 'resolved' => 'Resolved', 'closed' => 'Closed');
         if (!empty($statusFilter)) {
-            $where[] = 'status = %s';
-            $params[] = $statusFilter;
+            if ($statusFilter === 'pending') {
+                $where[] = '(status = %s OR status = %s)';
+                $params[] = 'open';
+                $params[] = 'in_progress';
+            } else {
+                $where[] = 'status = %s';
+                $params[] = $statusFilter;
+            }
         }
         if (!empty($urlFilter)) {
             $where[] = 'page_url = %s';
@@ -1575,10 +1713,8 @@ class FeedspaceConnector
                 <input type="hidden" name="page" value="feedspace-annotations" />
                 <select name="status">
                     <option value="">All statuses</option>
-                    <option value="open" <?php selected($statusFilter, 'open'); ?>>Open</option>
-                    <option value="in_progress" <?php selected($statusFilter, 'in_progress'); ?>>In Progress</option>
+                    <option value="pending" <?php selected($statusFilter, 'pending'); ?>>Pending</option>
                     <option value="resolved" <?php selected($statusFilter, 'resolved'); ?>>Resolved</option>
-                    <option value="closed" <?php selected($statusFilter, 'closed'); ?>>Closed</option>
                 </select>
                 <select name="page_url" style="min-width:200px;">
                     <option value="">All pages</option>
@@ -1620,13 +1756,22 @@ class FeedspaceConnector
                             <div style="font-size:11px;color:#94a3b8;word-break:break-all;"><?php echo esc_html($row->page_url); ?></div>
                         </td>
                         <td><?php echo esc_html(mb_substr($row->content, 0, 100)); ?></td>
-                        <td style="text-align:center;"><?php echo $mediaCount > 0 ? '<span title="' . esc_attr($mediaCount . ' file(s)') . '">📎 ' . $mediaCount . '</span>' : '—'; ?></td>
-                        <td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:<?php echo $row->status === 'open' ? '#fef3c7' : ($row->status === 'resolved' ? '#d1fae5' : '#e2e8f0'); ?>;color:<?php echo $row->status === 'open' ? '#92400e' : ($row->status === 'resolved' ? '#065f46' : '#475569'); ?>;"><?php echo esc_html($row->status); ?></span></td>
+                        <td style="text-align:center;">
+                            <?php if ($mediaCount > 0): ?>
+                                <span title="<?php echo esc_attr($mediaCount . ' file(s)'); ?>">📎 <?php echo $mediaCount; ?></span>
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
+                        </td>
+                        <td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:<?php echo in_array($row->status, array('open', 'in_progress')) ? '#fef3c7' : ($row->status === 'resolved' ? '#d1fae5' : '#e2e8f0'); ?>;color:<?php echo in_array($row->status, array('open', 'in_progress')) ? '#92400e' : ($row->status === 'resolved' ? '#065f46' : '#475569'); ?>;"><?php echo esc_html($statusLabels[$row->status] ?? $row->status); ?></span></td>
                         <td><?php echo esc_html($row->device); ?></td>
                         <td><?php echo esc_html($row->created_by); ?></td>
                         <td><?php echo esc_html($row->created_at); ?></td>
-                        <td>
+                        <td style="white-space:nowrap;">
                             <a href="<?php echo esc_url($previewUrl); ?>" target="_blank" class="button button-small" title="View on page">👁</a>
+                            <?php if ($mediaCount > 0): ?>
+                                <button class="button button-small feedspace-save-library" data-annotation-id="<?php echo esc_attr($row->annotation_id); ?>" title="Save all media to Media Library">📥</button>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; endif; ?>
@@ -1637,7 +1782,40 @@ class FeedspaceConnector
             .wp-list-table th { font-weight:600; }
             .wp-list-table td { vertical-align:middle; }
             .button-small { padding:0 6px !important; min-height:28px; line-height:28px; font-size:12px; }
+            .fs-library-done { opacity:0.6; pointer-events:none; }
         </style>
+        <script>
+        (function(){
+            document.querySelectorAll('.feedspace-save-library').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var self = this;
+                    var annotationId = this.dataset.annotationId;
+                    if (!annotationId || this.classList.contains('fs-library-done')) return;
+                    this.textContent = '⏳';
+                    fetch('<?php echo esc_url(rest_url('feedspace/v1/media/save-to-library')); ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Feedspace-Key': '<?php echo esc_js(get_option('feedspace_api_key')); ?>' },
+                        body: JSON.stringify({ annotation_id: annotationId, file_url: '' })
+                    })
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                        if (data.saved_count > 0) {
+                            self.textContent = '✅';
+                            self.classList.add('fs-library-done');
+                            self.title = 'Saved ' + data.saved_count + ' file(s) to Media Library';
+                        } else {
+                            self.textContent = '❌';
+                            alert('Failed: ' + (data.message || JSON.stringify(data)));
+                        }
+                    })
+                    .catch(function(err){
+                        self.textContent = '❌';
+                        alert('Error: ' + err.message);
+                    });
+                });
+            });
+        })();
+        </script>
         <?php
     }
 }
