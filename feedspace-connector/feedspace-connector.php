@@ -370,7 +370,7 @@ class FeedspaceConnector
 
             $code = (int) wp_remote_retrieve_response_code($result);
             $body = wp_remote_retrieve_body($result);
-            self::logDebug('queue_response', array('annotation_id' => $item->annotation_id, 'code' => $code, 'body' => mb_substr($body, 0, 200)));
+            self::logDebug('queue_response', array('annotation_id' => $item->annotation_id, 'code' => $code, 'body' => mb_substr($body, 0, 500)));
             if ($code >= 200 && $code < 300) {
                 $wpdb->update($table, array('status' => 'done', 'updated_at' => current_time('mysql')), array('id' => $item->id));
                 self::logDebug('queue_done', array('annotation_id' => $item->annotation_id, 'code' => $code));
