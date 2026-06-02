@@ -757,8 +757,6 @@ class FeedspaceConnector
             'annotation_id' => $annotationId,
         ));
 
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        require_once ABSPATH . 'wp-admin/includes/media.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
 
         $uploadDir = wp_upload_dir();
@@ -800,8 +798,8 @@ class FeedspaceConnector
             $diskName = basename(parse_url($fileUrl, PHP_URL_PATH));
             if (!$diskName) continue;
 
+            // Find the source file on disk
             $sourcePath = $feedspaceDir . $diskName;
-
             if (!file_exists($sourcePath)) {
                 $parsedUrl = parse_url($fileUrl);
                 if (!empty($parsedUrl['path'])) {
@@ -811,34 +809,47 @@ class FeedspaceConnector
                     }
                 }
             }
-
             if (!file_exists($sourcePath)) {
-                self::logDebug('save_to_library_skip', array('file' => $fileUrl, 'reason' => 'not found', 'sourcePath' => $sourcePath));
+                self::logDebug('save_to_library_skip', array('file' => $fileUrl, 'reason' => 'not found'));
                 $lastError = 'Source file not found: ' . $diskName;
                 continue;
             }
 
-            $tmp = wp_tempnam($diskName);
-            if (!$tmp || !copy($sourcePath, $tmp)) {
+            // Determine MIME type from the actual file
+            $wpFiletype = wp_check_filetype($diskName);
+            $mimeType = $wpFiletype['type'] ?: mime_content_type($sourcePath) ?: 'application/octet-stream';
+
+            // Copy to standard uploads directory
+            $subdir = date('Y/m');
+            $destDir = $uploadDir['basedir'] . '/' . $subdir;
+            if (!file_exists($destDir)) wp_mkdir_p($destDir);
+
+            $uniqueName = wp_unique_filename($destDir, sanitize_file_name($diskName));
+            $destPath = $destDir . '/' . $uniqueName;
+
+            if (!copy($sourcePath, $destPath)) {
                 $lastError = 'Failed to copy: ' . $diskName;
                 continue;
             }
 
-            $fileArray = array(
-                'name'     => $diskName,
-                'tmp_name' => $tmp,
-                'error'    => UPLOAD_ERR_OK,
-                'size'     => filesize($sourcePath),
+            // Insert as attachment
+            $attachment = array(
+                'guid'           => $uploadDir['baseurl'] . '/' . $subdir . '/' . $uniqueName,
+                'post_mime_type' => $mimeType,
+                'post_title'     => sanitize_file_name(pathinfo($diskName, PATHINFO_FILENAME)),
+                'post_content'   => '',
+                'post_status'    => 'inherit',
             );
 
-            $attachId = media_handle_sideload($fileArray, 0);
-
-            @unlink($tmp);
-
-            if (is_wp_error($attachId)) {
-                $lastError = $attachId->get_error_message();
+            $attachId = wp_insert_attachment($attachment, $destPath);
+            if (is_wp_error($attachId) || !$attachId) {
+                $lastError = 'wp_insert_attachment failed';
+                @unlink($destPath);
                 continue;
             }
+
+            $attachData = wp_generate_attachment_metadata($attachId, $destPath);
+            wp_update_attachment_metadata($attachId, $attachData);
 
             $libraryUrl = wp_get_attachment_url($attachId);
             $result = array(
@@ -868,7 +879,7 @@ class FeedspaceConnector
         self::logDebug('save_to_library_done', $result ?: array('error' => $lastError));
 
         if (empty($result)) {
-            return new WP_Error('save_failed', $lastError ?: 'Could not save file to Media Library', array('status' => 500));
+            return new WP_Error('save_failed', $lastError ?: 'Could not save file', array('status' => 500));
         }
 
         return new WP_REST_Response($result, 200);
@@ -1218,6 +1229,18 @@ class FeedspaceConnector
         $mimes['webm'] = 'audio/webm'; // MediaRecorder audio only
         $mimes['weba'] = 'audio/webm';
         $mimes['webp'] = 'image/webp';
+        $mimes['png']  = 'image/png';
+        $mimes['jpg']  = 'image/jpeg';
+        $mimes['jpeg'] = 'image/jpeg';
+        $mimes['gif']  = 'image/gif';
+        $mimes['mp4']  = 'video/mp4';
+        $mimes['mp3']  = 'audio/mpeg';
+        $mimes['pdf']  = 'application/pdf';
+        $mimes['doc']  = 'application/msword';
+        $mimes['docx'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        $mimes['xls']  = 'application/vnd.ms-excel';
+        $mimes['xlsx'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        $mimes['zip']  = 'application/zip';
         return $mimes;
     }
 
