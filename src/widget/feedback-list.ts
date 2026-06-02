@@ -103,6 +103,10 @@ export class FeedbackListPanel {
     this.render();
   }
 
+  isOpen(): boolean {
+    return this.root !== null;
+  }
+
   close(): void {
     if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
     if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);

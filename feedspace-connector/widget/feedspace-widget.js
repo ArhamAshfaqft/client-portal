@@ -1564,6 +1564,9 @@
       this.onClose = onClose;
       this.render();
     }
+    isOpen() {
+      return this.root !== null;
+    }
     close() {
       if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
       if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
@@ -2070,6 +2073,10 @@
         });
       }
       (_a = this.toolbarRoot.querySelector('[data-action="list"]')) == null ? void 0 : _a.addEventListener("click", () => {
+        if (this.feedbackList.isOpen()) {
+          this.feedbackList.close();
+          return;
+        }
         this.feedbackList.open(this.annotations, {
           onSelectAnnotation: (id) => this.focusAnnotation(id),
           onFilterChange: (filter) => {

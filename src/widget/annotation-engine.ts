@@ -177,6 +177,10 @@ export class AnnotationEngine {
     }
 
     this.toolbarRoot.querySelector('[data-action="list"]')?.addEventListener('click', () => {
+      if (this.feedbackList.isOpen()) {
+        this.feedbackList.close();
+        return;
+      }
       this.feedbackList.open(this.annotations, {
         onSelectAnnotation: (id) => this.focusAnnotation(id),
         onFilterChange: (filter) => {
