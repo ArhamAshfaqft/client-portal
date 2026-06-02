@@ -12,7 +12,20 @@ export interface FeedbackListCallbacks {
 
 function timeAgo(date: string): string {
   if (!date) return '';
-  const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  // WP returns UTC timestamps as "YYYY-MM-DD HH:MM:SS" with no timezone marker.
+  // new Date() would treat that as LOCAL time → constant offset (e.g. +5h in PKT).
+  // Normalize to an explicit UTC ISO string before parsing.
+  let iso = date.trim();
+  const hasTz = /[zZ]$/.test(iso) || /[+-]\d{2}:?\d{2}$/.test(iso);
+  if (!hasTz) {
+    iso = iso.replace(' ', 'T') + 'Z';
+  } else if (iso.includes(' ') && !iso.includes('T')) {
+    iso = iso.replace(' ', 'T');
+  }
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return '';
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 0) return 'Just now';
   const ints: [number, string][] = [[31536000,'y'],[2592000,'mo'],[86400,'d'],[3600,'h'],[60,'m']];
   for (const [sec, l] of ints) { const v = s / sec; if (v > 1) return Math.floor(v) + l + ' ago'; }
   return 'Just now';

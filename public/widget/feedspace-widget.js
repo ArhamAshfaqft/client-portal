@@ -1468,7 +1468,17 @@
   // src/widget/feedback-list.ts
   function timeAgo(date) {
     if (!date) return "";
-    const s = Math.floor((Date.now() - new Date(date).getTime()) / 1e3);
+    let iso = date.trim();
+    const hasTz = /[zZ]$/.test(iso) || /[+-]\d{2}:?\d{2}$/.test(iso);
+    if (!hasTz) {
+      iso = iso.replace(" ", "T") + "Z";
+    } else if (iso.includes(" ") && !iso.includes("T")) {
+      iso = iso.replace(" ", "T");
+    }
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) return "";
+    const s = Math.floor((Date.now() - t) / 1e3);
+    if (s < 0) return "Just now";
     const ints = [[31536e3, "y"], [2592e3, "mo"], [86400, "d"], [3600, "h"], [60, "m"]];
     for (const [sec, l] of ints) {
       const v = s / sec;

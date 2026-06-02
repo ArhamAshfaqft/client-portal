@@ -89,19 +89,22 @@ function getViewportLabel(width?: number | null, height?: number | null) {
 }
 
 function timeAgo(dateStr: string): string {
-  // Supabase TIMESTAMPTZ may return without 'Z' suffix; treat as UTC
-  let normalized = dateStr;
-  if (normalized && !normalized.endsWith("Z") && !normalized.includes("+") && !normalized.includes("T")) {
-    // Format like "2026-06-02 17:06:00" → "2026-06-02T17:06:00Z"
-    normalized = normalized.replace(" ", "T") + "Z";
-  } else if (normalized && !normalized.endsWith("Z") && !normalized.includes("+") && !/\d{2}:\d{2}$/.test(normalized.slice(-5))) {
-    // Has T but no timezone: "2026-06-02T17:06:00" → append Z
-    if (!normalized.match(/[+-]\d{2}:\d{2}$/)) normalized += "Z";
+  if (!dateStr) return "";
+  // Supabase TIMESTAMPTZ usually includes an offset, but WP-origin values may
+  // arrive as "YYYY-MM-DD HH:MM:SS" (UTC, no marker). Without a timezone marker
+  // new Date() treats it as LOCAL time → constant offset error. Normalize to UTC.
+  let iso = dateStr.trim();
+  const hasTz = /[zZ]$/.test(iso) || /[+-]\d{2}:?\d{2}$/.test(iso);
+  if (!hasTz) {
+    iso = iso.replace(" ", "T") + "Z";
+  } else if (iso.includes(" ") && !iso.includes("T")) {
+    iso = iso.replace(" ", "T");
   }
-  const date = new Date(normalized);
+  const date = new Date(iso);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
-  if (isNaN(diff) || diff < 0) return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  if (isNaN(diff)) return "";
+  if (diff < 0) return "Just now";
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);

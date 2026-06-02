@@ -235,26 +235,50 @@ export async function POST(request: Request) {
       );
     }
 
-    if (siteAgencyId) {
-      // Fetch the site to get its name for a descriptive notification
-      const siteResult = await supabase
-        .from("sites")
-        .select("id, name")
-        .eq("agency_id", siteAgencyId)
-        .eq("wp_connected", true)
-        .maybeSingle();
-      const siteName = siteResult.data?.name || "WordPress Site";
-      const siteId = siteResult.data?.id || null;
-
+    // Notify the agency about the new feedback. Resolve the owning site/agency
+    // from the project chain (project -> site -> agency) using the service-role
+    // client so this works for EVERY synced pin — not just ones whose WP
+    // credentials happen to match the strict "mirror" check above.
+    {
       const admin = adminClient();
-      void admin.from("notifications").insert({
-        agency_id: siteAgencyId,
-        type: "new_feedback",
-        title: `New feedback on ${siteName}`,
-        message: content ? `"${content.substring(0, 100)}"` : "New feedback with media",
-        feedback_id: feedbackItem.id,
-        site_id: siteId,
-      });
+      let resolvedAgencyId: string | null = siteAgencyId;
+      let resolvedSiteId: string | null = siteToken || null;
+      let resolvedSiteName = "your site";
+
+      const { data: proj } = await admin
+        .from("projects")
+        .select("site_id, sites(id, name, agency_id)")
+        .eq("id", projectId)
+        .maybeSingle();
+
+      const site = (proj as any)?.sites;
+      if (site) {
+        resolvedSiteId = site.id;
+        resolvedSiteName = site.name || resolvedSiteName;
+        resolvedAgencyId = site.agency_id || resolvedAgencyId;
+      } else if (resolvedSiteId) {
+        // Fall back to the site referenced by the WP X-Site-Token header.
+        const { data: s } = await admin
+          .from("sites")
+          .select("id, name, agency_id")
+          .eq("id", resolvedSiteId)
+          .maybeSingle();
+        if (s) {
+          resolvedSiteName = s.name || resolvedSiteName;
+          resolvedAgencyId = s.agency_id || resolvedAgencyId;
+        }
+      }
+
+      if (resolvedAgencyId) {
+        void admin.from("notifications").insert({
+          agency_id: resolvedAgencyId,
+          type: "new_feedback",
+          title: `New feedback on ${resolvedSiteName}`,
+          message: content ? `"${content.substring(0, 100)}"` : "New feedback with media",
+          feedback_id: feedbackItem.id,
+          site_id: resolvedSiteId,
+        });
+      }
     }
 
     let mediaRecords: any[] = [];
