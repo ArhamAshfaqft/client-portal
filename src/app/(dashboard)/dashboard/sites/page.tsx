@@ -365,6 +365,25 @@ export default function SitesPage() {
                                   <UserPlus className="w-4 h-4 text-muted-foreground" />
                                   {siteAssignments[site.id]?.userId ? "Reassign" : "Assign Developer"}
                                 </button>
+                                <button
+                                  onClick={() => {
+                                    setMenuOpen(null);
+                                    const newUrl = prompt('Enter new WordPress URL (e.g. https://yoursite.com):', 'https://');
+                                    if (newUrl && newUrl !== 'https://') {
+                                      fetch('/api/widget/wp-webhook', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: site.wp_api_key || '' }),
+                                      }).then(r => r.json()).then(d => {
+                                        alert(d.ok ? 'URL updated!' : 'Failed: ' + (d.error || d.body));
+                                      }).catch(() => alert('Failed to update URL'));
+                                    }
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
+                                >
+                                  <Globe className="w-4 h-4 text-muted-foreground" />
+                                  Edit WP URL
+                                </button>
                                 {canDelete && (
                                   <button
                                     onClick={() => { setMenuOpen(null); handleRemoveSite(site.id); }}
