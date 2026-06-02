@@ -1660,7 +1660,7 @@ add_action('wp_ajax_feedspace_connect_site', function () {
         return;
     }
 
-    $requestUrl = $dashboardUrl . '/api/auto-register';
+    $requestUrl = $dashboardUrl . '/api/sites';
     $requestBody = json_encode(array(
         'agencyToken' => $agencyToken,
         'siteName' => $siteName,
