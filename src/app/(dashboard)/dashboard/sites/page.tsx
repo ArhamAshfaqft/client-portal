@@ -375,7 +375,7 @@ export default function SitesPage() {
                                       fetch('/api/widget/wp-webhook', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: apiKey }),
+                                        body: JSON.stringify({ _updateUrl: newUrl, wpApiKey: apiKey, siteId: site.id }),
                                       }).then(r => r.json()).then(d => {
                                         if (d.ok) {
                                           alert('URL updated to ' + newUrl);

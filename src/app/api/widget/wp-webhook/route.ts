@@ -23,10 +23,15 @@ export async function POST(request: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
         { cookies: { getAll: () => [], setAll: () => {} } }
       );
-      const { error } = await supabase
-        .from("sites")
-        .update({ wp_api_url: _updateUrl, url: _updateUrl })
-        .eq("wp_api_key", wpApiKey);
+      let query = supabase.from("sites").update({ wp_api_url: _updateUrl, url: _updateUrl });
+      if (body.siteId) {
+        query = query.eq("id", body.siteId);
+      } else if (wpApiKey) {
+        query = query.eq("wp_api_key", wpApiKey);
+      } else {
+        return NextResponse.json({ error: "Missing siteId or wpApiKey" }, { status: 400, headers: corsHeaders });
+      }
+      const { error } = await query;
       if (error) {
         return NextResponse.json({ ok: false, error: error.message }, { status: 500, headers: corsHeaders });
       }
