@@ -1666,13 +1666,36 @@ add_action('wp_ajax_feedspace_connect_site', function () {
     }
 
     $requestUrl = $dashboardUrl . '/api/connect-site';
+
+    // Phase 1: test POST endpoint works at all
+    FeedspaceConnector::logDebug('connect_phase1_test', array('url' => $requestUrl));
+    $testResponse = wp_remote_post($requestUrl, array(
+        'headers' => array('Content-Type' => 'application/json'),
+        'body' => json_encode(array('_test' => true)),
+        'timeout' => 15,
+    ));
+    if (is_wp_error($testResponse)) {
+        FeedspaceConnector::logDebug('connect_phase1_error', array('error' => $testResponse->get_error_message()));
+        wp_send_json_error(array('error' => 'POST test failed: ' . $testResponse->get_error_message()));
+        return;
+    }
+    $testCode = wp_remote_retrieve_response_code($testResponse);
+    $testBody = wp_remote_retrieve_body($testResponse);
+    FeedspaceConnector::logDebug('connect_phase1_response', array('code' => $testCode, 'body' => $testBody));
+    $testJson = json_decode($testBody, true);
+    if (!$testJson || !isset($testJson['ok']) || $testJson['ok'] !== true) {
+        wp_send_json_error(array('error' => "POST endpoint test failed (HTTP $testCode): " . substr($testBody, 0, 200)));
+        return;
+    }
+
+    // Phase 2: actual connection
     $requestBody = json_encode(array(
         'token' => $siteToken,
         'apiKey' => $apiKey,
         'wpUrl' => $wpUrl,
     ));
 
-    FeedspaceConnector::logDebug('connect_site_request', array(
+    FeedspaceConnector::logDebug('connect_phase2_request', array(
         'url' => $requestUrl,
         'body' => $requestBody,
     ));
@@ -1684,18 +1707,16 @@ add_action('wp_ajax_feedspace_connect_site', function () {
     ));
 
     if (is_wp_error($response)) {
-        FeedspaceConnector::logDebug('connect_site_error', array('error' => $response->get_error_message()));
+        FeedspaceConnector::logDebug('connect_phase2_error', array('error' => $response->get_error_message()));
         wp_send_json_error(array('error' => $response->get_error_message()));
         return;
     }
 
     $code = wp_remote_retrieve_response_code($response);
     $respBody = wp_remote_retrieve_body($response);
-    $respHeaders = wp_remote_retrieve_headers($response);
 
-    FeedspaceConnector::logDebug('connect_site_response', array(
+    FeedspaceConnector::logDebug('connect_phase2_response', array(
         'code' => $code,
-        'headers' => is_array($respHeaders) ? json_encode($respHeaders) : (string) $respHeaders,
         'body' => $respBody,
     ));
 
@@ -1703,7 +1724,7 @@ add_action('wp_ajax_feedspace_connect_site', function () {
 
     if ($code >= 200 && $code < 300 && !empty($body['connected'])) {
         update_option('feedspace_site_connected', true);
-        FeedspaceConnector::logDebug('connect_site_success', array('site_id' => $body['siteId']));
+        FeedspaceConnector::logDebug('connect_phase2_success', array('site_id' => $body['siteId']));
         wp_send_json_success(array('site_id' => $body['siteId']));
     } else {
         wp_send_json_error(array('error' => $body['error'] ?? ($body['message'] ?? "HTTP $code")));
