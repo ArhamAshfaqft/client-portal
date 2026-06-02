@@ -203,6 +203,7 @@ class FeedspaceConnector
         $pageUrl = $overridePageUrl ?: remove_query_arg('feedspace_preview', home_url(add_query_arg(null, null)));
         $isDebug = get_option('feedspace_debug_enabled') === '1';
 
+        $siteLabel = !empty($config['siteName']) ? $config['siteName'] : get_bloginfo('name');
         $configJSON = json_encode(array(
             'apiUrl' => $apiBaseUrl,
             'token' => $token,
@@ -212,6 +213,7 @@ class FeedspaceConnector
             'wpApiKey' => $wpApiKey,
             'pageUrl' => $pageUrl,
             'devMode' => $token === '' ? true : false,
+            'siteName' => $siteLabel,
         ));
 
         $debugInit = $isDebug ? 'window.__feedspaceDebug=window.__feedspaceDebug||[];' : '';
@@ -1176,6 +1178,7 @@ class FeedspaceConnector
                 'viewportWidth' => intval($row->viewport_width),
                 'viewportHeight' => intval($row->viewport_height),
                 'device' => $row->device,
+                'projectId' => $row->project_id,
                 'createdBy' => $row->created_by,
                 'createdAt' => $row->created_at,
                 'replies' => array(),

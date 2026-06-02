@@ -7,6 +7,7 @@ export interface WidgetConfig {
   wpApiKey: string;
   pageUrl: string;
   devMode?: boolean;
+  siteName?: string;
 }
 
 export interface ElementDNA {
@@ -22,6 +23,7 @@ export interface Annotation {
   type: 'pin' | 'rect' | 'arrow' | 'draw';
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   content: string;
+  projectId?: string;
   pageUrl: string;
   elementDna: ElementDNA | null;
   anchorXPct: number;
