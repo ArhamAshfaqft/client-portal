@@ -277,7 +277,7 @@ export async function POST(request: Request) {
       _siteResolved = resolvedSiteId;
 
       if (resolvedAgencyId) {
-        void admin.from("notifications").insert({
+        const { error: notifErr } = await admin.from("notifications").insert({
           agency_id: resolvedAgencyId,
           type: "new_feedback",
           title: `New feedback on ${resolvedSiteName}`,
@@ -285,6 +285,9 @@ export async function POST(request: Request) {
           feedback_id: feedbackItem.id,
           site_id: resolvedSiteId,
         });
+        if (notifErr) {
+          _notifStatus = 'error:' + notifErr.message;
+        }
       }
     }
 
