@@ -1587,12 +1587,10 @@
         const pid = a.projectId;
         if (pid && !seen.has(pid)) {
           seen.add(pid);
-          const name = a.projectName || this.siteName || "Session #" + pid.slice(0, 8);
-          console.log("[Feedspace DEBUG] distinctProjects: pid=" + pid + " projectName=" + a.projectName + " siteName=" + this.siteName + " => title=" + name);
+          const name = a.projectName || "Session #" + pid.slice(0, 8);
           out.push({ id: pid, title: name });
         }
       }
-      console.log("[Feedspace DEBUG] distinctProjects result:", JSON.stringify(out));
       return out;
     }
     open(annotations, callbacks, onClose, siteName) {

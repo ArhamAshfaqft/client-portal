@@ -125,11 +125,33 @@ class FeedspaceConnector
         if (!$projectId) {
             $projectId = 'elementor-' . $postId;
         }
+        $siteName = get_bloginfo('name');
+        // Try to fetch the real project name from Vercel
+        $apiUrl = get_option('feedspace_api_url', '');
+        $siteToken = get_option('feedspace_site_token', '');
+        $wpApiKey = get_option('feedspace_api_key', '');
+        if (!empty($apiUrl) && !empty($siteToken) && !empty($wpApiKey) && !empty($projectId) && strpos($projectId, 'elementor-') !== 0) {
+            $lookupUrl = rtrim($apiUrl, '/') . '/api/projects/lookup?projectId=' . urlencode($projectId);
+            $response = wp_remote_get($lookupUrl, array(
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'X-Site-Token' => $siteToken,
+                    'X-WP-API-Key' => $wpApiKey,
+                ),
+                'timeout' => 5,
+            ));
+            if (!is_wp_error($response)) {
+                $body = json_decode(wp_remote_retrieve_body($response), true);
+                if ($body && !empty($body['name'])) {
+                    $siteName = $body['name'];
+                }
+            }
+        }
         return array(
             'valid' => true,
             'projectId' => $projectId,
             'primaryColor' => '#6366f1',
-            'siteName' => get_bloginfo('name'),
+            'siteName' => $siteName,
         );
     }
 
