@@ -314,12 +314,25 @@ class FeedspaceConnector
 
     public function addAdminBarNode($wp_admin_bar)
     {
-        if (!is_admin() && get_option('feedspace_dev_mode') === '1') {
+        if (get_option('feedspace_dev_mode') !== '1') return;
+
+        $href = '';
+        if (is_admin()) {
+            // On a post edit screen — link to the frontend page with dev mode
+            $screen = get_current_screen();
+            if ($screen && $screen->base === 'post' && ($postId = intval($_GET['post'] ?? 0))) {
+                $href = add_query_arg('feedspace_dev', '1', get_permalink($postId));
+            }
+        } else {
+            $href = add_query_arg('feedspace_dev', '1');
+        }
+
+        if (!empty($href)) {
             $wp_admin_bar->add_node(array(
                 'id' => 'feedspace-dev',
                 'title' => '<span style="display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Feedspace</span>',
-                'href' => add_query_arg('feedspace_dev', '1'),
-                'meta' => array('title' => 'Open Feedspace widget on this page'),
+                'href' => $href,
+                'meta' => array('title' => 'Open Feedspace widget on this page', 'target' => '_blank'),
             ));
         }
     }
