@@ -5,6 +5,7 @@ export interface FeedbackListCallbacks {
   onFilterChange: (filter: FilterMode) => void;
   onDeleteAnnotation: (id: string) => void;
   onDeviceFilterChange: (device: string) => void;
+  onStatusChange: (id: string, status: string) => void;
 }
 
 function timeAgo(date: string): string {
@@ -142,8 +143,7 @@ export class FeedbackListPanel {
     filters.className = 'feedspace-filter-tabs';
     const filterOptions: Array<{ value: FilterMode; label: string }> = [
       { value: 'all', label: 'All' },
-      { value: 'open', label: 'Open' },
-      { value: 'in_progress', label: 'In Progress' },
+      { value: 'pending', label: 'Pending' },
       { value: 'resolved', label: 'Resolved' },
     ];
     const filtersRoot = filters;
@@ -229,7 +229,9 @@ export class FeedbackListPanel {
     // Filter by status
     let filtered = this.currentFilter === 'all'
       ? this.annotations
-      : this.annotations.filter(a => a.status === this.currentFilter);
+      : this.currentFilter === 'pending'
+        ? this.annotations.filter(a => a.status === 'open' || a.status === 'in_progress')
+        : this.annotations.filter(a => a.status === this.currentFilter);
 
     // Filter by device
     if (this.currentDeviceFilter && this.currentDeviceFilter !== 'all') {
@@ -238,7 +240,9 @@ export class FeedbackListPanel {
 
     // Count per device
     const deviceCounts: Record<string, number> = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
-    let baseForCounts = this.currentFilter === 'all' ? this.annotations : this.annotations.filter(a => a.status === this.currentFilter);
+    let baseForCounts = this.currentFilter === 'all' ? this.annotations :
+      this.currentFilter === 'pending' ? this.annotations.filter(a => a.status === 'open' || a.status === 'in_progress') :
+      this.annotations.filter(a => a.status === this.currentFilter);
     baseForCounts.forEach(a => { deviceCounts.all++; const d = a.device || 'desktop'; if (deviceCounts[d] !== undefined) deviceCounts[d]++; });
 
     // Update device filter counts
@@ -263,7 +267,7 @@ export class FeedbackListPanel {
       return;
     }
 
-    const statusLabels: Record<string, string> = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+    const statusLabels: Record<string, string> = { open: 'Pending', in_progress: 'Pending', resolved: 'Resolved', closed: 'Closed' };
 
     const html = filtered.map((a, idx) => {
       const initial = (a.createdBy || 'A').charAt(0).toUpperCase();
@@ -340,6 +344,11 @@ export class FeedbackListPanel {
         <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
           ${a.elementDna && a.type === 'pin' ? `<button class="fs-reveal-btn" data-id="${a.id}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;color:#94a3b8;background:none;border:none;cursor:pointer;padding:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Reveal</button>` : ''}
           ${replyCount > 0 ? `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> ${replyCount}</span>` : ''}
+          <span style="flex:1"></span>
+          ${a.status === 'resolved'
+            ? `<button class="fs-reopen-btn" data-id="${a.id}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#64748b;background:#f1f5f9;border:none;border-radius:6px;cursor:pointer;padding:3px 8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>Reopen</button>`
+            : `<button class="fs-resolve-btn" data-id="${a.id}" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#059669;background:#ecfdf5;border:none;border-radius:6px;cursor:pointer;padding:3px 8px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Resolve</button>`
+          }
         </div>
       </div>`;
     }).join('');
@@ -383,6 +392,24 @@ export class FeedbackListPanel {
         e.stopPropagation();
         const id = (e.target as HTMLElement).dataset.id;
         if (id) this.callbacks?.onSelectAnnotation(id);
+      });
+    });
+
+    // Resolve button
+    body.querySelectorAll('.fs-resolve-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).dataset.id;
+        if (id) this.callbacks?.onStatusChange(id, 'resolved');
+      });
+    });
+
+    // Reopen button
+    body.querySelectorAll('.fs-reopen-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).dataset.id;
+        if (id) this.callbacks?.onStatusChange(id, 'open');
       });
     });
 

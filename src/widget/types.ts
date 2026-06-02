@@ -80,4 +80,4 @@ export interface CreateAnnotationPayload {
 
 export type ToolMode = 'select' | 'pin' | 'rect' | 'arrow' | 'draw';
 export type DeviceMode = 'desktop' | 'tablet' | 'mobile';
-export type FilterMode = 'all' | 'open' | 'in_progress' | 'resolved';
+export type FilterMode = 'all' | 'open' | 'in_progress' | 'resolved' | 'pending';

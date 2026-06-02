@@ -460,8 +460,8 @@ const STYLES = `
   color: #d97706;
 }
 .feedspace-feedback-status.in_progress {
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
 }
 .feedspace-feedback-status.resolved {
   background: rgba(34, 197, 94, 0.1);

@@ -187,6 +187,7 @@ export class AnnotationEngine {
         onDeviceFilterChange: (device) => {
           this.renderer.setDeviceFilter(device);
         },
+        onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
       }, () => { });
     });
 
@@ -419,6 +420,23 @@ export class AnnotationEngine {
     } catch (err) {
       console.error('Failed to save annotation', err);
       this.showToast('Failed to save feedback. Please try again.');
+    }
+  }
+
+  private async changeAnnotationStatus(id: string, status: string): Promise<void> {
+    try {
+      const updated = await this.api.updateAnnotation(id, { status: status as any });
+      const idx = this.annotations.findIndex(a => a.id === id);
+      if (idx >= 0) {
+        this.annotations[idx] = { ...this.annotations[idx], ...updated, status: status as any };
+      }
+      this.renderer.setAnnotations(this.annotations);
+      this.feedbackList.updateAnnotations(this.annotations);
+      this.updateBadge();
+      this.showToast(status === 'resolved' ? 'Marked as resolved' : 'Reopened');
+    } catch (err) {
+      console.error('Failed to update annotation status', err);
+      this.showToast('Failed to update status');
     }
   }
 
