@@ -96,9 +96,21 @@ export default function FeedbackOverviewPage() {
     if (isDemo) {
       setSites(getAllFeedbackGroupedBySite());
       setLoading(false);
-    } else {
-      fetchSitesOverview();
+      return;
     }
+    fetchSitesOverview();
+
+    // Real-time: refresh counts when feedback items change
+    const channel = supabase
+      .channel("feedback-overview")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "feedback_items" },
+        () => { fetchSitesOverview(); }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [isDemo, profile]);
 
   const filteredSites = useMemo(() => {

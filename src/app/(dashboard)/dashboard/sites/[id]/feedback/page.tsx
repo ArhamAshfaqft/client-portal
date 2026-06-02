@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { usePermissions } from "@/lib/use-permissions";
@@ -86,6 +86,21 @@ function getViewportLabel(width?: number | null, height?: number | null) {
   if (width >= 1440) return "Desktop";
   if (width >= 768) return "Tablet";
   return "Mobile";
+}
+
+function timeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  if (isNaN(diff) || diff < 0) return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function proxyMediaUrl(fileUrl: string): string {
@@ -292,9 +307,39 @@ export default function SiteFeedbackPage() {
     if (isDemo) {
       setFeedback(getFeedbackForSite(id));
       setLoading(false);
-    } else {
-      fetchFeedback();
+      return;
     }
+    fetchFeedback();
+
+    // ── Real-time: new feedback items ──────────────────────────────────
+    const channel = supabase
+      .channel(`site-feedback-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "feedback_items" },
+        (payload) => {
+          const newItem = payload.new as any;
+          if (!newItem.parent_id) {
+            // Refresh the full list to get enriched data (media, project name, etc.)
+            fetchFeedback();
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "feedback_items" },
+        (payload) => {
+          const updated = payload.new as any;
+          setFeedback((prev) =>
+            prev.map((f) =>
+              f.id === updated.id ? { ...f, status: updated.status, assigned_to: updated.assigned_to } : f
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [isDemo, id]);
 
   useEffect(() => {
@@ -519,7 +564,10 @@ export default function SiteFeedbackPage() {
   const filtered = useMemo(() => {
     let result = feedback;
 
-    if (filter !== "all") {
+    if (filter === "open") {
+      // "Pending" tab catches both open and in_progress
+      result = result.filter((f) => f.status === "open" || f.status === "in_progress");
+    } else if (filter !== "all") {
       result = result.filter((f) => f.status === filter);
     }
 
@@ -867,11 +915,9 @@ export default function SiteFeedbackPage() {
                   </span>
                 )}
 
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-xs text-muted-foreground" title={new Date(item.created_at).toLocaleString()}>
                                   <Clock className="w-3 h-3 inline mr-1" />
-                                  {new Date(item.created_at).toLocaleDateString("en-US", {
-                                    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-                                  })}
+                                  {timeAgo(item.created_at)}
                                 </span>
                               </div>
 

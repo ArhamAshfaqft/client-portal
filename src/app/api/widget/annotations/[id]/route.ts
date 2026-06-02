@@ -130,6 +130,24 @@ export async function PATCH(
       );
     }
 
+    // If status changed to resolved, insert a notification for the agency
+    if (updates.status === "resolved") {
+      const { data: project } = await supabase.from("projects").select("site_id").eq("id", data.project_id).single();
+      if (project && project.site_id) {
+        const { data: site } = await supabase.from("sites").select("agency_id, name").eq("id", project.site_id).single();
+        if (site && site.agency_id) {
+          void supabase.from("notifications").insert({
+            agency_id: site.agency_id,
+            type: "resolved",
+            title: `Feedback resolved on ${site.name || "Client Site"}`,
+            message: `"${data.content?.substring(0, 80) || "A feedback item"}" — Marked as resolved`,
+            feedback_id: data.id,
+            site_id: project.site_id,
+          });
+        }
+      }
+    }
+
     // Fire webhook in background (best-effort, don't await or block)
     notifySiteWebhook(lookupId, "update_status", { id, status: updates.status });
 

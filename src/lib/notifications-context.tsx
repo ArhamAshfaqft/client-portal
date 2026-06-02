@@ -12,6 +12,7 @@ export interface AppNotification {
   site_name?: string;
   site_id: string;
   feedback_id?: string;
+  user_id?: string | null;
   read: boolean;
   created_at: string;
 }
@@ -70,6 +71,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
     if (!profile?.agency_id) return;
     const supabase = createClient();
+
+    // Initial load
     supabase
       .from("notifications")
       .select("*")
@@ -80,6 +83,29 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         if (data) setNotifications(data as AppNotification[]);
       });
+
+    // Real-time: new notifications appear instantly in the bell
+    const channel = supabase
+      .channel(`notifications-${profile.agency_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `agency_id=eq.${profile.agency_id}`,
+        },
+        (payload) => {
+          const n = payload.new as AppNotification;
+          // Only show if addressed to this user or broadcast
+          if (!n.user_id || n.user_id === profile.user_id) {
+            setNotifications((prev) => [n, ...prev].slice(0, 50));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [isDemo, profile?.agency_id, profile?.user_id]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -92,7 +118,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-  }, []);
+    if (!isDemo) {
+      const supabase = createClient();
+      supabase.from("notifications").update({ read: true }).eq("id", id);
+    }
+  }, [isDemo]);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));

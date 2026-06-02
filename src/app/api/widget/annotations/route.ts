@@ -229,12 +229,23 @@ export async function POST(request: Request) {
     }
 
     if (siteAgencyId) {
+      // Fetch the site to get its name for a descriptive notification
+      const siteResult = await supabase
+        .from("sites")
+        .select("id, name")
+        .eq("agency_id", siteAgencyId)
+        .eq("wp_connected", true)
+        .maybeSingle();
+      const siteName = siteResult.data?.name || "WordPress Site";
+      const siteId = siteResult.data?.id || null;
+
       void supabase.from("notifications").insert({
         agency_id: siteAgencyId,
         type: "new_feedback",
-        title: "New feedback submitted",
-        message: content ? content.substring(0, 120) : "New feedback with media",
+        title: `New feedback on ${siteName}`,
+        message: content ? `"${content.substring(0, 100)}"` : "New feedback with media",
         feedback_id: feedbackItem.id,
+        site_id: siteId,
       });
     }
 
