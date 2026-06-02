@@ -445,7 +445,7 @@ export class AnnotationEngine {
     }
   }
 
-  private async saveToLibrary(fileUrl: string, fileName: string): Promise<void> {
+  private async saveToLibrary(fileUrl: string, fileName: string): Promise<boolean> {
     try {
       const wpUrl = this.config.wpApiUrl.replace(/\/+$/, '');
       const res = await fetch(`${wpUrl}/wp-json/feedspace/v1/media/save-to-library`, {
@@ -454,16 +454,19 @@ export class AnnotationEngine {
           'Content-Type': 'application/json',
           'X-Feedspace-Key': this.config.wpApiKey,
         },
-        body: JSON.stringify({ file_url: fileUrl, file_name: fileName }),
+        body: JSON.stringify({ url: fileUrl }),
       });
       const data = await res.json();
-      if (data.saved_count > 0) {
+      if (data.attachment_id) {
         dbg('save_to_library_ok', data);
+        return true;
       } else {
         dbg('save_to_library_failed', data);
+        return false;
       }
     } catch (err) {
       dbg('save_to_library_error', err);
+      return false;
     }
   }
 

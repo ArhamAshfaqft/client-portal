@@ -1839,13 +1839,14 @@
           const url = el.dataset.url;
           const name = el.dataset.name || "";
           if (url && ((_a2 = this.callbacks) == null ? void 0 : _a2.onSaveToLibrary)) {
-            el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;animation:fs-spin 0.8s linear infinite;"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 019.95 9"/></svg>';
-            this.callbacks.onSaveToLibrary(url, name);
-            el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" style="width:10px;height:10px;"><polyline points="20 6 9 17 4 12"/></svg>';
             const restoreSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-            setTimeout(() => {
-              el.innerHTML = restoreSvg;
-            }, 2e3);
+            el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;animation:fs-spin 0.8s linear infinite;"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 019.95 9"/></svg>';
+            this.callbacks.onSaveToLibrary(url, name).then((ok) => {
+              el.innerHTML = ok ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" style="width:10px;height:10px;"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" style="width:10px;height:10px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+              setTimeout(() => {
+                el.innerHTML = restoreSvg;
+              }, 2e3);
+            });
           }
         });
       });
@@ -2310,16 +2311,19 @@
             "Content-Type": "application/json",
             "X-Feedspace-Key": this.config.wpApiKey
           },
-          body: JSON.stringify({ file_url: fileUrl, file_name: fileName })
+          body: JSON.stringify({ url: fileUrl })
         });
         const data = await res.json();
-        if (data.saved_count > 0) {
+        if (data.attachment_id) {
           dbg("save_to_library_ok", data);
+          return true;
         } else {
           dbg("save_to_library_failed", data);
+          return false;
         }
       } catch (err) {
         dbg("save_to_library_error", err);
+        return false;
       }
     }
     async deleteAnnotation(id) {

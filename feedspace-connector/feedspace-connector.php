@@ -749,21 +749,25 @@ class FeedspaceConnector
     {
         global $wpdb;
         $body = $request->get_json_params();
-        $fileUrl = $body['file_url'] ?? '';
+        $url = $body['url'] ?? ($body['file_url'] ?? '');
         $annotationId = $body['annotation_id'] ?? '';
 
         self::logDebug('save_to_library_start', array(
-            'file_url' => $fileUrl ?: '(all from annotation)',
+            'url' => $url ?: '(all from annotation)',
             'annotation_id' => $annotationId,
         ));
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
 
         $uploadDir = wp_upload_dir();
         $feedspaceDir = $uploadDir['basedir'] . '/feedspace-media/';
 
         $filesToSave = array();
 
-        if (!empty($fileUrl)) {
-            $filesToSave[] = array('url' => $fileUrl, 'name' => basename($fileUrl));
+        if (!empty($url)) {
+            $filesToSave[] = array('url' => $url);
         } elseif (!empty($annotationId)) {
             $tableName = $wpdb->prefix . 'feedspace_annotations';
             $existing = $wpdb->get_var($wpdb->prepare(
@@ -776,6 +780,99 @@ class FeedspaceConnector
                 foreach (($meta['saved_to_library'] ?? array()) as $s) {
                     $savedUrls[] = $s['file_url'];
                 }
+                foreach ($atts as $att) {
+                    if (!in_array($att['fileUrl'] ?? '', $savedUrls)) {
+                        $filesToSave[] = array('url' => $att['fileUrl']);
+                    }
+                }
+            }
+        }
+
+        if (empty($filesToSave)) {
+            return new WP_Error('nothing_to_save', 'No new media files to save', array('status' => 200));
+        }
+
+        $result = array();
+        $lastError = '';
+
+        foreach ($filesToSave as $fileInfo) {
+            $fileUrl = $fileInfo['url'];
+            $diskName = basename(parse_url($fileUrl, PHP_URL_PATH));
+            if (!$diskName) continue;
+
+            $sourcePath = $feedspaceDir . $diskName;
+
+            if (!file_exists($sourcePath)) {
+                $parsedUrl = parse_url($fileUrl);
+                if (!empty($parsedUrl['path'])) {
+                    $altPath = ABSPATH . ltrim($parsedUrl['path'], '/');
+                    if (file_exists($altPath)) {
+                        $sourcePath = $altPath;
+                    }
+                }
+            }
+
+            if (!file_exists($sourcePath)) {
+                self::logDebug('save_to_library_skip', array('file' => $fileUrl, 'reason' => 'not found', 'sourcePath' => $sourcePath));
+                $lastError = 'Source file not found: ' . $diskName;
+                continue;
+            }
+
+            $tmp = wp_tempnam($diskName);
+            if (!$tmp || !copy($sourcePath, $tmp)) {
+                $lastError = 'Failed to copy: ' . $diskName;
+                continue;
+            }
+
+            $fileArray = array(
+                'name'     => $diskName,
+                'tmp_name' => $tmp,
+                'error'    => UPLOAD_ERR_OK,
+                'size'     => filesize($sourcePath),
+            );
+
+            $attachId = media_handle_sideload($fileArray, 0);
+
+            @unlink($tmp);
+
+            if (is_wp_error($attachId)) {
+                $lastError = $attachId->get_error_message();
+                continue;
+            }
+
+            $libraryUrl = wp_get_attachment_url($attachId);
+            $result = array(
+                'attachment_id' => $attachId,
+                'library_url'   => $libraryUrl,
+                'file_url'      => $fileUrl,
+                'edit_url'      => admin_url('upload.php?item=' . $attachId),
+            );
+
+            if (!empty($annotationId)) {
+                $tableName = $wpdb->prefix . 'feedspace_annotations';
+                $existingMeta = $wpdb->get_var($wpdb->prepare(
+                    "SELECT meta_data FROM $tableName WHERE annotation_id = %s", $annotationId
+                ));
+                if ($existingMeta) {
+                    $metaData = json_decode($existingMeta, true) ?: array();
+                    $saved = $metaData['saved_to_library'] ?? array();
+                    $saved[] = array('attachment_id' => $attachId, 'file_url' => $fileUrl, 'wp_url' => $libraryUrl);
+                    $metaData['saved_to_library'] = $saved;
+                    $wpdb->update($tableName, array('meta_data' => json_encode($metaData)), array('annotation_id' => $annotationId));
+                }
+            }
+
+            break;
+        }
+
+        self::logDebug('save_to_library_done', $result ?: array('error' => $lastError));
+
+        if (empty($result)) {
+            return new WP_Error('save_failed', $lastError ?: 'Could not save file to Media Library', array('status' => 500));
+        }
+
+        return new WP_REST_Response($result, 200);
+    }
                 foreach ($atts as $att) {
                     if (!in_array($att['fileUrl'] ?? '', $savedUrls)) {
                         $filesToSave[] = array('url' => $att['fileUrl'], 'name' => $att['fileName'] ?? basename($att['fileUrl']));
