@@ -1,5 +1,6 @@
 const WP_WEBHOOK_PATH = "/wp-json/feedspace/v1/webhook";
 
+// Use Vercel server proxy to avoid browser CORS/loopback restrictions
 export async function notifyWPWebhook(
   wpRestUrl: string,
   apiKey: string,
@@ -7,20 +8,17 @@ export async function notifyWPWebhook(
   data: Record<string, any>
 ) {
   try {
-    const url = `${wpRestUrl.replace(/\/+$/, "")}/${WP_WEBHOOK_PATH.replace(/^\//, "")}`;
-    console.log("[Feedspace] Webhook sending", { url, action, data, apiKey: apiKey ? apiKey.slice(0, 8) + '...' : 'empty' });
-    const res = await fetch(url, {
+    const proxyUrl = "/api/widget/wp-webhook";
+    const res = await fetch(proxyUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Feedspace-Key": apiKey,
-      },
-      body: JSON.stringify({ action, data }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wpRestUrl, wpApiKey: apiKey, action, data }),
     });
-    if (!res.ok) {
-      console.warn("[Feedspace] Webhook to WP failed", res.status, await res.text());
+    const result = await res.json();
+    if (result.ok) {
+      console.log("[Feedspace] Webhook to WP success", { action, data });
     } else {
-      console.log("[Feedspace] Webhook to WP success", { url, action, data });
+      console.warn("[Feedspace] Webhook to WP failed", result.status, result.body);
     }
   } catch (err) {
     console.warn("[Feedspace] Webhook to WP error", err);
