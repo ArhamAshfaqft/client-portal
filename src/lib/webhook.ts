@@ -8,6 +8,7 @@ export async function notifyWPWebhook(
 ) {
   try {
     const url = `${wpRestUrl.replace(/\/+$/, "")}/${WP_WEBHOOK_PATH.replace(/^\//, "")}`;
+    console.log("[Feedspace] Webhook sending", { url, action, data, apiKey: apiKey ? apiKey.slice(0, 8) + '...' : 'empty' });
     const res = await fetch(url, {
       method: "POST",
       headers: {
@@ -18,6 +19,8 @@ export async function notifyWPWebhook(
     });
     if (!res.ok) {
       console.warn("[Feedspace] Webhook to WP failed", res.status, await res.text());
+    } else {
+      console.log("[Feedspace] Webhook to WP success", { url, action, data });
     }
   } catch (err) {
     console.warn("[Feedspace] Webhook to WP error", err);
