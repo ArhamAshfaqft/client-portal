@@ -98,9 +98,9 @@ export default function SitesPage() {
           const projectsList = projectsData || [];
           const projectIds = projectsList.map((p) => p.id);
 
-          let countsMap: Record<string, { new_count: number; in_progress_count: number; resolved_count: number }> = {};
+          let countsMap: Record<string, { pending_count: number; resolved_count: number }> = {};
           for (const s of sitesList) {
-            countsMap[s.id] = { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+            countsMap[s.id] = { pending_count: 0, resolved_count: 0 };
           }
 
           if (projectIds.length > 0) {
@@ -110,17 +110,16 @@ export default function SitesPage() {
               .in("project_id", projectIds)
               .is("parent_id", null);
 
-            if (feedbackData) {
-              const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
-              for (const item of feedbackData) {
-                const siteId = projectToSiteMap[item.project_id];
-                if (siteId && countsMap[siteId]) {
-                  if (item.status === "open") countsMap[siteId].new_count++;
-                  else if (item.status === "in_progress") countsMap[siteId].in_progress_count++;
-                  else if (item.status === "resolved") countsMap[siteId].resolved_count++;
+              if (feedbackData) {
+                const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
+                for (const item of feedbackData) {
+                  const siteId = projectToSiteMap[item.project_id];
+                  if (siteId && countsMap[siteId]) {
+                    if (item.status === "open" || item.status === "in_progress") countsMap[siteId].pending_count++;
+                    else if (item.status === "resolved") countsMap[siteId].resolved_count++;
+                  }
                 }
               }
-            }
           }
 
           // Attach feedback_counts to each site object
@@ -205,10 +204,10 @@ export default function SitesPage() {
   const getCounts = (siteId: string) => {
     if (isDemo) {
       const s = DEMO_SITES.find((ds) => ds.id === siteId);
-      return s?.feedback_counts || { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+      return s?.feedback_counts || { pending_count: 0, resolved_count: 0 };
     }
-    const site = sites.find((s) => s.id === siteId);
-    return (site as any)?.feedback_counts || { new_count: 0, in_progress_count: 0, resolved_count: 0 };
+    const site = sites.find((s) => s.id === siteId) as any;
+    return site?.feedback_counts || { pending_count: 0, resolved_count: 0 };
   };
 
   const filteredSites = sites.filter((site) => {
@@ -388,13 +387,8 @@ export default function SitesPage() {
                     <div className="flex items-center gap-4 py-2.5 border-t border-border">
                       <div className="flex items-center gap-1.5 text-sm">
                         <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="font-medium text-foreground">{counts.new_count}</span>
-                        <span className="text-muted-foreground text-xs">new</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Loader2 className="w-3.5 h-3.5 text-primary" />
-                        <span className="font-medium text-foreground">{counts.in_progress_count}</span>
-                        <span className="text-muted-foreground text-xs">in progress</span>
+                        <span className="font-medium text-foreground">{counts.pending_count}</span>
+                        <span className="text-muted-foreground text-xs">pending</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-sm">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />

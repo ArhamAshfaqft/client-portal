@@ -1,6 +1,6 @@
 import type { Site, Project, FeedbackItem, FeedbackMedia } from "@/types";
 
-export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_progress_count: number; resolved_count: number } })[] = [
+export const DEMO_SITES: (Site & { feedback_counts: { pending_count: number; resolved_count: number } })[] = [
   {
     id: "demo-site-1",
     agency_id: "demo-agency",
@@ -11,7 +11,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: "****",
     wp_connected: true,
     created_at: "2026-05-15T10:00:00Z",
-    feedback_counts: { new_count: 3, in_progress_count: 2, resolved_count: 18 },
+    feedback_counts: { pending_count: 5, resolved_count: 18 },
   },
   {
     id: "demo-site-2",
@@ -23,7 +23,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: "****",
     wp_connected: true,
     created_at: "2026-05-12T08:30:00Z",
-    feedback_counts: { new_count: 1, in_progress_count: 1, resolved_count: 9 },
+    feedback_counts: { pending_count: 2, resolved_count: 9 },
   },
   {
     id: "demo-site-3",
@@ -35,7 +35,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: null,
     wp_connected: false,
     created_at: "2026-05-10T14:00:00Z",
-    feedback_counts: { new_count: 5, in_progress_count: 0, resolved_count: 3 },
+    feedback_counts: { pending_count: 5, resolved_count: 3 },
   },
   {
     id: "demo-site-4",
@@ -47,7 +47,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: "****",
     wp_connected: true,
     created_at: "2026-05-08T09:15:00Z",
-    feedback_counts: { new_count: 0, in_progress_count: 0, resolved_count: 12 },
+    feedback_counts: { pending_count: 0, resolved_count: 12 },
   },
   {
     id: "demo-site-5",
@@ -59,7 +59,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: "****",
     wp_connected: true,
     created_at: "2026-05-05T11:45:00Z",
-    feedback_counts: { new_count: 2, in_progress_count: 1, resolved_count: 5 },
+    feedback_counts: { pending_count: 3, resolved_count: 5 },
   },
   {
     id: "demo-site-6",
@@ -71,7 +71,7 @@ export const DEMO_SITES: (Site & { feedback_counts: { new_count: number; in_prog
     wp_application_password: null,
     wp_connected: false,
     created_at: "2026-05-03T16:00:00Z",
-    feedback_counts: { new_count: 0, in_progress_count: 0, resolved_count: 0 },
+    feedback_counts: { pending_count: 0, resolved_count: 0 },
   },
 ];
 
@@ -320,8 +320,7 @@ export function getFeedbackForSite(siteId: string): EnrichedFeedback[] {
 export function getFeedbackCounts(siteId: string) {
   const fb = getFeedbackForSite(siteId);
   return {
-    new_count: fb.filter((f) => f.status === "open").length,
-    in_progress_count: fb.filter((f) => f.status === "in_progress").length,
+    pending_count: fb.filter((f) => f.status === "open" || f.status === "in_progress").length,
     resolved_count: fb.filter((f) => f.status === "resolved").length,
     total: fb.length,
   };

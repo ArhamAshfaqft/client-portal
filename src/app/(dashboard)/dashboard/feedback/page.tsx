@@ -11,7 +11,6 @@ import {
   Globe,
   AlertCircle,
   CheckCircle2,
-  Loader2,
   ChevronRight,
   MessageSquareText,
   ArrowRight,
@@ -54,9 +53,9 @@ export default function FeedbackOverviewPage() {
       const projectsList = projectsData || [];
       const projectIds = projectsList.map((p) => p.id);
       
-      let feedbackCountsMap: Record<string, { new_count: number; in_progress_count: number; resolved_count: number; total: number }> = {};
+      let feedbackCountsMap: Record<string, { pending_count: number; resolved_count: number; total: number }> = {};
       for (const site of sitesList) {
-        feedbackCountsMap[site.id] = { new_count: 0, in_progress_count: 0, resolved_count: 0, total: 0 };
+        feedbackCountsMap[site.id] = { pending_count: 0, resolved_count: 0, total: 0 };
       }
 
       if (projectIds.length > 0) {
@@ -66,18 +65,17 @@ export default function FeedbackOverviewPage() {
           .in("project_id", projectIds)
           .is("parent_id", null);
 
-        if (feedbackData) {
-          const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
-          for (const item of feedbackData) {
-            const siteId = projectToSiteMap[item.project_id];
-            if (siteId && feedbackCountsMap[siteId]) {
-              feedbackCountsMap[siteId].total++;
-              if (item.status === "open") feedbackCountsMap[siteId].new_count++;
-              else if (item.status === "in_progress") feedbackCountsMap[siteId].in_progress_count++;
-              else if (item.status === "resolved") feedbackCountsMap[siteId].resolved_count++;
-            }
-          }
-        }
+              if (feedbackData) {
+                const projectToSiteMap = Object.fromEntries(projectsList.map((p) => [p.id, p.site_id]));
+                for (const item of feedbackData) {
+                  const siteId = projectToSiteMap[item.project_id];
+                  if (siteId && feedbackCountsMap[siteId]) {
+                    feedbackCountsMap[siteId].total++;
+                    if (item.status === "open" || item.status === "in_progress") feedbackCountsMap[siteId].pending_count++;
+                    else if (item.status === "resolved") feedbackCountsMap[siteId].resolved_count++;
+                  }
+                }
+              }
       }
 
       const mapped = sitesList.map((site) => ({
@@ -114,8 +112,7 @@ export default function FeedbackOverviewPage() {
   }, [sites, search]);
 
   const totalFeedback = filteredSites.reduce((s, site) => s + site.feedback_counts.total, 0);
-  const totalNew = filteredSites.reduce((s, site) => s + site.feedback_counts.new_count, 0);
-  const totalInProgress = filteredSites.reduce((s, site) => s + site.feedback_counts.in_progress_count, 0);
+  const totalPending = filteredSites.reduce((s, site) => s + site.feedback_counts.pending_count, 0);
   const totalResolved = filteredSites.reduce((s, site) => s + site.feedback_counts.resolved_count, 0);
 
   return (
@@ -134,15 +131,8 @@ export default function FeedbackOverviewPage() {
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               <span className="text-sm">
-                <span className="font-semibold text-foreground">{totalNew}</span>{" "}
-                <span className="text-muted-foreground">new</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 text-primary" />
-              <span className="text-sm">
-                <span className="font-semibold text-foreground">{totalInProgress}</span>{" "}
-                <span className="text-muted-foreground">in progress</span>
+                <span className="font-semibold text-foreground">{totalPending}</span>{" "}
+                <span className="text-muted-foreground">pending</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -208,19 +198,11 @@ export default function FeedbackOverviewPage() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {site.feedback_counts.new_count > 0 && (
+                      {site.feedback_counts.pending_count > 0 && (
                         <div className="flex items-center gap-1">
                           <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                           <span className="text-sm font-medium text-foreground">
-                            {site.feedback_counts.new_count}
-                          </span>
-                        </div>
-                      )}
-                      {site.feedback_counts.in_progress_count > 0 && (
-                        <div className="flex items-center gap-1">
-                          <Loader2 className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-sm font-medium text-foreground">
-                            {site.feedback_counts.in_progress_count}
+                            {site.feedback_counts.pending_count}
                           </span>
                         </div>
                       )}
