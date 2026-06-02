@@ -90,6 +90,13 @@ function getViewportLabel(width?: number | null, height?: number | null) {
   return "Mobile";
 }
 
+function proxyMediaUrl(fileUrl: string): string {
+  if (fileUrl.startsWith("/api/") || fileUrl.startsWith("http://localhost") || fileUrl.startsWith("blob:")) {
+    return fileUrl;
+  }
+  return `/api/media/proxy?url=${encodeURIComponent(fileUrl)}`;
+}
+
 // Module-level singleton — stable across renders
 const supabase = createClient();
 
@@ -711,7 +718,7 @@ export default function SiteFeedbackPage() {
                                           className="group relative w-24 h-24 rounded-lg overflow-hidden border border-border bg-muted flex-shrink-0 hover:ring-2 hover:ring-primary/50 transition-all"
                                         >
                                           <img
-                                            src={m.file_url}
+                                            src={proxyMediaUrl(m.file_url)}
                                             alt={m.file_name}
                                             className="w-full h-full object-cover"
                                             loading="lazy"
@@ -727,7 +734,7 @@ export default function SiteFeedbackPage() {
                                           onClick={() => setPreviewMedia({ media: item.media!, index: mi })}
                                           className="group relative w-48 h-24 rounded-lg overflow-hidden border border-border bg-muted flex-shrink-0 hover:ring-2 hover:ring-primary/50 transition-all"
                                         >
-                                          <video src={m.file_url} className="w-full h-full object-cover" muted />
+                                          <video src={proxyMediaUrl(m.file_url)} className="w-full h-full object-cover" muted />
                                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
                                             <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
                                               <div className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px] border-t-transparent border-b-transparent border-l-black ml-1" />
