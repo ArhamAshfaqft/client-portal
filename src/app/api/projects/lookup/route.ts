@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const { data: site } = await supabase
       .from("sites")
       .select("id, wp_api_key")
-      .eq("site_token", siteToken)
+      .eq("id", siteToken)
       .maybeSingle();
 
     if (!site || site.wp_api_key !== wpApiKey) {
