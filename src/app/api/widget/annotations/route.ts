@@ -100,11 +100,11 @@ export async function POST(request: Request) {
     const wpApiKey = request.headers.get("X-WP-API-Key");
     let isMirror = false;
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    );
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
+  );
 
     // Mirror sync from WP plugin: validate against stored wp_api_key
     if (siteToken && wpApiKey) {
