@@ -193,7 +193,7 @@ export class AnnotationEngine {
         },
         onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
         onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName),
-      }, () => { }, this.config.siteName);
+      }, () => { }, this.config.siteName, this.config.projectId);
     });
 
     if (dev) {

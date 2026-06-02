@@ -1576,6 +1576,7 @@
       this.currentDeviceFilter = "all";
       this.currentSort = "newest";
       this.currentProjectFilter = "";
+      this.defaultProjectFilter = "";
       this.onClose = null;
       this.siteName = "";
       this._closeProjectMenu = null;
@@ -1593,14 +1594,19 @@
       }
       return out;
     }
-    open(annotations, callbacks, onClose, siteName) {
+    open(annotations, callbacks, onClose, siteName, defaultProjectId) {
       this.annotations = annotations;
       this.callbacks = callbacks;
       this.onClose = onClose;
       if (siteName) this.siteName = siteName;
       try {
         const v = localStorage.getItem("fs_project_filter");
-        if (v) this.currentProjectFilter = v;
+        if (v) {
+          this.currentProjectFilter = v;
+        } else if (defaultProjectId && !this.defaultProjectFilter) {
+          this.currentProjectFilter = defaultProjectId;
+          this.defaultProjectFilter = defaultProjectId;
+        }
       } catch (e) {
       }
       this.render();
@@ -2208,7 +2214,7 @@
           onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
           onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName)
         }, () => {
-        }, this.config.siteName);
+        }, this.config.siteName, this.config.projectId);
       });
       if (dev) {
         setTimeout(() => {
