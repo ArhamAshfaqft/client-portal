@@ -2297,7 +2297,7 @@
     async saveToLibrary(fileUrl, fileName) {
       try {
         const wpUrl = this.config.wpApiUrl.replace(/\/+$/, "");
-        const res = await fetch(`${wpUrl}/feedspace/v1/media/save-to-library`, {
+        const res = await fetch(`${wpUrl}/wp-json/feedspace/v1/media/save-to-library`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
