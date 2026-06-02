@@ -63,16 +63,14 @@ const typeLabels: Record<string, string> = {
   draw: "Freehand",
 };
 
-const statusVariants: Record<string, "warning" | "info" | "success" | "default"> = {
+const statusVariants: Record<string, "warning" | "success" | "default"> = {
   open: "warning",
-  in_progress: "info",
+  in_progress: "warning",
   resolved: "success",
-  closed: "default",
 };
 
 const statusActions: Record<string, { next: FeedbackStatus; label: string; icon: typeof Play }> = {
-  open: { next: "in_progress" as FeedbackStatus, label: "Start Working", icon: Play },
-  in_progress: { next: "resolved" as FeedbackStatus, label: "Mark Resolved", icon: CheckCircle2 },
+  open: { next: "resolved" as FeedbackStatus, label: "Mark Resolved", icon: CheckCircle2 },
   resolved: { next: "open" as FeedbackStatus, label: "Reopen", icon: ArrowRight },
 };
 
@@ -500,8 +498,7 @@ export default function SiteFeedbackPage() {
 
   const counts = {
     all: feedback.length,
-    open: feedback.filter((f) => f.status === "open").length,
-    in_progress: feedback.filter((f) => f.status === "in_progress").length,
+    pending: feedback.filter((f) => f.status === "open" || f.status === "in_progress").length,
     resolved: feedback.filter((f) => f.status === "resolved").length,
   };
 
@@ -548,11 +545,7 @@ export default function SiteFeedbackPage() {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-500" />
-                <span className="text-sm"><span className="font-semibold text-foreground">{counts.open}</span> <span className="text-muted-foreground">new</span></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 text-primary" />
-                <span className="text-sm"><span className="font-semibold text-foreground">{counts.in_progress}</span> <span className="text-muted-foreground">in progress</span></span>
+                <span className="text-sm"><span className="font-semibold text-foreground">{counts.pending}</span> <span className="text-muted-foreground">pending</span></span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -563,11 +556,7 @@ export default function SiteFeedbackPage() {
               <div className="flex h-full">
                 <div
                   className="bg-amber-500 h-full transition-all"
-                  style={{ width: `${counts.all ? (counts.open / counts.all) * 100 : 0}%` }}
-                />
-                <div
-                  className="bg-primary h-full transition-all"
-                  style={{ width: `${counts.all ? (counts.in_progress / counts.all) * 100 : 0}%` }}
+                  style={{ width: `${counts.all ? (counts.pending / counts.all) * 100 : 0}%` }}
                 />
                 <div
                   className="bg-emerald-500 h-full transition-all"
@@ -584,8 +573,7 @@ export default function SiteFeedbackPage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
             { key: "all", label: "All", count: counts.all },
-            { key: "open", label: "New", count: counts.open },
-            { key: "in_progress", label: "In Progress", count: counts.in_progress },
+            { key: "open", label: "Pending", count: counts.pending },
             { key: "resolved", label: "Resolved", count: counts.resolved },
           ].map((tab) => (
             <button
@@ -691,7 +679,7 @@ export default function SiteFeedbackPage() {
                                   {typeLabels[item.type]}
                                 </span>
                                 <Badge variant={statusVariants[item.status] || "default"}>
-                                  {item.status === "open" ? "New" : item.status.replace("_", " ")}
+                                  {item.status === "open" ? "Pending" : item.status === "in_progress" ? "Pending" : item.status === "resolved" ? "Resolved" : item.status}
                                 </Badge>
                                 {item.creator_name && (
                                   <span className="text-xs text-muted-foreground">
