@@ -306,7 +306,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia },
+      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia, _debug: { notif: resolvedAgencyId ? 'created' : 'skipped', agencyId: resolvedAgencyId || null, siteId: resolvedSiteId || null, projectId, siteToken: siteToken || null } },
       { status: 201, headers: corsHeaders() }
     );
   } catch (err: any) {
