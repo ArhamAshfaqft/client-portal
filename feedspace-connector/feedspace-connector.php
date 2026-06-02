@@ -1003,7 +1003,7 @@ class FeedspaceConnector
             'content' => substr($body['content'] ?? '', 0, 50),
         ));
 
-        // Merge media into meta_data.attachments (Previu pattern)
+        // Merge media into meta_data.attachments (Previu pattern) + store projectName
         $incomingMeta = isset($body['metaData']) && is_array($body['metaData']) ? $body['metaData'] : array();
         $rawMedia = isset($body['media']) && is_array($body['media']) ? $body['media'] : array();
         if (!empty($rawMedia)) {
@@ -1017,6 +1017,9 @@ class FeedspaceConnector
                 );
             }
             $incomingMeta['attachments'] = $cleanMedia;
+        }
+        if (!empty($body['projectName'])) {
+            $incomingMeta['projectName'] = sanitize_text_field($body['projectName']);
         }
 
         $data = array(
@@ -1100,6 +1103,8 @@ class FeedspaceConnector
             'type' => $data['type'],
             'status' => $data['status'],
             'content' => $data['content'],
+            'projectId' => $data['project_id'],
+            'projectName' => $incomingMeta['projectName'] ?? '',
             'pageUrl' => $data['page_url'],
             'elementDna' => $body['elementDna'] ?? null,
             'anchorXPct' => $data['coordinates_x'] ?? 50,
@@ -1179,6 +1184,7 @@ class FeedspaceConnector
                 'viewportHeight' => intval($row->viewport_height),
                 'device' => $row->device,
                 'projectId' => $row->project_id,
+                'projectName' => isset($annMeta['projectName']) ? $annMeta['projectName'] : '',
                 'createdBy' => $row->created_by,
                 'createdAt' => $row->created_at,
                 'replies' => array(),

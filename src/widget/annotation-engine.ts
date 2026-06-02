@@ -368,6 +368,7 @@ export class AnnotationEngine {
       device: this.deviceMode,
       elementTag: startDna.tag,
       elementText: startDna.text,
+      projectName: this.config.siteName || '',
     };
 
     const payload: CreateAnnotationPayload = {

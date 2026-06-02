@@ -1587,7 +1587,8 @@
         const pid = a.projectId;
         if (pid && !seen.has(pid)) {
           seen.add(pid);
-          out.push({ id: pid, title: this.siteName || "Session #" + pid.slice(0, 8) });
+          const name = a.projectName || this.siteName || "Session #" + pid.slice(0, 8);
+          out.push({ id: pid, title: name });
         }
       }
       return out;
@@ -2345,7 +2346,8 @@
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
-        elementText: startDna.text
+        elementText: startDna.text,
+        projectName: this.config.siteName || ""
       };
       const payload = {
         projectId: this.config.projectId,

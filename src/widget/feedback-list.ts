@@ -127,7 +127,11 @@ export class FeedbackListPanel {
     const out: Array<{id: string; title: string}> = [];
     for (const a of this.annotations) {
       const pid = a.projectId;
-      if (pid && !seen.has(pid)) { seen.add(pid); out.push({ id: pid, title: this.siteName || 'Session #' + pid.slice(0, 8) }); }
+      if (pid && !seen.has(pid)) {
+        seen.add(pid);
+        const name = a.projectName || this.siteName || 'Session #' + pid.slice(0, 8);
+        out.push({ id: pid, title: name });
+      }
     }
     return out;
   }

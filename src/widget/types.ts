@@ -24,6 +24,7 @@ export interface Annotation {
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   content: string;
   projectId?: string;
+  projectName?: string;
   pageUrl: string;
   elementDna: ElementDNA | null;
   anchorXPct: number;
