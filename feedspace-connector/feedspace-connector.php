@@ -1665,29 +1665,48 @@ add_action('wp_ajax_feedspace_connect_site', function () {
         return;
     }
 
-    $response = wp_remote_post($dashboardUrl . '/api/connect-site', array(
+    $requestUrl = $dashboardUrl . '/api/connect-site';
+    $requestBody = json_encode(array(
+        'token' => $siteToken,
+        'apiKey' => $apiKey,
+        'wpUrl' => $wpUrl,
+    ));
+
+    FeedspaceConnector::logDebug('connect_site_request', array(
+        'url' => $requestUrl,
+        'body' => $requestBody,
+    ));
+
+    $response = wp_remote_post($requestUrl, array(
         'headers' => array('Content-Type' => 'application/json'),
-        'body' => json_encode(array(
-            'token' => $siteToken,
-            'apiKey' => $apiKey,
-            'wpUrl' => $wpUrl,
-        )),
+        'body' => $requestBody,
         'timeout' => 15,
     ));
 
     if (is_wp_error($response)) {
+        FeedspaceConnector::logDebug('connect_site_error', array('error' => $response->get_error_message()));
         wp_send_json_error(array('error' => $response->get_error_message()));
         return;
     }
 
     $code = wp_remote_retrieve_response_code($response);
-    $body = json_decode(wp_remote_retrieve_body($response), true);
+    $respBody = wp_remote_retrieve_body($response);
+    $respHeaders = wp_remote_retrieve_headers($response);
+
+    FeedspaceConnector::logDebug('connect_site_response', array(
+        'code' => $code,
+        'headers' => is_array($respHeaders) ? json_encode($respHeaders) : (string) $respHeaders,
+        'body' => $respBody,
+    ));
+
+    $body = json_decode($respBody, true);
 
     if ($code >= 200 && $code < 300 && !empty($body['connected'])) {
         update_option('feedspace_site_connected', true);
+        FeedspaceConnector::logDebug('connect_site_success', array('site_id' => $body['siteId']));
         wp_send_json_success(array('site_id' => $body['siteId']));
     } else {
-        wp_send_json_error(array('error' => $body['error'] ?? "HTTP $code"));
+        wp_send_json_error(array('error' => $body['error'] ?? ($body['message'] ?? "HTTP $code")));
     }
 });
 

@@ -2,12 +2,22 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function OPTIONS() {
-  return NextResponse.json({}, { status: 200 });
+  return new NextResponse(null, { status: 204 });
+}
+
+export async function GET() {
+  return NextResponse.json({ ok: true, message: "connect-site endpoint is reachable" });
 }
 
 export async function POST(request: Request) {
   try {
-    const { token, apiKey, wpUrl } = await request.json();
+    const body = await request.json();
+
+    if (body._test) {
+      return NextResponse.json({ ok: true, message: "connect-site POST works" });
+    }
+
+    const { token, apiKey, wpUrl } = body;
     if (!token || !apiKey) {
       return NextResponse.json({ error: "Missing token or apiKey" }, { status: 400 });
     }
