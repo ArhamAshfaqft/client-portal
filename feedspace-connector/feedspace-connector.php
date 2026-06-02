@@ -105,6 +105,12 @@ class FeedspaceConnector
         $postId = isset($_GET['elementor-preview']) ? (int) $_GET['elementor-preview'] : 0;
         if (!$postId) return;
 
+        $permalink = get_permalink($postId);
+        if (!$permalink) return;
+
+        $apiUrl = get_option('feedspace_api_url', '');
+        if (empty($apiUrl)) return;
+
         $config = $this->getWidgetConfigForEditor($postId);
         if (!$config) return;
 
@@ -113,15 +119,15 @@ class FeedspaceConnector
 
     private function getWidgetConfigForEditor($postId)
     {
-        $apiUrl = get_option('feedspace_api_url', '');
-        if (empty($apiUrl)) return null;
-
-        $permalink = get_permalink($postId);
-        if (!$permalink) return null;
-
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'feedspace_annotations';
+        $projectId = $wpdb->get_var("SELECT project_id FROM $tableName WHERE project_id != '' LIMIT 1");
+        if (!$projectId) {
+            $projectId = 'elementor-' . $postId;
+        }
         return array(
             'valid' => true,
-            'projectId' => (string) $postId,
+            'projectId' => $projectId,
             'primaryColor' => '#6366f1',
             'siteName' => get_bloginfo('name'),
         );
@@ -1110,21 +1116,18 @@ class FeedspaceConnector
         }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
-        if (!$projectId) {
-            return new WP_REST_Response(array(), 200);
-        }
-
         if ($pageUrl) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
-                $pageUrl,
-                $projectId
+                "SELECT * FROM $tableName WHERE page_url = %s ORDER BY created_at ASC",
+                $pageUrl
             ));
-        } else {
+        } elseif ($projectId) {
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $tableName WHERE project_id = %s ORDER BY created_at ASC",
                 $projectId
             ));
+        } else {
+            $results = array();
         }
 
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions
