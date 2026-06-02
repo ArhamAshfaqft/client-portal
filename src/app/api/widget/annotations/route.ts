@@ -105,15 +105,17 @@ export async function POST(request: Request) {
       { cookies: { getAll: () => [], setAll: () => {} } }
     );
 
+    let siteAgencyId: string | null = null;
     if (siteToken && wpApiKey) {
       const { data: site } = await supabase
         .from("sites")
-        .select("wp_api_key")
+        .select("wp_api_key, agency_id")
         .eq("id", siteToken)
         .eq("wp_connected", true)
         .maybeSingle();
       if (site && site.wp_api_key === wpApiKey) {
         isMirror = true;
+        siteAgencyId = site.agency_id;
       }
     }
 
@@ -224,6 +226,16 @@ export async function POST(request: Request) {
         { error: error?.message || "Failed to create feedback" },
         { status: 400, headers: corsHeaders() }
       );
+    }
+
+    if (siteAgencyId) {
+      void supabase.from("notifications").insert({
+        agency_id: siteAgencyId,
+        type: "new_feedback",
+        title: "New feedback submitted",
+        message: content ? content.substring(0, 120) : "New feedback with media",
+        feedback_id: feedbackItem.id,
+      });
     }
 
     let mediaRecords: any[] = [];

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 export interface AppNotification {
   id: string;
@@ -59,13 +60,27 @@ interface NotificationsState {
 const NotificationsContext = createContext<NotificationsState | undefined>(undefined);
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const { isDemo } = useAuth();
+  const { isDemo, profile } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   useEffect(() => {
-    if (isDemo) setNotifications(DEMO_NOTIFICATIONS);
-    else setNotifications([]);
-  }, [isDemo]);
+    if (isDemo) {
+      setNotifications(DEMO_NOTIFICATIONS);
+      return;
+    }
+    if (!profile?.agency_id) return;
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("*")
+      .or(`user_id.eq.${profile.user_id},user_id.is.null`)
+      .eq("agency_id", profile.agency_id)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (data) setNotifications(data as AppNotification[]);
+      });
+  }, [isDemo, profile?.agency_id, profile?.user_id]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

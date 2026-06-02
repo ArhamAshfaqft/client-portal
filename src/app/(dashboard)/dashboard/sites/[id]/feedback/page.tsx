@@ -95,6 +95,26 @@ function proxyMediaUrl(fileUrl: string): string {
   return `/api/media/proxy?url=${encodeURIComponent(fileUrl)}`;
 }
 
+async function insertNotification(notif: {
+  agency_id: string;
+  user_id?: string;
+  type: string;
+  title: string;
+  message: string;
+  site_id?: string;
+  feedback_id?: string;
+}) {
+  await supabase.from("notifications").insert({
+    agency_id: notif.agency_id,
+    user_id: notif.user_id || null,
+    type: notif.type,
+    title: notif.title,
+    message: notif.message,
+    site_id: notif.site_id || null,
+    feedback_id: notif.feedback_id || null,
+  });
+}
+
 // Module-level singleton — stable across renders
 const supabase = createClient();
 
@@ -299,6 +319,18 @@ export default function SiteFeedbackPage() {
       setFeedback((prev) =>
         prev.map((f) => (f.id === feedbackId ? { ...f, assigned_to: userId } : f))
       );
+      if (userId && profile?.agency_id) {
+        const item = feedback.find((f) => f.id === feedbackId);
+        insertNotification({
+          agency_id: profile.agency_id,
+          user_id: userId,
+          type: "assigned",
+          title: "Assigned to you",
+          message: `${item?.content?.substring(0, 80) || "Feedback"} — assigned to you`,
+          site_id: id,
+          feedback_id: feedbackId,
+        });
+      }
     } catch (err) {
       console.error("Failed to assign feedback:", err);
     } finally {
@@ -323,9 +355,19 @@ export default function SiteFeedbackPage() {
       setFeedback((prev) =>
         prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
       );
+      const item = feedback.find((f) => f.id === feedbackId);
       if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
-        const item = feedback.find((f) => f.id === feedbackId);
         notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: item?.mirror_id || feedbackId, status: nextStatus });
+      }
+      if (nextStatus === "resolved" && profile?.agency_id) {
+        insertNotification({
+          agency_id: profile.agency_id,
+          type: "resolved",
+          title: "Feedback resolved",
+          message: `"${item?.content?.substring(0, 80) || "Feedback"}" — Marked as resolved`,
+          site_id: id,
+          feedback_id: feedbackId,
+        });
       }
     } catch (err) {
       console.error("Failed to update status:", err);
@@ -395,14 +437,25 @@ export default function SiteFeedbackPage() {
         .single();
       if (error) throw error;
 
+      const parentItem = feedback.find((f) => f.id === feedbackId);
       if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
-        const parentItem = feedback.find((f) => f.id === feedbackId);
         notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "reply_added", {
           parentId: feedbackId,
           parentMirrorId: parentItem?.mirror_id || null,
           replyId: data.id,
           content: replyText,
           createdBy: profile?.full_name || "Anonymous",
+        });
+      }
+      if (profile?.agency_id) {
+        insertNotification({
+          agency_id: profile.agency_id,
+          user_id: parentItem?.created_by !== profile?.user_id ? parentItem?.assigned_to || undefined : undefined,
+          type: "replied",
+          title: "New reply on feedback",
+          message: `${profile?.full_name || "Someone"}: "${replyText.substring(0, 80)}"`,
+          site_id: id,
+          feedback_id: feedbackId,
         });
       }
 
