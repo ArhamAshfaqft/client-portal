@@ -200,6 +200,7 @@ class FeedspaceConnector
             'wpApiUrl' => $wpApiUrl,
             'wpApiKey' => $wpApiKey,
             'pageUrl' => $pageUrl,
+            'devMode' => $token === '' ? true : false,
         ));
 
         $debugInit = $isDebug ? 'window.__feedspaceDebug=window.__feedspaceDebug||[];' : '';

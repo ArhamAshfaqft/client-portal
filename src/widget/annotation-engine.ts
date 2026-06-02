@@ -141,38 +141,40 @@ export class AnnotationEngine {
   }
 
   private buildToolbar(): void {
+    const dev = !!this.config.devMode;
     this.toolbarRoot = document.createElement('div');
     this.toolbarRoot.id = 'feedspace-widget-root';
     this.toolbarRoot.innerHTML = `
       <div class="feedspace-toolbar">
-        <button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
+        ${dev ? '' : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
         <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
         <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
         <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
-        <div class="feedspace-toolbar-divider"></div>
+        <div class="feedspace-toolbar-divider"></div>`}
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
           ${SVG_ICONS.list}
           <span class="badge" id="feedspace-list-count" style="display:none">0</span>
         </button>
-        <div class="feedspace-toolbar-divider"></div>
+        ${dev ? '' : `<div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
           ${SVG_ICONS.submit}
           Finish Review
-        </button>
+        </button>`}
       </div>
     `;
 
     document.body.appendChild(this.toolbarRoot);
 
-    this.toolbarRoot.querySelectorAll('[data-tool]').forEach((btn) => {
-      btn.addEventListener('click', () => this.setTool(btn.getAttribute('data-tool') as ToolMode));
-    });
-
-    this.toolbarRoot.querySelectorAll('[data-device]').forEach((btn) => {
-      btn.addEventListener('click', () => this.setDevice(btn.getAttribute('data-device') as DeviceMode));
-    });
+    if (!dev) {
+      this.toolbarRoot.querySelectorAll('[data-tool]').forEach((btn) => {
+        btn.addEventListener('click', () => this.setTool(btn.getAttribute('data-tool') as ToolMode));
+      });
+      this.toolbarRoot.querySelectorAll('[data-device]').forEach((btn) => {
+        btn.addEventListener('click', () => this.setDevice(btn.getAttribute('data-device') as DeviceMode));
+      });
+    }
 
     this.toolbarRoot.querySelector('[data-action="list"]')?.addEventListener('click', () => {
       this.feedbackList.open(this.annotations, {
@@ -188,9 +190,15 @@ export class AnnotationEngine {
       }, () => { });
     });
 
-    this.toolbarRoot.querySelector('[data-action="submit"]')?.addEventListener('click', () => {
-      this.showToast('Feedback saved! Thanks for your input.');
-    });
+    if (dev) {
+      setTimeout(() => {
+        (this.toolbarRoot?.querySelector('[data-action="list"]') as HTMLElement)?.click();
+      }, 500);
+    } else {
+      this.toolbarRoot.querySelector('[data-action="submit"]')?.addEventListener('click', () => {
+        this.showToast('Feedback saved! Thanks for your input.');
+      });
+    }
   }
 
   private setTool(tool: ToolMode): void {

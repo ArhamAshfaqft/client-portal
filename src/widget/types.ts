@@ -6,6 +6,7 @@ export interface WidgetConfig {
   wpApiUrl: string;
   wpApiKey: string;
   pageUrl: string;
+  devMode?: boolean;
 }
 
 export interface ElementDNA {
