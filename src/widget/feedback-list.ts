@@ -28,12 +28,20 @@ function escHtml(str: string): string {
   const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
 }
 
-function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>, start: number): void {
+function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>, start: number, onSave?: (url: string) => Promise<boolean>): void {
   document.querySelectorAll('.fs-lb').forEach(el => el.remove());
   let cur = start;
   const ov = document.createElement('div');
   ov.className = 'fs-lb';
   ov.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.94);display:flex;flex-direction:column;';
+
+  function formatSize(bytes: number): string {
+    if (!bytes || bytes === 0) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let i = 0, s = bytes;
+    while (s >= 1024 && i < 3) { s /= 1024; i++; }
+    return s.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+  }
 
   const render = () => {
     const a = atts[cur];
@@ -55,8 +63,8 @@ function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>,
       (atts.length>1?`<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">›</button>`:'') +
       `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div>` +
       `<div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;border-top:1px solid rgba(255,255,255,0.06);">` +
-      `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.name||'')}</span>${a.size?`<span style="color:rgba(255,255,255,0.35);font-size:11px;">${fmtSize(a.size)}</span>`:''}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml(ext.substring(0,6))}</span></div>` +
-      `<div style="display:flex;align-items:center;gap:12px;">${pag}<a href="${escHtml(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
+      `<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(a.name||'')}</span>${a.size?`<span style="color:rgba(255,255,255,0.35);font-size:11px;">${formatSize(a.size)}</span>`:''}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml(ext.substring(0,6))}</span></div>` +
+      `<div style="display:flex;align-items:center;gap:12px;">${pag}${onSave?`<button class="fs-lb-send" data-url="${escHtml(a.url)}" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(99,102,241,0.8);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save to Media</button>`:''}<a href="${escHtml(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
   };
   render();
   document.body.appendChild(ov);
@@ -65,6 +73,22 @@ function lightbox(atts: Array<{url:string;type:string;name:string;size:number}>,
     if (t.classList.contains('fs-lb-close')) ov.remove();
     else if (t.classList.contains('fs-lb-prev') && cur > 0) { cur--; render(); }
     else if (t.classList.contains('fs-lb-next') && cur < atts.length-1) { cur++; render(); }
+    else if (t.classList.contains('fs-lb-send') && onSave) {
+      const btn = t;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:fs-spin 0.6s linear infinite;"></span>';
+      btn.disabled = true;
+      onSave(atts[cur].url).then(ok => {
+        if (ok) {
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+          btn.title = 'Saved to Media Library';
+        } else {
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+          btn.title = 'Save failed';
+        }
+        setTimeout(() => { btn.innerHTML = originalHTML; btn.disabled = false; btn.title = 'Save to Media Library'; }, 2500);
+      });
+    }
     else if (t === ov) ov.remove();
   });
   const kd = (e: KeyboardEvent) => {
@@ -308,10 +332,7 @@ export class FeedbackListPanel {
           } else {
             inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml(ext.substring(0, 4))}</div>`;
           }
-          const mediaUrl = m.fileUrl;
-          const saveIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-          const saveBtn = `<button class="fs-save-library" data-url="${escHtml(mediaUrl)}" data-name="${escHtml(m.fileName || '')}" title="Save to Media Library" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:4px;border:none;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">${saveIcon}</button>`;
-          return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}${saveBtn}</div>`;
+          return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
         }).join('');
         mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
       }
@@ -421,34 +442,6 @@ export class FeedbackListPanel {
       });
     });
 
-    // Save to library button
-    body.querySelectorAll('.fs-save-library').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const el = e.currentTarget as HTMLElement;
-        const url = el.dataset.url;
-        const name = el.dataset.name || '';
-        if (url && this.callbacks?.onSaveToLibrary) {
-          const restoreSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;animation:fs-spin 0.8s linear infinite;"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 019.95 9"/></svg>';
-          this.callbacks.onSaveToLibrary(url, name).then((ok: boolean) => {
-            el.innerHTML = ok ? 'Saved' : 'Err';
-            el.style.fontSize = '7px';
-            el.style.fontWeight = '600';
-            el.style.color = ok ? '#22c55e' : '#ef4444';
-            el.style.background = 'rgba(0,0,0,0.5)';
-            setTimeout(() => {
-              el.innerHTML = restoreSvg;
-              el.style.fontSize = '';
-              el.style.fontWeight = '';
-              el.style.color = '';
-              el.style.background = '';
-            }, 2000);
-          });
-        }
-      });
-    });
-
     // 3-dot context menu
     body.querySelectorAll('.fs-dots-trigger').forEach(trigger => {
       trigger.addEventListener('click', e => {
@@ -506,7 +499,7 @@ export class FeedbackListPanel {
         if (!a || !a.media || !a.media.length) return;
         const atts = a.media.map(m => ({ url: m.fileUrl, type: m.fileType, name: m.fileName, size: 0 }));
         const idx = parseInt((thumb as HTMLElement).dataset.index || '0');
-        lightbox(atts, idx);
+        lightbox(atts, idx, this.callbacks?.onSaveToLibrary ? (url: string) => this.callbacks!.onSaveToLibrary!(url, '') : undefined);
       });
     });
   }

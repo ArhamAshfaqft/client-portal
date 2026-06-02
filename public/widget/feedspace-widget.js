@@ -1468,27 +1468,27 @@
     }
     return "Just now";
   }
-  function fmtSize(bytes) {
-    if (!bytes) return "";
-    const u = ["B", "KB", "MB", "GB"];
-    let i = 0, s = bytes;
-    while (s >= 1024 && i < 3) {
-      s /= 1024;
-      i++;
-    }
-    return s.toFixed(i > 0 ? 1 : 0) + " " + u[i];
-  }
   function escHtml2(str) {
     const d = document.createElement("div");
     d.textContent = str;
     return d.innerHTML;
   }
-  function lightbox(atts, start) {
+  function lightbox(atts, start, onSave) {
     document.querySelectorAll(".fs-lb").forEach((el) => el.remove());
     let cur = start;
     const ov = document.createElement("div");
     ov.className = "fs-lb";
     ov.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.94);display:flex;flex-direction:column;";
+    function formatSize(bytes) {
+      if (!bytes || bytes === 0) return "";
+      const units = ["B", "KB", "MB", "GB"];
+      let i = 0, s = bytes;
+      while (s >= 1024 && i < 3) {
+        s /= 1024;
+        i++;
+      }
+      return s.toFixed(i > 0 ? 1 : 0) + " " + units[i];
+    }
     const render = () => {
       var _a;
       const a = atts[cur];
@@ -1504,7 +1504,7 @@
         c = `<div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;"><div style="width:80px;height:80px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.08);">${escHtml2(ext)}</div><a href="${escHtml2(a.url)}" target="_blank" style="color:#818cf8;font-size:14px;text-decoration:none;font-weight:600;">${escHtml2(a.name || "Download")}</a></div>`;
       }
       const pag = atts.length > 1 ? `<span style="color:rgba(255,255,255,0.35);font-size:12px;">${cur + 1} / ${atts.length}</span>` : "";
-      ov.innerHTML = `<button class="fs-lb-close" style="position:fixed;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">&times;</button>` + (atts.length > 1 ? `<button class="fs-lb-prev" style="position:fixed;left:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u2039</button>` : "") + (atts.length > 1 ? `<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u203A</button>` : "") + `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div><div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;border-top:1px solid rgba(255,255,255,0.06);"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml2(a.name || "")}</span>${a.size ? `<span style="color:rgba(255,255,255,0.35);font-size:11px;">${fmtSize(a.size)}</span>` : ""}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml2(ext.substring(0, 6))}</span></div><div style="display:flex;align-items:center;gap:12px;">${pag}<a href="${escHtml2(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
+      ov.innerHTML = `<button class="fs-lb-close" style="position:fixed;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">&times;</button>` + (atts.length > 1 ? `<button class="fs-lb-prev" style="position:fixed;left:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u2039</button>` : "") + (atts.length > 1 ? `<button class="fs-lb-next" style="position:fixed;right:14px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,0.08);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">\u203A</button>` : "") + `<div class="fs-lb-content" style="flex:1;display:flex;align-items:center;justify-content:center;padding:70px 70px 80px;overflow:hidden;">${c}</div><div style="position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10;border-top:1px solid rgba(255,255,255,0.06);"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><span style="color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml2(a.name || "")}</span>${a.size ? `<span style="color:rgba(255,255,255,0.35);font-size:11px;">${formatSize(a.size)}</span>` : ""}<span style="background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:4px;color:rgba(255,255,255,0.5);font-size:10px;font-weight:700;">${escHtml2(ext.substring(0, 6))}</span></div><div style="display:flex;align-items:center;gap:12px;">${pag}${onSave ? `<button class="fs-lb-send" data-url="${escHtml2(a.url)}" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(99,102,241,0.8);color:#fff;font-size:12px;font-weight:600;cursor:pointer;">Save to Media</button>` : ""}<a href="${escHtml2(a.url)}" download style="text-decoration:none;padding:6px 14px;border-radius:6px;background:#6366f1;color:#fff;font-size:12px;font-weight:600;">Download</a></div></div>`;
     };
     render();
     document.body.appendChild(ov);
@@ -1517,6 +1517,25 @@
       } else if (t.classList.contains("fs-lb-next") && cur < atts.length - 1) {
         cur++;
         render();
+      } else if (t.classList.contains("fs-lb-send") && onSave) {
+        const btn = t;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:fs-spin 0.6s linear infinite;"></span>';
+        btn.disabled = true;
+        onSave(atts[cur].url).then((ok) => {
+          if (ok) {
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+            btn.title = "Saved to Media Library";
+          } else {
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            btn.title = "Save failed";
+          }
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+            btn.title = "Save to Media Library";
+          }, 2500);
+        });
       } else if (t === ov) ov.remove();
     });
     const kd = (e) => {
@@ -1731,10 +1750,7 @@
             } else {
               inner = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#94a3b8;">${escHtml2(ext.substring(0, 4))}</div>`;
             }
-            const mediaUrl = m.fileUrl;
-            const saveIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-            const saveBtn = `<button class="fs-save-library" data-url="${escHtml2(mediaUrl)}" data-name="${escHtml2(m.fileName || "")}" title="Save to Media Library" style="position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:4px;border:none;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">${saveIcon}</button>`;
-            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}${saveBtn}</div>`;
+            return `<div class="fs-att-thumb" data-index="${mi}" style="flex-shrink:0;width:44px;height:44px;border-radius:6px;overflow:hidden;border:1px solid #e2e8f0;cursor:pointer;position:relative;background:#f8fafc;">${inner}</div>`;
           }).join("");
           mediaHtml = `<div class="fs-att-strip" style="display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px;scrollbar-width:thin;">${items}</div>`;
         }
@@ -1831,33 +1847,6 @@
           if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onStatusChange(id, "open");
         });
       });
-      body.querySelectorAll(".fs-save-library").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          var _a2;
-          e.stopPropagation();
-          const el = e.currentTarget;
-          const url = el.dataset.url;
-          const name = el.dataset.name || "";
-          if (url && ((_a2 = this.callbacks) == null ? void 0 : _a2.onSaveToLibrary)) {
-            const restoreSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
-            el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;animation:fs-spin 0.8s linear infinite;"><circle cx="12" cy="12" r="10" opacity="0.3"/><path d="M12 2a10 10 0 019.95 9"/></svg>';
-            this.callbacks.onSaveToLibrary(url, name).then((ok) => {
-              el.innerHTML = ok ? "Saved" : "Err";
-              el.style.fontSize = "7px";
-              el.style.fontWeight = "600";
-              el.style.color = ok ? "#22c55e" : "#ef4444";
-              el.style.background = "rgba(0,0,0,0.5)";
-              setTimeout(() => {
-                el.innerHTML = restoreSvg;
-                el.style.fontSize = "";
-                el.style.fontWeight = "";
-                el.style.color = "";
-                el.style.background = "";
-              }, 2e3);
-            });
-          }
-        });
-      });
       body.querySelectorAll(".fs-dots-trigger").forEach((trigger) => {
         trigger.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -1900,6 +1889,7 @@
       });
       body.querySelectorAll(".fs-att-thumb").forEach((thumb) => {
         thumb.addEventListener("click", (e) => {
+          var _a2;
           e.stopPropagation();
           const item = e.target.closest(".feedspace-feedback-item");
           const id = item == null ? void 0 : item.dataset.id;
@@ -1908,7 +1898,7 @@
           if (!a || !a.media || !a.media.length) return;
           const atts = a.media.map((m) => ({ url: m.fileUrl, type: m.fileType, name: m.fileName, size: 0 }));
           const idx = parseInt(thumb.dataset.index || "0");
-          lightbox(atts, idx);
+          lightbox(atts, idx, ((_a2 = this.callbacks) == null ? void 0 : _a2.onSaveToLibrary) ? (url) => this.callbacks.onSaveToLibrary(url, "") : void 0);
         });
       });
     }
