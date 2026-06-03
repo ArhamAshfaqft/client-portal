@@ -65,7 +65,6 @@ const typeLabels: Record<string, string> = {
 
 const statusVariants: Record<string, "warning" | "success" | "default"> = {
   open: "warning",
-  in_progress: "warning",
   resolved: "success",
 };
 
@@ -622,8 +621,7 @@ export default function SiteFeedbackPage() {
     let result = feedback;
 
     if (filter === "open") {
-      // "Pending" tab catches both open and in_progress
-      result = result.filter((f) => f.status === "open" || f.status === "in_progress");
+      result = result.filter((f) => f.status === "open");
     } else if (filter !== "all") {
       result = result.filter((f) => f.status === filter);
     }
@@ -656,7 +654,7 @@ export default function SiteFeedbackPage() {
 
   const counts = {
     all: feedback.length,
-    pending: feedback.filter((f) => f.status === "open" || f.status === "in_progress").length,
+    pending: feedback.filter((f) => f.status === "open").length,
     resolved: feedback.filter((f) => f.status === "resolved").length,
   };
 
@@ -837,7 +835,7 @@ export default function SiteFeedbackPage() {
                                   {typeLabels[item.type]}
                                 </span>
                                 <Badge variant={statusVariants[item.status] || "default"}>
-                                  {item.status === "open" ? "Pending" : item.status === "in_progress" ? "Pending" : item.status === "resolved" ? "Resolved" : item.status}
+                                  {item.status === "open" ? "Pending" : item.status === "resolved" ? "Resolved" : item.status}
                                 </Badge>
                                 {item.creator_name && (
                                   <span className="text-xs text-muted-foreground">

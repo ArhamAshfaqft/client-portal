@@ -132,7 +132,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     content: "The contact form on the pricing page is not submitting properly. Tested on Chrome and Safari. Getting a 500 error after clicking submit.",
     page_url: "/pricing", selector: null,
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
-    status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-28T11:15:00Z",
+    status: "open", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-28T11:15:00Z",
   },
   {
     ...DEMO_FEEDBACK_DEFAULTS,
@@ -168,7 +168,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     content: "Mobile responsiveness needs work. The navigation menu overlaps with the logo on iPhone 14. Also the hamburger menu doesn't close on tap outside.",
     page_url: "/", selector: null,
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
-    status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-24T10:00:00Z",
+    status: "open", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-24T10:00:00Z",
   },
   {
     ...DEMO_FEEDBACK_DEFAULTS,
@@ -203,7 +203,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     content: "Map markers are not displaying correctly on the property map view. All markers show at the same location instead of their actual addresses.",
     page_url: "/properties/map", selector: null,
     coordinates_x: 65, coordinates_y: 55, viewport_width: 1920, viewport_height: 1080,
-    status: "in_progress", assigned_to: "demo-dev-3", created_by: "demo-client-3", created_at: "2026-05-20T14:30:00Z",
+    status: "open", assigned_to: "demo-dev-3", created_by: "demo-client-3", created_at: "2026-05-20T14:30:00Z",
   },
   {
     ...DEMO_FEEDBACK_DEFAULTS,
@@ -265,7 +265,7 @@ export const DEMO_REPLIES: EnrichedFeedback[] = [
     content: "Updated the hero image with the new brand photo. Also adjusted the overlay gradient to match. Deployed to staging, please verify.",
     page_url: "/", selector: null,
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
-    status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-30T09:00:00Z",
+    status: "open", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-30T09:00:00Z",
   },
   {
     ...DEMO_FEEDBACK_DEFAULTS,
@@ -273,7 +273,7 @@ export const DEMO_REPLIES: EnrichedFeedback[] = [
     content: "The mobile nav issue was caused by a z-index conflict with the sticky header. Fixed by increasing the nav z-index to 60. Also added an overlay click handler to close the hamburger. Should be good now.",
     page_url: "/", selector: null,
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
-    status: "in_progress", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-25T14:00:00Z",
+    status: "open", assigned_to: "demo-dev-1", created_by: "demo-dev-1", created_at: "2026-05-25T14:00:00Z",
   },
 ];
 
@@ -320,7 +320,7 @@ export function getFeedbackForSite(siteId: string): EnrichedFeedback[] {
 export function getFeedbackCounts(siteId: string) {
   const fb = getFeedbackForSite(siteId);
   return {
-    pending_count: fb.filter((f) => f.status === "open" || f.status === "in_progress").length,
+    pending_count: fb.filter((f) => f.status === "open").length,
     resolved_count: fb.filter((f) => f.status === "resolved").length,
     total: fb.length,
   };

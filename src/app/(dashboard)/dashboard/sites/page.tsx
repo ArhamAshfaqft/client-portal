@@ -167,7 +167,7 @@ export default function SitesPage() {
                 for (const item of feedbackData) {
                   const siteId = projectToSiteMap[item.project_id];
                   if (siteId && countsMap[siteId]) {
-                    if (item.status === "open" || item.status === "in_progress") countsMap[siteId].pending_count++;
+                    if (item.status === "open") countsMap[siteId].pending_count++;
                     else if (item.status === "resolved") countsMap[siteId].resolved_count++;
                   }
                 }

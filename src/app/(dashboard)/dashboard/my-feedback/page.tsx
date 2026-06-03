@@ -39,7 +39,6 @@ const typeIcons: Record<string, typeof Pin> = {
 
 const statusVariants: Record<string, "warning" | "info" | "success" | "default"> = {
   open: "warning",
-  in_progress: "info",
   resolved: "success",
   closed: "default",
 };
@@ -160,13 +159,11 @@ export default function MyFeedbackPage() {
   const counts = {
     all: feedback.length,
     open: feedback.filter((f) => f.status === "open").length,
-    in_progress: feedback.filter((f) => f.status === "in_progress").length,
     resolved: feedback.filter((f) => f.status === "resolved").length,
   };
 
   const statusActions: Record<string, { next: FeedbackStatus; label: string; icon: typeof Play }> = {
-    open: { next: "in_progress" as FeedbackStatus, label: "Start Working", icon: Play },
-    in_progress: { next: "resolved" as FeedbackStatus, label: "Mark Resolved", icon: CheckCircle2 },
+    open: { next: "resolved" as FeedbackStatus, label: "Mark Resolved", icon: CheckCircle2 },
     resolved: { next: "open" as FeedbackStatus, label: "Reopen", icon: ArrowRight },
   };
 
@@ -211,8 +208,7 @@ export default function MyFeedbackPage() {
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         {[
           { key: "all", label: "All", count: counts.all },
-          { key: "open", label: "Open", count: counts.open },
-          { key: "in_progress", label: "In Progress", count: counts.in_progress },
+          { key: "open", label: "Pending", count: counts.open },
           { key: "resolved", label: "Resolved", count: counts.resolved },
         ].map((tab) => (
           <button

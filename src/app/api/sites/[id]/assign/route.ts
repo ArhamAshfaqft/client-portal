@@ -108,7 +108,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         .from("feedback_items")
         .update({ assigned_to: user_id })
         .in("project_id", projectIds)
-        .in("status", ["open", "in_progress"]);
+        .in("status", ["open"]);
     }
 
     return NextResponse.json({ ok: true, member });

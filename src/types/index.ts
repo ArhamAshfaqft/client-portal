@@ -1,7 +1,7 @@
 export type UserRole = "owner" | "developer" | "client";
 
 export type FeedbackType = "pin" | "comment" | "voice" | "media" | "rect" | "arrow" | "draw";
-export type FeedbackStatus = "open" | "in_progress" | "resolved" | "closed";
+export type FeedbackStatus = "open" | "resolved" | "closed";
 export type ProjectStatus = "draft" | "active" | "completed" | "archived";
 export type MediaStorageType = "wordpress" | "supabase";
 
@@ -106,7 +106,7 @@ export const DEFAULT_FEEDBACK_FIELDS = {
 export interface SiteFeedbackCounts {
   site_id: string;
   new_count: number;
-  in_progress_count: number;
+  pending_count: number;
   resolved_count: number;
   total: number;
 }

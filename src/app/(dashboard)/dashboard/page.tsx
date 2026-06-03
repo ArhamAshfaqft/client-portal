@@ -50,8 +50,7 @@ const DEMO_DEV_DATA = {
   resolved_this_week: 3,
   hours_logged_this_week: 28,
   active_projects: 2,
-  my_open: 3,
-  my_in_progress: 2,
+  my_open: 5,
 };
 
 // Module-level singleton — never changes across renders
@@ -68,7 +67,6 @@ export default function DashboardPage() {
   });
   const [devData, setDevData] = useState({
     my_open: 0,
-    my_in_progress: 0,
     resolved: 0,
     active_projects: 0,
   });
@@ -103,7 +101,6 @@ export default function DashboardPage() {
         if (isDev && profile?.user_id) {
           const [
             { count: openCount },
-            { count: inProgressCount },
             { count: resolvedCount },
           ] = await Promise.all([
             supabase
@@ -111,11 +108,6 @@ export default function DashboardPage() {
               .select("*", { count: "exact", head: true })
               .eq("assigned_to", profile.user_id)
               .eq("status", "open"),
-            supabase
-              .from("feedback_items")
-              .select("*", { count: "exact", head: true })
-              .eq("assigned_to", profile.user_id)
-              .eq("status", "in_progress"),
             supabase
               .from("feedback_items")
               .select("*", { count: "exact", head: true })
@@ -154,7 +146,7 @@ export default function DashboardPage() {
                 .select("project_id")
                 .in("project_id", projIds)
                 .eq("assigned_to", profile.user_id)
-                .in("status", ["open", "in_progress"]);
+                .in("status", ["open"]);
 
               const countMap: Record<string, number> = {};
               if (fbCounts) for (const f of fbCounts as any[]) { countMap[f.project_id] = (countMap[f.project_id] || 0) + 1; }
@@ -191,7 +183,6 @@ export default function DashboardPage() {
           if (!cancelled) {
             setDevData({
               my_open: openCount ?? 0,
-              my_in_progress: inProgressCount ?? 0,
               resolved: resolvedCount ?? 0,
               active_projects: projCount ?? 0,
             });
@@ -221,7 +212,7 @@ export default function DashboardPage() {
           supabase
             .from("feedback_items")
             .select("*", { count: "exact", head: true })
-            .in("status", ["open", "in_progress"]),
+            .eq("status", "open"),
           supabase
             .from("profiles")
             .select("*", { count: "exact", head: true })
@@ -254,18 +245,11 @@ export default function DashboardPage() {
   if (isDev) {
     const devStats = [
       {
-        label: "My Open Tasks",
+        label: "Pending",
         value: isDemo ? DEMO_DEV_DATA.my_open : devData.my_open,
         icon: AlertCircle,
         color: "text-amber-600 dark:text-amber-400",
         bg: "bg-amber-50 dark:bg-amber-500/10",
-      },
-      {
-        label: "In Progress",
-        value: isDemo ? DEMO_DEV_DATA.my_in_progress : devData.my_in_progress,
-        icon: ListTodo,
-        color: "text-primary",
-        bg: "bg-primary-light",
       },
       {
         label: "Resolved",

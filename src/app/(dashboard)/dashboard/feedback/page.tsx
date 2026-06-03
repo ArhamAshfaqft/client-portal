@@ -71,7 +71,7 @@ export default function FeedbackOverviewPage() {
                   const siteId = projectToSiteMap[item.project_id];
                   if (siteId && feedbackCountsMap[siteId]) {
                     feedbackCountsMap[siteId].total++;
-                    if (item.status === "open" || item.status === "in_progress") feedbackCountsMap[siteId].pending_count++;
+                    if (item.status === "open") feedbackCountsMap[siteId].pending_count++;
                     else if (item.status === "resolved") feedbackCountsMap[siteId].resolved_count++;
                   }
                 }
