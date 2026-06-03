@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import { Bell, CheckCheck, MessageSquareText, UserPlus, CheckCircle2, AlertCircle, X } from "lucide-react";
 import { useNotifications, type AppNotification } from "@/lib/notifications-context";
 import { useAuth } from "@/lib/auth-context";
@@ -30,6 +31,18 @@ export function NotificationBell() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (open && profile?.agency_id) {
+      const lastCleanup = sessionStorage.getItem("notif_cleanup_last");
+      if (lastCleanup && Date.now() - Number(lastCleanup) < 60000) return;
+      sessionStorage.setItem("notif_cleanup_last", String(Date.now()));
+      const supabase = createClient();
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      supabase.from("notifications").delete().lt("created_at", cutoff.toISOString()).then(() => {}, () => {});
+    }
+  }, [open, profile?.agency_id]);
 
   const roleFiltered = notifications.filter((n) => {
     if (profile?.role === "client") return n.type !== "assigned";
