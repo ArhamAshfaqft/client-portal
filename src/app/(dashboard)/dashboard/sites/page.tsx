@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { DEMO_SITES, getTeamMembers, getTeamMemberName } from "@/lib/demo-data";
+import { DEMO_SITES } from "@/lib/demo-data";
 import {
   Globe,
   Plus,
@@ -59,8 +59,8 @@ export default function SitesPage() {
   const [assignSite, setAssignSite] = useState<string | null>(null);
   const [assignMessage, setAssignMessage] = useState("");
   const [selectedDev, setSelectedDev] = useState("");
-  const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string }>>({});
-  const teamMembers = isDemo ? getTeamMembers() : [];
+  const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string; assignedBy: string }>>({});
+  const [teamMembers, setTeamMembers] = useState<{ user_id: string; full_name: string; email: string; position: string | null }[]>([]);
 
   useEffect(() => {
     if (isDemo) {
@@ -78,15 +78,66 @@ export default function SitesPage() {
   const fetchSites = async () => {
     if (!profile?.agency_id) return;
     try {
-      const { data: sitesData } = await supabase
+      // Fetch team members (developers) for the assign dropdown
+      supabase
+        .from("profiles")
+        .select("user_id, full_name, email, position")
+        .eq("agency_id", profile.agency_id)
+        .neq("user_id", profile.user_id)
+        .order("full_name", { ascending: true })
+        .then(({ data }) => { if (data) setTeamMembers(data as any); });
+
+      // For devs: first get assigned site IDs
+      let assignedSiteIds: string[] = [];
+      if (profile.role !== "owner") {
+        const { data: memberData } = await supabase
+          .from("site_members")
+          .select("site_id")
+          .eq("user_id", profile.user_id);
+
+        assignedSiteIds = memberData?.map((m) => m.site_id) || [];
+        if (assignedSiteIds.length === 0) {
+          setSites([]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fetch sites
+      let query = supabase
         .from("sites")
         .select("*")
-        .eq("agency_id", profile.agency_id)
-        .order("created_at", { ascending: false });
+        .eq("agency_id", profile.agency_id);
+
+      if (profile.role !== "owner" && assignedSiteIds.length > 0) {
+        query = query.in("id", assignedSiteIds);
+      }
+
+      const { data: sitesData } = await query.order("created_at", { ascending: false });
 
       if (sitesData) {
         const sitesList = sitesData as Site[];
         const siteIds = sitesList.map((s) => s.id);
+
+        // Fetch site_members for all visible sites
+        if (siteIds.length > 0) {
+          const { data: membersData } = await supabase
+            .from("site_members")
+            .select("*")
+            .in("site_id", siteIds);
+
+          const assignments: Record<string, { userId: string; message: string; assignedBy: string }> = {};
+          if (membersData) {
+            for (const m of membersData) {
+              assignments[m.site_id] = {
+                userId: m.user_id,
+                message: m.message || "",
+                assignedBy: m.assigned_by || "",
+              };
+            }
+          }
+          setSiteAssignments(assignments);
+        }
 
         if (siteIds.length > 0) {
           // Fetch all projects for these sites
@@ -193,12 +244,25 @@ export default function SitesPage() {
   };
 
   const handleAssignSite = (siteId: string, userId: string) => {
-    setSiteAssignments((prev) => ({
-      ...prev,
-      [siteId]: { userId, message: userId ? assignMessage : "" },
-    }));
     setAssignSite(null);
     setAssignMessage("");
+    setSelectedDev("");
+
+    const body = JSON.stringify({ user_id: userId, message: assignMessage });
+    fetch(`/api/sites/${siteId}/assign`, { method: "POST", headers: { "Content-Type": "application/json" }, body })
+      .then((r) => { if (r.ok) fetchSites(); })
+      .catch((e) => console.error("Failed to assign dev:", e));
+  };
+
+  const handleUnassign = (siteId: string, userId: string) => {
+    setAssignSite(null);
+    setAssignMessage("");
+    setSelectedDev("");
+
+    const body = JSON.stringify({ user_id: userId });
+    fetch(`/api/sites/${siteId}/assign`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body })
+      .then((r) => { if (r.ok) fetchSites(); })
+      .catch((e) => console.error("Failed to unassign dev:", e));
   };
 
   const getCounts = (siteId: string) => {
@@ -320,7 +384,7 @@ export default function SitesPage() {
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
                                 <User className="w-3 h-3" />
-                                {getTeamMemberName(siteAssignments[site.id].userId)}
+                                {teamMembers.find((m) => m.user_id === siteAssignments[site.id].userId)?.full_name || siteAssignments[site.id].assignedBy || "Developer"}
                               </p>
                               {siteAssignments[site.id]?.message && (
                                 <span className="text-[10px] text-muted-foreground/50 truncate max-w-[140px]">
@@ -593,15 +657,7 @@ export default function SitesPage() {
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
             {assignSite && siteAssignments[assignSite]?.userId && (
               <button
-                onClick={() => {
-                  setSiteAssignments((prev) => ({
-                    ...prev,
-                    [assignSite]: { userId: "", message: "" },
-                  }));
-                  setAssignSite(null);
-                  setAssignMessage("");
-                  setSelectedDev("");
-                }}
+                onClick={() => handleUnassign(assignSite, siteAssignments[assignSite].userId)}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Unassign

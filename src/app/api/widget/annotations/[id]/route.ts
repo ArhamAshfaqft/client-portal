@@ -130,20 +130,39 @@ export async function PATCH(
       );
     }
 
-    // If status changed to resolved, insert a notification for the agency
+    // If status changed to resolved, insert notifications for assigned devs and owners
     if (updates.status === "resolved") {
       const { data: project } = await supabase.from("projects").select("site_id").eq("id", data.project_id).single();
       if (project && project.site_id) {
         const { data: site } = await supabase.from("sites").select("agency_id, name").eq("id", project.site_id).single();
         if (site && site.agency_id) {
-          void supabase.from("notifications").insert({
-            agency_id: site.agency_id,
-            type: "resolved",
-            title: `Feedback resolved on ${site.name || "Client Site"}`,
-            message: `"${data.content?.substring(0, 80) || "A feedback item"}" — Marked as resolved`,
-            feedback_id: data.id,
-            site_id: project.site_id,
-          });
+          const userIds: string[] = [];
+
+          const { data: members } = await supabase
+            .from("site_members")
+            .select("user_id")
+            .eq("site_id", project.site_id);
+          if (members) for (const m of members) userIds.push(m.user_id);
+
+          const { data: owners } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("agency_id", site.agency_id)
+            .eq("role", "owner");
+          if (owners) for (const o of owners) { if (!userIds.includes(o.user_id)) userIds.push(o.user_id); }
+
+          if (userIds.length > 0) {
+            const notifs = userIds.map((uid) => ({
+              agency_id: site.agency_id,
+              user_id: uid,
+              type: "resolved",
+              title: `Feedback resolved on ${site.name || "Client Site"}`,
+              message: `"${data.content?.substring(0, 80) || "A feedback item"}" — Marked as resolved`,
+              feedback_id: data.id,
+              site_id: project.site_id,
+            }));
+            void supabase.from("notifications").insert(notifs);
+          }
         }
       }
     }

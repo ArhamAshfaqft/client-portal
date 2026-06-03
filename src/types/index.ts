@@ -131,6 +131,16 @@ export interface TeamMember {
   created_at: string;
 }
 
+export interface SiteMember {
+  id: string;
+  site_id: string;
+  user_id: string;
+  agency_id: string;
+  assigned_by: string | null;
+  message: string | null;
+  created_at: string;
+}
+
 export interface DevReport {
   id: string;
   developer_id: string;

@@ -170,6 +170,20 @@ export default function SiteFeedbackPage() {
     if (isDemo) return;
     setLoading(true);
     try {
+      // Non-owners must be assigned to this site
+      if (profile?.role !== "owner") {
+        const { data: member } = await supabase
+          .from("site_members")
+          .select("id")
+          .eq("site_id", id)
+          .eq("user_id", profile?.user_id)
+          .maybeSingle();
+        if (!member) {
+          router.replace("/dashboard/sites");
+          return;
+        }
+      }
+
       const { data: siteData } = await supabase
         .from("sites")
         .select("url, wp_api_url, wp_api_key")
@@ -196,10 +210,18 @@ export default function SiteFeedbackPage() {
         return;
       }
 
-      const { data: feedbackData, error } = await supabase
+      let fbQuery = supabase
         .from("feedback_items")
         .select("*")
-        .in("project_id", projectIds)
+        .in("project_id", projectIds);
+
+      // Devs with FEEDBACK_VIEW_ASSIGNED only see their own feedback
+      const viewAll = canDo(Permissions.FEEDBACK_VIEW_ALL);
+      if (!viewAll && canDo(Permissions.FEEDBACK_VIEW_ASSIGNED) && profile?.user_id) {
+        fbQuery = fbQuery.eq("assigned_to", profile.user_id);
+      }
+
+      const { data: feedbackData, error } = await fbQuery
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -417,14 +439,37 @@ export default function SiteFeedbackPage() {
         notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: item?.mirror_id || feedbackId, status: nextStatus });
       }
       if (nextStatus === "resolved" && profile?.agency_id) {
-        insertNotification({
-          agency_id: profile.agency_id,
-          type: "resolved",
-          title: "Feedback resolved",
-          message: `"${item?.content?.substring(0, 80) || "Feedback"}" — Marked as resolved`,
-          site_id: id,
-          feedback_id: feedbackId,
-        });
+        // Notify assigned devs and owners
+        supabase
+          .from("site_members")
+          .select("user_id")
+          .eq("site_id", id)
+          .then(({ data: members }) => {
+            const userIds = (members || []).map((m) => m.user_id);
+            supabase
+              .from("profiles")
+              .select("user_id")
+              .eq("agency_id", profile.agency_id)
+              .eq("role", "owner")
+              .then(({ data: owners }) => {
+                if (owners) for (const o of owners) {
+                  if (!userIds.includes(o.user_id)) userIds.push(o.user_id);
+                }
+                if (userIds.length > 0) {
+                  supabase.from("notifications").insert(
+                    userIds.map((uid) => ({
+                      agency_id: profile.agency_id,
+                      user_id: uid,
+                      type: "resolved",
+                      title: "Feedback resolved",
+                      message: `"${item?.content?.substring(0, 80) || "Feedback"}" — Marked as resolved`,
+                      site_id: id,
+                      feedback_id: feedbackId,
+                    }))
+                  ).then(({ error }) => { if (error) console.error("Notify error:", error); });
+                }
+              });
+          });
       }
     } catch (err) {
       console.error("Failed to update status:", err);

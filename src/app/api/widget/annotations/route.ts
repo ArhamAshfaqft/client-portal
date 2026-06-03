@@ -277,16 +277,46 @@ export async function POST(request: Request) {
       _siteResolved = resolvedSiteId;
 
       if (resolvedAgencyId) {
-        const { error: notifErr } = await admin.from("notifications").insert({
+        // Look up assigned devs for this site
+        const devIds: string[] = [];
+        const { data: members } = await admin
+          .from("site_members")
+          .select("user_id")
+          .eq("site_id", resolvedSiteId);
+
+        if (members) {
+          for (const m of members) devIds.push(m.user_id);
+        }
+
+        // Look up owners for this agency
+        const { data: owners } = await admin
+          .from("profiles")
+          .select("user_id")
+          .eq("agency_id", resolvedAgencyId)
+          .eq("role", "owner");
+
+        if (owners) {
+          for (const o of owners) {
+            if (!devIds.includes(o.user_id)) devIds.push(o.user_id);
+          }
+        }
+
+        // Send targeted notifications
+        const notifications = devIds.map((uid) => ({
           agency_id: resolvedAgencyId,
+          user_id: uid,
           type: "new_feedback",
           title: `New feedback on ${resolvedSiteName}`,
           message: content ? `"${content.substring(0, 100)}"` : "New feedback with media",
           feedback_id: feedbackItem.id,
           site_id: resolvedSiteId,
-        });
-        if (notifErr) {
-          _notifStatus = 'error:' + notifErr.message;
+        }));
+
+        if (notifications.length > 0) {
+          const { error: notifErr } = await admin.from("notifications").insert(notifications);
+          if (notifErr) {
+            _notifStatus = 'error:' + notifErr.message;
+          }
         }
       }
     }
