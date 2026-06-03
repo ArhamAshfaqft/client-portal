@@ -152,7 +152,7 @@ export default function DashboardPage() {
             .from("projects")
             .select("id, name, site_id", { count: "exact", head: false })
             .in("site_id", mySiteIds)
-            .in("status", ["active"]);
+            .or("status.eq.active,status.is.null");
 
           const projectsList: { name: string; feedback: number; siteName: string }[] = [];
           if (activeProjs && activeProjs.length > 0) {
