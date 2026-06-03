@@ -123,6 +123,12 @@ export default function DashboardPage() {
               .eq("status", "resolved"),
           ]);
 
+          // Get assigned site memberships
+          const { data: members } = await supabase
+            .from("site_members")
+            .select("site_id")
+            .eq("user_id", profile.user_id);
+
           // Count active projects on assigned sites and fetch project details
           let activeProjectCount = 0;
           const projectsList: { name: string; feedback: number; siteName: string }[] = [];
