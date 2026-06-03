@@ -193,6 +193,12 @@ export default function DashboardPage() {
           return;
         }
 
+        const { data: agencyProjects } = await supabase
+          .from("projects")
+          .select("id")
+          .eq("agency_id", agencyId);
+        const projectIds = (agencyProjects || []).map((p: any) => p.id);
+
         const [
           { count: sitesCount },
           { count: projectsCount },
@@ -208,11 +214,12 @@ export default function DashboardPage() {
             .from("projects")
             .select("*", { count: "exact", head: true })
             .eq("agency_id", agencyId)
-            .in("status", ["active"]),
+            .notIn("status", ["archived", "completed"]),
           supabase
             .from("feedback_items")
             .select("*", { count: "exact", head: true })
-            .eq("status", "open"),
+            .eq("status", "open")
+            .in("project_id", projectIds.length > 0 ? projectIds : ["__none__"]),
           supabase
             .from("profiles")
             .select("*", { count: "exact", head: true })
@@ -220,7 +227,8 @@ export default function DashboardPage() {
           supabase
             .from("feedback_items")
             .select("*", { count: "exact", head: true })
-            .eq("status", "resolved"),
+            .eq("status", "resolved")
+            .in("project_id", projectIds.length > 0 ? projectIds : ["__none__"]),
         ]);
 
         if (!cancelled) {
@@ -445,19 +453,6 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Open</p>
                   <p className="text-xl font-bold text-foreground">{isDemo ? 4 : 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center">
-                  <ListTodo className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">In Progress</p>
-                  <p className="text-xl font-bold text-foreground">{isDemo ? 2 : 0}</p>
                 </div>
               </div>
             </CardContent>
