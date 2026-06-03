@@ -66,7 +66,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isDemo) {
-      setNotifications(DEMO_NOTIFICATIONS);
+      const stored = localStorage.getItem("demo_notifications_read");
+      const readIds: string[] = stored ? JSON.parse(stored) : [];
+      setNotifications(
+        DEMO_NOTIFICATIONS.map((n) => (readIds.includes(n.id) ? { ...n, read: true } : n))
+      );
       return;
     }
     if (!profile?.agency_id) return;
@@ -115,22 +119,39 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      if (isDemo) {
+        const readIds = next.filter((n) => n.read).map((n) => n.id);
+        localStorage.setItem("demo_notifications_read", JSON.stringify(readIds));
+      }
+      return next;
+    });
     if (!isDemo) {
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", id);
+      supabase.from("notifications").update({ read: true }).eq("id", id).then(() => {}, () => {});
     }
   }, [isDemo]);
 
   const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    if (!isDemo) {
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, read: true }));
+      if (isDemo) {
+        const readIds = next.map((n) => n.id);
+        localStorage.setItem("demo_notifications_read", JSON.stringify(readIds));
+      }
+      return next;
+    });
+    if (!isDemo && profile?.agency_id) {
       const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("read", false);
+      supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("read", false)
+        .eq("agency_id", profile.agency_id)
+        .then(() => {}, () => {});
     }
-  }, [isDemo]);
+  }, [isDemo, profile?.agency_id]);
 
   return (
     <NotificationsContext.Provider
