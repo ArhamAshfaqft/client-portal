@@ -332,16 +332,18 @@ export default function SitesPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
-      ) : filteredSites.length === 0 ? (
+      ) : sites.length === 0 ? (
         <Card>
           <CardContent>
             <div className="text-center py-16">
               <Globe className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-semibold text-foreground mb-1">
-                No sites added yet
+                {profile?.role === "owner" ? "No sites added yet" : "No projects assigned"}
               </h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Add your first WordPress site to start collecting feedback
+                {profile?.role === "owner"
+                  ? "Add your first WordPress site to start collecting feedback"
+                  : "Wait for your owner to assign you a project"}
               </p>
               {canCreate && (
                 <Button onClick={() => setShowAdd(true)}>
@@ -349,6 +351,20 @@ export default function SitesPage() {
                   Add Your First Site
                 </Button>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredSites.length === 0 ? (
+        <Card>
+          <CardContent>
+            <div className="text-center py-16">
+              <Globe className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-lg font-semibold text-foreground mb-1">
+                No matching sites
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Try adjusting your search or filter
+              </p>
             </div>
           </CardContent>
         </Card>
