@@ -17,6 +17,18 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 interface DashboardData {
   total_sites: number;
   active_projects: number;
@@ -54,6 +66,14 @@ export default function DashboardPage() {
     team_members: 0,
     resolved_feedback: 0,
   });
+  const [devData, setDevData] = useState({
+    my_open: 0,
+    my_in_progress: 0,
+    resolved: 0,
+    active_projects: 0,
+  });
+  const [devProjects, setDevProjects] = useState<{ name: string; feedback: number; siteName: string }[]>([]);
+  const [devActivity, setDevActivity] = useState<{ action: string; time: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isDev = profile?.role === "developer";
@@ -80,6 +100,113 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
+        if (isDev && profile?.user_id) {
+          const [
+            { count: openCount },
+            { count: inProgressCount },
+            { count: resolvedCount },
+          ] = await Promise.all([
+            supabase
+              .from("feedback_items")
+              .select("*", { count: "exact", head: true })
+              .eq("assigned_to", profile.user_id)
+              .eq("status", "open"),
+            supabase
+              .from("feedback_items")
+              .select("*", { count: "exact", head: true })
+              .eq("assigned_to", profile.user_id)
+              .eq("status", "in_progress"),
+            supabase
+              .from("feedback_items")
+              .select("*", { count: "exact", head: true })
+              .eq("assigned_to", profile.user_id)
+              .eq("status", "resolved"),
+          ]);
+
+          // Count active projects on assigned sites and fetch project details
+          let activeProjectCount = 0;
+          const projectsList: { name: string; feedback: number; siteName: string }[] = [];
+          if (members && members.length > 0) {
+            const siteIds = members.map((m) => m.site_id);
+
+            // Get site names
+            const { data: sites } = await supabase
+              .from("sites")
+              .select("id, name")
+              .in("id", siteIds);
+            const siteNames = Object.fromEntries((sites || []).map((s: any) => [s.id, s.name]));
+
+            const { data: activeProjs, count: projCount } = await supabase
+              .from("projects")
+              .select("id, name, site_id", { count: "exact", head: false })
+              .in("site_id", siteIds)
+              .in("status", ["active"]);
+
+            activeProjectCount = projCount ?? 0;
+
+            if (activeProjs && activeProjs.length > 0) {
+              const projIds = activeProjs.map((p: any) => p.id);
+              const { data: fbCounts } = await supabase
+                .from("feedback_items")
+                .select("project_id, status")
+                .in("project_id", projIds)
+                .in("status", ["open", "in_progress"]);
+
+              const countMap: Record<string, number> = {};
+              if (fbCounts) for (const f of fbCounts as any[]) { countMap[f.project_id] = (countMap[f.project_id] || 0) + 1; }
+
+              for (const p of activeProjs as any[]) {
+                projectsList.push({
+                  name: p.name,
+                  feedback: countMap[p.id] || 0,
+                  siteName: siteNames[p.site_id] || "Unknown Site",
+                });
+              }
+            }
+          }
+
+          // Recent activity - last 5 feedback items assigned to dev
+          const { data: recentFeedback } = await supabase
+            .from("feedback_items")
+            .select("content, status, created_at, project_id")
+            .eq("assigned_to", profile.user_id)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
+          const activity: { action: string; time: string }[] = [];
+          if (recentFeedback) {
+            for (const f of recentFeedback as any[]) {
+              const action = f.status === "resolved"
+                ? `Resolved: "${f.content?.substring(0, 50) || "Feedback"}"`
+                : `New: "${f.content?.substring(0, 50) || "Feedback"}"`;
+              const time = timeAgo(f.created_at);
+              activity.push({ action, time });
+            }
+          }
+
+          if (!cancelled) {
+            setDevData({
+              my_open: openCount ?? 0,
+              my_in_progress: inProgressCount ?? 0,
+              resolved: resolvedCount ?? 0,
+              active_projects: activeProjectCount,
+            });
+            setDevProjects(projectsList);
+            setDevActivity(activity);
+          }
+
+          if (!cancelled) {
+            setDevData({
+              my_open: openCount ?? 0,
+              my_in_progress: inProgressCount ?? 0,
+              resolved: resolvedCount ?? 0,
+              active_projects: activeProjectCount,
+            });
+          }
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
         const [
           { count: sitesCount },
           { count: projectsCount },
@@ -133,21 +260,21 @@ export default function DashboardPage() {
     const devStats = [
       {
         label: "My Open Tasks",
-        value: isDemo ? DEMO_DEV_DATA.my_open : 0,
+        value: isDemo ? DEMO_DEV_DATA.my_open : devData.my_open,
         icon: AlertCircle,
         color: "text-amber-600 dark:text-amber-400",
         bg: "bg-amber-50 dark:bg-amber-500/10",
       },
       {
         label: "In Progress",
-        value: isDemo ? DEMO_DEV_DATA.my_in_progress : 0,
+        value: isDemo ? DEMO_DEV_DATA.my_in_progress : devData.my_in_progress,
         icon: ListTodo,
         color: "text-primary",
         bg: "bg-primary-light",
       },
       {
-        label: "Resolved This Week",
-        value: isDemo ? DEMO_DEV_DATA.resolved_this_week : 0,
+        label: "Resolved",
+        value: isDemo ? DEMO_DEV_DATA.resolved_this_week : devData.resolved,
         icon: CheckCircle2,
         color: "text-emerald-600 dark:text-emerald-400",
         bg: "bg-emerald-50 dark:bg-emerald-500/10",
@@ -207,7 +334,7 @@ export default function DashboardPage() {
                   Active Projects
                 </h3>
                 <span className="text-xs text-muted-foreground">
-                  {isDemo ? DEMO_DEV_DATA.active_projects : 0} projects
+                  {isDemo ? DEMO_DEV_DATA.active_projects : devData.active_projects} projects
                 </span>
               </div>
             </CardHeader>
@@ -215,16 +342,8 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {isDemo ? (
                   [
-                    {
-                      name: "Brighton Law Firm",
-                      status: "active",
-                      feedback: 4,
-                    },
-                    {
-                      name: "Apex Fitness",
-                      status: "active",
-                      feedback: 2,
-                    },
+                    { name: "Brighton Law Firm", status: "active", feedback: 4 },
+                    { name: "Apex Fitness", status: "active", feedback: 2 },
                   ].map((proj) => (
                     <div
                       key={proj.name}
@@ -236,6 +355,23 @@ export default function DashboardPage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {proj.feedback} open feedback items
+                        </p>
+                      </div>
+                      <Badge variant="success">active</Badge>
+                    </div>
+                  ))
+                ) : devProjects.length > 0 ? (
+                  devProjects.map((proj, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {proj.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {proj.siteName} · {proj.feedback} open
                         </p>
                       </div>
                       <Badge variant="success">active</Badge>
@@ -261,18 +397,9 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {isDemo ? (
                   [
-                    {
-                      action: "Resolved feedback on Brighton Law Firm",
-                      time: "2 hours ago",
-                    },
-                    {
-                      action: "Added daily report - 6 hours logged",
-                      time: "5 hours ago",
-                    },
-                    {
-                      action: "Started work on Apex Fitness mobile nav",
-                      time: "Yesterday",
-                    },
+                    { action: "Resolved feedback on Brighton Law Firm", time: "2 hours ago" },
+                    { action: "Added daily report - 6 hours logged", time: "5 hours ago" },
+                    { action: "Started work on Apex Fitness mobile nav", time: "Yesterday" },
                   ].map((activity, i) => (
                     <div
                       key={i}
@@ -285,6 +412,23 @@ export default function DashboardPage() {
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {activity.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : devActivity.length > 0 ? (
+                  devActivity.map((act, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 py-2 border-b border-border last:border-0"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-foreground">
+                          {act.action}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {act.time}
                         </p>
                       </div>
                     </div>
