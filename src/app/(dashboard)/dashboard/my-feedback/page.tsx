@@ -27,6 +27,14 @@ export default function MyFeedbackPage() {
   const [collapsedSites, setCollapsedSites] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Collapse all sites by default once sessions load
+  useEffect(() => {
+    if (sessions.length > 0 && collapsedSites.size === 0) {
+      const siteIds = [...new Set(sessions.map((s) => s.site_id))];
+      setCollapsedSites(new Set(siteIds));
+    }
+  }, [sessions]);
+
   useEffect(() => {
     const userId = profile?.user_id;
     const agencyId = profile?.agency_id;
