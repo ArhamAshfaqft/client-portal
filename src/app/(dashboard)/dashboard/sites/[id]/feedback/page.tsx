@@ -538,6 +538,9 @@ export default function SiteFeedbackPage() {
         .single();
       if (error) throw error;
 
+      // Auto-activate project if it was draft
+      supabase.from("projects").update({ status: "active" }).eq("id", parent?.project_id).eq("status", "draft").then(() => {}, () => {});
+
       const parentItem = feedback.find((f) => f.id === feedbackId);
       if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
         notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "reply_added", {

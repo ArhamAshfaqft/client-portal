@@ -214,7 +214,7 @@ export default function DashboardPage() {
             .from("projects")
             .select("*", { count: "exact", head: true })
             .eq("agency_id", agencyId)
-            .notIn("status", ["archived", "completed"]),
+            .eq("status", "active"),
           supabase
             .from("feedback_items")
             .select("*", { count: "exact", head: true })

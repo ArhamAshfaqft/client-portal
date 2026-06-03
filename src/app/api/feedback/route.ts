@@ -96,6 +96,9 @@ export async function POST(request: Request) {
     );
   }
 
+  // Auto-activate project if it was draft
+  supabase.from("projects").update({ status: "active" }).eq("id", projectId).eq("status", "draft").then(() => {}, () => {});
+
   // Fire-and-forget: notify WP about the new feedback item
   Promise.resolve().then(async () => {
     const { data: proj } = await supabase.from("projects").select("site_id").eq("id", projectId).single();

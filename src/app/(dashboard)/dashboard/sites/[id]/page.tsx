@@ -27,7 +27,7 @@ import {
   CheckCircle2,
   Ban,
 } from "lucide-react";
-import type { Site, Project, PreviewLink } from "@/types";
+import type { Site, Project, PreviewLink, ProjectStatus } from "@/types";
 
 const DEMO_PREVIEW_LINKS: Record<string, PreviewLink[]> = {
   "demo-proj-1": [
@@ -63,6 +63,12 @@ export default function SiteDetailPage() {
   const [linkTargetUrl, setLinkTargetUrl] = useState("");
   const [linkExpiryDays, setLinkExpiryDays] = useState("30");
   const [creatingLink, setCreatingLink] = useState(false);
+
+  const updateProjectStatus = async (projectId: string, status: string) => {
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: status as ProjectStatus } : p)));
+    const supabase = createClient();
+    await supabase.from("projects").update({ status }).eq("id", projectId);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -357,17 +363,34 @@ export default function SiteDetailPage() {
                       {project.description || "No description"}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <Badge
-                        variant={
-                          project.status === "active"
-                            ? "success"
-                            : project.status === "completed"
-                              ? "info"
-                              : "default"
-                        }
-                      >
-                        {project.status}
-                      </Badge>
+                      {profile?.role === "owner" ? (
+                        <select
+                          value={project.status}
+                          onChange={(e) => updateProjectStatus(project.id, e.target.value)}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent text-accent-foreground border-0 cursor-pointer outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+                          style={{
+                            backgroundColor: project.status === "active" ? "rgba(16,185,129,0.1)" : project.status === "completed" ? "rgba(59,130,246,0.1)" : undefined,
+                            color: project.status === "active" ? "#059669" : project.status === "completed" ? "#2563eb" : undefined,
+                          }}
+                        >
+                          <option value="draft">draft</option>
+                          <option value="active">active</option>
+                          <option value="completed">completed</option>
+                          <option value="archived">archived</option>
+                        </select>
+                      ) : (
+                        <Badge
+                          variant={
+                            project.status === "active"
+                              ? "success"
+                              : project.status === "completed"
+                                ? "info"
+                                : "default"
+                          }
+                        >
+                          {project.status}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -235,6 +235,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Auto-activate project if it was draft
+    adminClient().from("projects").update({ status: "active" }).eq("id", projectId).eq("status", "draft").then(() => {}, () => {});
+
     // Notify the agency about the new feedback. Resolve the owning site/agency
     // from the project chain (project -> site -> agency) using the service-role
     // client so this works for EVERY synced pin — not just ones whose WP
