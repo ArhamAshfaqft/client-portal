@@ -101,30 +101,6 @@ export default function DashboardPage() {
     const fetchData = async () => {
       try {
         if (isDev && profile?.user_id) {
-          // Get assigned site IDs
-          const { data: memberRecords } = await supabase
-            .from("site_members")
-            .select("site_id")
-            .eq("user_id", profile.user_id);
-          const mySiteIds = (memberRecords || []).map((m: any) => m.site_id);
-
-          if (mySiteIds.length === 0) {
-            if (!cancelled) setLoading(false);
-            return;
-          }
-
-          // Get projects on assigned sites
-          const { data: myProjects } = await supabase
-            .from("projects")
-            .select("id, name")
-            .in("site_id", mySiteIds);
-          const myProjectIds = (myProjects || []).map((p: any) => p.id);
-
-          if (myProjectIds.length === 0) {
-            if (!cancelled) setLoading(false);
-            return;
-          }
-
           const [
             { count: openCount },
             { count: inProgressCount },
@@ -133,58 +109,72 @@ export default function DashboardPage() {
             supabase
               .from("feedback_items")
               .select("*", { count: "exact", head: true })
-              .in("project_id", myProjectIds)
+              .eq("assigned_to", profile.user_id)
               .eq("status", "open"),
             supabase
               .from("feedback_items")
               .select("*", { count: "exact", head: true })
-              .in("project_id", myProjectIds)
+              .eq("assigned_to", profile.user_id)
               .eq("status", "in_progress"),
             supabase
               .from("feedback_items")
               .select("*", { count: "exact", head: true })
-              .in("project_id", myProjectIds)
+              .eq("assigned_to", profile.user_id)
               .eq("status", "resolved"),
           ]);
 
-          // Active projects on assigned sites
-          const { data: activeProjs, count: projCount } = await supabase
-            .from("projects")
-            .select("id, name, site_id", { count: "exact", head: false })
-            .in("site_id", mySiteIds)
-            .or("status.eq.active,status.is.null");
+          // Active projects = distinct projects where dev has assigned feedback
+          const { data: myProjects } = await supabase
+            .from("feedback_items")
+            .select("project_id")
+            .eq("assigned_to", profile.user_id);
+          const uniqueProjectIds = [...new Set((myProjects || []).map((f: any) => f.project_id))];
 
+          let projCount = 0;
           const projectsList: { name: string; feedback: number; siteName: string }[] = [];
-          if (activeProjs && activeProjs.length > 0) {
-            const { data: sites } = await supabase
-              .from("sites")
-              .select("id, name")
-              .in("id", mySiteIds);
-            const siteNames = Object.fromEntries((sites || []).map((s: any) => [s.id, s.name]));
+          if (uniqueProjectIds.length > 0) {
+            const { data: projects, count: pCount } = await supabase
+              .from("projects")
+              .select("id, name, site_id", { count: "exact", head: false })
+              .in("id", uniqueProjectIds)
+              .or("status.eq.active,status.is.null");
 
-            const { data: fbCounts } = await supabase
-              .from("feedback_items")
-              .select("project_id")
-              .in("project_id", activeProjs.map((p: any) => p.id))
-              .in("status", ["open", "in_progress"]);
+            projCount = pCount ?? 0;
 
-            const countMap: Record<string, number> = {};
-            if (fbCounts) for (const f of fbCounts as any[]) { countMap[f.project_id] = (countMap[f.project_id] || 0) + 1; }
+            if (projects && projects.length > 0) {
+              const siteIds = [...new Set(projects.map((p: any) => p.site_id))];
+              const { data: sites } = await supabase
+                .from("sites")
+                .select("id, name")
+                .in("id", siteIds);
+              const siteNames = Object.fromEntries((sites || []).map((s: any) => [s.id, s.name]));
 
-            for (const p of activeProjs as any[]) {
-              projectsList.push({
-                name: p.name,
-                feedback: countMap[p.id] || 0,
-                siteName: siteNames[p.site_id] || "Unknown",
-              });
+              const projIds = projects.map((p: any) => p.id);
+              const { data: fbCounts } = await supabase
+                .from("feedback_items")
+                .select("project_id")
+                .in("project_id", projIds)
+                .eq("assigned_to", profile.user_id)
+                .in("status", ["open", "in_progress"]);
+
+              const countMap: Record<string, number> = {};
+              if (fbCounts) for (const f of fbCounts as any[]) { countMap[f.project_id] = (countMap[f.project_id] || 0) + 1; }
+
+              for (const p of projects as any[]) {
+                projectsList.push({
+                  name: p.name,
+                  feedback: countMap[p.id] || 0,
+                  siteName: siteNames[p.site_id] || "Unknown",
+                });
+              }
             }
           }
 
-          // Recent activity - last 5 feedback on assigned sites
+          // Recent activity - last 5 feedback items assigned to dev
           const { data: recentFeedback } = await supabase
             .from("feedback_items")
             .select("content, status, created_at")
-            .in("project_id", myProjectIds)
+            .eq("assigned_to", profile.user_id)
             .order("created_at", { ascending: false })
             .limit(5);
 
