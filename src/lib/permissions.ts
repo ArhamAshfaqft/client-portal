@@ -21,6 +21,8 @@ export const Permissions = {
 
   PROJECTS_CREATE: "projects.create",
   PROJECTS_DELETE: "projects.delete",
+
+  CONNECTOR_VIEW: "connector.view",
 } as const;
 
 export type Permission = (typeof Permissions)[keyof typeof Permissions];
@@ -105,6 +107,7 @@ export const ALL_PERMISSIONS: { key: Permission; label: string; group: string }[
   { key: Permissions.REPORTS_CREATE, label: "Submit reports", group: "Reports" },
   { key: Permissions.SETTINGS_VIEW, label: "View settings", group: "Settings" },
   { key: Permissions.SETTINGS_EDIT, label: "Edit settings", group: "Settings" },
+  { key: Permissions.CONNECTOR_VIEW, label: "View connector token", group: "Sites" },
 ];
 
 const OWNER_PERMISSIONS: string[] = ALL_PERMISSIONS.map((p) => p.key);

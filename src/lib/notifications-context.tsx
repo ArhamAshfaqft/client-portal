@@ -126,7 +126,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+    if (!isDemo) {
+      const supabase = createClient();
+      supabase.from("notifications").update({ read: true }).eq("read", false);
+    }
+  }, [isDemo]);
 
   return (
     <NotificationsContext.Provider

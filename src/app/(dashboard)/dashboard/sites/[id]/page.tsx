@@ -301,7 +301,7 @@ export default function SiteDetailPage() {
             <p className="text-sm text-muted-foreground">{site.url}</p>
           </div>
         </div>
-        {can(Permissions.SETTINGS_VIEW) && (
+        {can(Permissions.CONNECTOR_VIEW) && (
           <button
             onClick={() => { navigator.clipboard.writeText(site.id); alert('Site token copied!'); }}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
