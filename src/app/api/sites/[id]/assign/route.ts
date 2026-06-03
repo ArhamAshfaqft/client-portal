@@ -96,6 +96,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       console.error("[SiteAssign] Notification insert error:", notifError);
     }
 
+    // Auto-assign all open/in-progress feedback on this site to the dev
+    const { data: projects } = await adminClient
+      .from("projects")
+      .select("id")
+      .eq("site_id", siteId);
+
+    if (projects && projects.length > 0) {
+      const projectIds = projects.map((p: any) => p.id);
+      await adminClient
+        .from("feedback_items")
+        .update({ assigned_to: user_id })
+        .in("project_id", projectIds)
+        .in("status", ["open", "in_progress"]);
+    }
+
     return NextResponse.json({ ok: true, member });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

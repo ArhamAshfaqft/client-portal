@@ -288,6 +288,14 @@ export async function POST(request: Request) {
           for (const m of members) devIds.push(m.user_id);
         }
 
+        // Auto-assign new feedback to the first assigned dev on this site
+        if (devIds.length > 0) {
+          await admin
+            .from("feedback_items")
+            .update({ assigned_to: devIds[0] })
+            .eq("id", feedbackItem.id);
+        }
+
         // Look up owners for this agency
         const { data: owners } = await admin
           .from("profiles")
