@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -20,8 +20,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const redirectedRef = useRef(false);
+
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && user && !redirectedRef.current) {
+      redirectedRef.current = true;
+      if (window.location.hash.includes("access_token")) {
+        sessionStorage.setItem("feedspace_invite_flow", "true");
+      }
       router.replace("/dashboard");
     }
   }, [user, isLoading, router]);

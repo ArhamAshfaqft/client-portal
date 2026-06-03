@@ -1,14 +1,22 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { DemoBanner } from "./demo-banner";
+import { SetPasswordDialog } from "@/components/auth/set-password-dialog";
 import { useAuth } from "@/lib/auth-context";
 import { Loader2 } from "lucide-react";
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
-  const { isLoading } = useAuth();
+  const { isLoading, isDemo } = useAuth();
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+
+  useEffect(() => {
+    if (!isDemo && sessionStorage.getItem("feedspace_invite_flow") === "true") {
+      setShowPasswordDialog(true);
+    }
+  }, [isDemo]);
 
   if (isLoading) {
     return (
@@ -33,6 +41,10 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="p-6">{children}</div>
         </main>
       </div>
+      <SetPasswordDialog
+        open={showPasswordDialog}
+        onClose={() => setShowPasswordDialog(false)}
+      />
     </div>
   );
 }
