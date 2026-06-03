@@ -80,16 +80,20 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (!projectId || isDemo) { setLoading(false); return; }
     const supabase = createClient();
+    const isOwner = profile?.role === "owner";
 
     Promise.all([
       supabase.from("projects").select("*, site:site_id(name)").eq("id", projectId).single(),
-      supabase
-        .from("feedback_items")
-        .select("id, type, content, status, created_by, created_at, page_url, parent_id")
-        .eq("project_id", projectId)
-        .eq("assigned_to", profile?.user_id)
-        .is("parent_id", null)
-        .order("created_at", { ascending: false }),
+      (() => {
+        let q = supabase
+          .from("feedback_items")
+          .select("id, type, content, status, created_by, created_at, page_url, parent_id")
+          .eq("project_id", projectId)
+          .is("parent_id", null)
+          .order("created_at", { ascending: false });
+        if (!isOwner) q = q.eq("assigned_to", profile?.user_id);
+        return q;
+      })(),
     ]).then(async ([{ data: proj }, { data: items }]) => {
       setProject(proj);
       if (!items || items.length === 0) { setFeedback([]); setLoading(false); return; }

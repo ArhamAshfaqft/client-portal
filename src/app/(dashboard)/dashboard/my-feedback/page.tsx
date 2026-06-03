@@ -29,7 +29,9 @@ export default function MyFeedbackPage() {
 
   useEffect(() => {
     const userId = profile?.user_id;
-    if (!userId) { setLoading(false); return; }
+    const agencyId = profile?.agency_id;
+    const role = profile?.role;
+    if (!userId || !agencyId) { setLoading(false); return; }
 
     if (isDemo) {
       setLoading(false);
@@ -37,40 +39,85 @@ export default function MyFeedbackPage() {
     }
 
     const supabase = createClient();
+    const isOwner = role === "owner";
 
-    // Get all projects where there's feedback assigned to this user
-    supabase
-      .from("feedback_items")
-      .select("project_id, status, created_at, project:project_id(id, name, site_id, site:site_id(id, name))")
-      .eq("assigned_to", userId)
-      .order("created_at", { ascending: false })
-      .then(({ data: items, error }) => {
-        if (error || !items) { setLoading(false); return; }
+    if (isOwner) {
+      // Owner: get all projects in agency, then fetch counts per project
+      supabase
+        .from("projects")
+        .select("id, name, site_id, created_at, site:site_id(id, name)")
+        .eq("agency_id", agencyId)
+        .order("created_at", { ascending: false })
+        .then(async ({ data: projects, error }) => {
+          if (error || !projects) { setLoading(false); return; }
+          const projIds = projects.map((p: any) => p.id);
+          if (projIds.length === 0) { setSessions([]); setLoading(false); return; }
 
-        const projectMap: Record<string, ProjectSummary> = {};
-        for (const i of items as any[]) {
-          const pid = i.project_id;
-          if (!projectMap[pid]) {
-            projectMap[pid] = {
-              id: pid,
-              name: i.project?.name || "Unknown",
-              site_id: i.project?.site?.id || i.project?.site_id,
-              site_name: i.project?.site?.name || "Unknown",
-              total: 0,
-              pending: 0,
-              resolved: 0,
-              latest_date: i.created_at,
-            };
+          const { data: fb } = await supabase
+            .from("feedback_items")
+            .select("project_id, status, created_at")
+            .in("project_id", projIds)
+            .is("parent_id", null);
+
+          const countMap: Record<string, { total: number; pending: number; resolved: number; latest: string }> = {};
+          if (fb) {
+            for (const f of fb as any[]) {
+              if (!countMap[f.project_id]) countMap[f.project_id] = { total: 0, pending: 0, resolved: 0, latest: f.created_at };
+              countMap[f.project_id].total++;
+              if (f.status === "open") countMap[f.project_id].pending++;
+              if (f.status === "resolved") countMap[f.project_id].resolved++;
+              if (f.created_at > countMap[f.project_id].latest) countMap[f.project_id].latest = f.created_at;
+            }
           }
-          projectMap[pid].total++;
-          if (i.status === "open") projectMap[pid].pending++;
-          if (i.status === "resolved") projectMap[pid].resolved++;
-          if (i.created_at > projectMap[pid].latest_date) projectMap[pid].latest_date = i.created_at;
-        }
 
-        setSessions(Object.values(projectMap));
-        setLoading(false);
-      });
+          setSessions(
+            projects.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              site_id: p.site_id,
+              site_name: p.site?.name || "Unknown",
+              total: countMap[p.id]?.total || 0,
+              pending: countMap[p.id]?.pending || 0,
+              resolved: countMap[p.id]?.resolved || 0,
+              latest_date: countMap[p.id]?.latest || p.created_at,
+            }))
+          );
+          setLoading(false);
+        });
+    } else {
+      // Dev: get projects where feedback is assigned to this user
+      supabase
+        .from("feedback_items")
+        .select("project_id, status, created_at, project:project_id(id, name, site_id, site:site_id(id, name))")
+        .eq("assigned_to", userId)
+        .is("parent_id", null)
+        .order("created_at", { ascending: false })
+        .then(({ data: items, error }) => {
+          if (error || !items) { setLoading(false); return; }
+
+          const projectMap: Record<string, ProjectSummary> = {};
+          for (const i of items as any[]) {
+            const pid = i.project_id;
+            if (!projectMap[pid]) {
+              projectMap[pid] = {
+                id: pid,
+                name: i.project?.name || "Unknown",
+                site_id: i.project?.site?.id || i.project?.site_id,
+                site_name: i.project?.site?.name || "Unknown",
+                total: 0, pending: 0, resolved: 0,
+                latest_date: i.created_at,
+              };
+            }
+            projectMap[pid].total++;
+            if (i.status === "open") projectMap[pid].pending++;
+            if (i.status === "resolved") projectMap[pid].resolved++;
+            if (i.created_at > projectMap[pid].latest_date) projectMap[pid].latest_date = i.created_at;
+          }
+
+          setSessions(Object.values(projectMap));
+          setLoading(false);
+        });
+    }
   }, [profile?.user_id, isDemo]);
 
   const copyLink = (projectId: string) => {
