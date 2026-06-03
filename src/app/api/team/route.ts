@@ -130,7 +130,20 @@ export async function PATCH(request: Request) {
   if (position !== undefined) updates.position = position;
   if (permissions !== undefined) updates.permissions = permissions;
 
-  const { error } = await supabase
+  // Use service role key to bypass RLS (profiles update policy is self-only)
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!serviceRoleKey || !supabaseUrl) {
+    return NextResponse.json(
+      { error: "Server configuration error: service role key not set" },
+      { status: 500 }
+    );
+  }
+
+  const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
+
+  const { error } = await adminClient
     .from("profiles")
     .update(updates)
     .eq("user_id", userId)
