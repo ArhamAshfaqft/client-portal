@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { usePermissions } from "@/lib/use-permissions";
+import { Permissions } from "@/lib/permissions";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +32,7 @@ const supabase = createClient();
 
 export default function SettingsPage() {
   const { profile, refreshProfile, isDemo } = useAuth();
+  const { can } = usePermissions();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [agencyToken, setAgencyToken] = useState("");
@@ -323,12 +326,14 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} loading={saving}>
-          <Save className="w-4 h-4 mr-2" />
-          {saved ? "Saved" : "Save Changes"}
-        </Button>
-      </div>
+      {can(Permissions.SETTINGS_EDIT) && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} loading={saving}>
+            <Save className="w-4 h-4 mr-2" />
+            {saved ? "Saved" : "Save Changes"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

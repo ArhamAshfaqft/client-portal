@@ -17,6 +17,8 @@ import {
   Mail,
   UserPlus,
   Trash2,
+  Pencil,
+  Save,
   Shield,
   Code,
   Palette,
@@ -107,6 +109,15 @@ export default function TeamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+
+  const [showEdit, setShowEdit] = useState(false);
+  const [editMemberId, setEditMemberId] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editPosition, setEditPosition] = useState<PositionType>("developer");
+  const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [editShowPermissions, setEditShowPermissions] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
 
   useEffect(() => {
     if (isDemo) {
@@ -229,6 +240,80 @@ export default function TeamPage() {
     fetchMembers();
   };
 
+  const openEdit = (member: MemberEntry) => {
+    setEditMemberId(member.user_id);
+    setEditName(member.full_name);
+    setEditPosition((member.position as PositionType) || "developer");
+    setEditPermissions(member.permissions || []);
+    setEditShowPermissions(false);
+    setEditError("");
+    setShowEdit(true);
+  };
+
+  const handleEditPositionChange = (position: PositionType) => {
+    setEditPosition(position);
+    if (position !== "custom") {
+      setEditPermissions(getDefaultPermissions("developer", position));
+      setEditShowPermissions(false);
+    } else {
+      setEditShowPermissions(true);
+    }
+  };
+
+  const toggleEditPermission = (perm: string) => {
+    setEditPermissions((prev) =>
+      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
+    );
+  };
+
+  const handleEditSave = async () => {
+    if (!editMemberId) return;
+    setEditError("");
+    setEditSubmitting(true);
+
+    if (isDemo) {
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.user_id === editMemberId
+            ? { ...m, full_name: editName, position: editPosition, permissions: editPermissions }
+            : m
+        )
+      );
+      setShowEdit(false);
+      setEditSubmitting(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/team", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: editMemberId,
+          fullName: editName,
+          position: editPosition,
+          permissions: editPermissions,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setEditError(data.error || "Failed to update member");
+        setEditSubmitting(false);
+        return;
+      }
+    } catch {
+      setEditError("Network error. Please try again.");
+      setEditSubmitting(false);
+      return;
+    }
+
+    setShowEdit(false);
+    setEditSubmitting(false);
+    fetchMembers();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -331,13 +416,24 @@ export default function TeamPage() {
                           </p>
                         </div>
                       </div>
-                      {can(Permissions.TEAM_REMOVE) && member.role !== "owner" && (
-                        <button
-                          onClick={() => handleRemove(member.user_id)}
-                          className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      {can(Permissions.TEAM_INVITE) && member.role !== "owner" && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEdit(member)}
+                            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                            title="Edit member"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          {can(Permissions.TEAM_REMOVE) && (
+                            <button
+                              onClick={() => handleRemove(member.user_id)}
+                              className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </CardContent>
@@ -478,6 +574,132 @@ export default function TeamPage() {
             <Button onClick={handleInvite} loading={submitting}>
               <Mail className="w-4 h-4 mr-2" />
               Send Invitation
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        title="Edit Team Member"
+        size="lg"
+      >
+        <div className="space-y-5">
+          <Input
+            label="Full Name"
+            placeholder="Jane Doe"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+          />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Position
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {POSITIONS.map((pos) => {
+                const Icon = positionIcons[pos.value];
+                const isActive = editPosition === pos.value;
+                return (
+                  <button
+                    key={pos.value}
+                    onClick={() => handleEditPositionChange(pos.value)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-sm transition-all ${
+                      isActive
+                        ? "border-primary bg-primary-light text-primary"
+                        : "border-border hover:bg-accent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{pos.label}</span>
+                    <span className="text-[10px] text-center leading-tight opacity-70">
+                      {pos.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border border-border rounded-lg">
+            <button
+              onClick={() => setEditShowPermissions(!editShowPermissions)}
+              className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-foreground"
+            >
+              <span>Custom Permissions ({editPermissions.length} selected)</span>
+              {editShowPermissions ? (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+            {editShowPermissions && (
+              <div className="px-4 pb-3 space-y-3 border-t border-border pt-3">
+                {ALL_PERMISSIONS.reduce(
+                  (groups, perm) => {
+                    const group = groups.find((g) => g.group === perm.group);
+                    if (group) group.items.push(perm);
+                    else groups.push({ group: perm.group, items: [perm] });
+                    return groups;
+                  },
+                  [] as { group: string; items: typeof ALL_PERMISSIONS }[]
+                ).map(({ group, items }) => (
+                  <div key={group}>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                      {group}
+                    </p>
+                    <div className="space-y-1">
+                      {items.map((perm) => {
+                        const enabled = editPermissions.includes(perm.key);
+                        return (
+                          <label
+                            key={perm.key}
+                            className="flex items-center gap-2.5 py-1 cursor-pointer group"
+                          >
+                            <div
+                              className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                                enabled
+                                  ? "bg-primary border-primary"
+                                  : "border-border group-hover:border-muted-foreground"
+                              }`}
+                            >
+                              {enabled && (
+                                <Check className="w-3 h-3 text-white" />
+                              )}
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={enabled}
+                              onChange={() => toggleEditPermission(perm.key)}
+                              className="sr-only"
+                            />
+                            <span className="text-sm text-foreground">
+                              {perm.label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {editError && (
+            <p className="text-sm text-danger bg-danger/5 rounded-lg px-3 py-2">
+              {editError}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setShowEdit(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSave} loading={editSubmitting}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
             </Button>
           </div>
         </div>

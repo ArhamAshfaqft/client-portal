@@ -97,3 +97,48 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: true });
 }
+
+export async function PATCH(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, agency_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "owner") {
+    return NextResponse.json({ error: "Only owners can edit team members" }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { userId, fullName, position, permissions } = body;
+
+  if (!userId) {
+    return NextResponse.json({ error: "userId is required" }, { status: 400 });
+  }
+
+  const updates: Record<string, any> = {};
+  if (fullName !== undefined) updates.full_name = fullName;
+  if (position !== undefined) updates.position = position;
+  if (permissions !== undefined) updates.permissions = permissions;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(updates)
+    .eq("user_id", userId)
+    .eq("agency_id", profile.agency_id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+
+  return NextResponse.json({ success: true });
+}
