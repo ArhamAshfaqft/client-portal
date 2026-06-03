@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { usePermissions } from "@/lib/use-permissions";
+import { Permissions } from "@/lib/permissions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +49,7 @@ export default function SiteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { isDemo, profile } = useAuth();
+  const { can } = usePermissions();
   const [site, setSite] = useState<Site | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [previewLinks, setPreviewLinks] = useState<Record<string, PreviewLink[]>>({});
@@ -298,22 +301,26 @@ export default function SiteDetailPage() {
             <p className="text-sm text-muted-foreground">{site.url}</p>
           </div>
         </div>
-        <button
-          onClick={() => { navigator.clipboard.writeText(site.id); alert('Site token copied!'); }}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-          title="Copy site token for Feedspace Connector plugin"
-        >
-          <Copy className="w-3.5 h-3.5" />
-          Copy Token
-        </button>
+        {can(Permissions.SETTINGS_VIEW) && (
+          <button
+            onClick={() => { navigator.clipboard.writeText(site.id); alert('Site token copied!'); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            title="Copy site token for Feedspace Connector plugin"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            Copy Token
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground">Projects</h3>
-        <Button onClick={() => setShowNewProject(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Project
-        </Button>
+        {can(Permissions.PROJECTS_CREATE) && (
+          <Button onClick={() => setShowNewProject(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Project
+          </Button>
+        )}
       </div>
 
       {projects.length === 0 ? (
@@ -327,10 +334,12 @@ export default function SiteDetailPage() {
               <p className="text-sm text-muted-foreground mb-6">
                 Create your first project to start collecting feedback
               </p>
-              <Button onClick={() => setShowNewProject(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create First Project
-              </Button>
+              {can(Permissions.PROJECTS_CREATE) && (
+                <Button onClick={() => setShowNewProject(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Project
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
