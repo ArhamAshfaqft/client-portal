@@ -215,12 +215,6 @@ export default function SiteFeedbackPage() {
         .select("*")
         .in("project_id", projectIds);
 
-      // Devs with FEEDBACK_VIEW_ASSIGNED only see their own feedback
-      const viewAll = canDo(Permissions.FEEDBACK_VIEW_ALL);
-      if (!viewAll && canDo(Permissions.FEEDBACK_VIEW_ASSIGNED) && profile?.user_id) {
-        fbQuery = fbQuery.eq("assigned_to", profile.user_id);
-      }
-
       const { data: feedbackData, error } = await fbQuery
         .order("created_at", { ascending: false });
 
