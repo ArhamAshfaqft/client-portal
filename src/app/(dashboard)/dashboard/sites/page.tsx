@@ -61,6 +61,7 @@ export default function SitesPage() {
   const [selectedDev, setSelectedDev] = useState("");
   const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string; assignedBy: string }>>({});
   const [teamMembers, setTeamMembers] = useState<{ user_id: string; full_name: string; email: string; position: string | null }[]>([]);
+  const [assignError, setAssignError] = useState("");
 
   useEffect(() => {
     if (isDemo) {
@@ -250,8 +251,16 @@ export default function SitesPage() {
 
     const body = JSON.stringify({ user_id: userId, message: assignMessage });
     fetch(`/api/sites/${siteId}/assign`, { method: "POST", headers: { "Content-Type": "application/json" }, body })
-      .then((r) => { if (r.ok) fetchSites(); })
-      .catch((e) => console.error("Failed to assign dev:", e));
+      .then(async (r) => {
+        if (r.ok) { fetchSites(); return; }
+        const data = await r.json().catch(() => ({}));
+        setAssignError(data?.error || `Server error (${r.status})`);
+        setTimeout(() => setAssignError(""), 5000);
+      })
+      .catch((e) => {
+        setAssignError("Network error: " + e.message);
+        setTimeout(() => setAssignError(""), 5000);
+      });
   };
 
   const handleUnassign = (siteId: string, userId: string) => {
@@ -261,8 +270,16 @@ export default function SitesPage() {
 
     const body = JSON.stringify({ user_id: userId });
     fetch(`/api/sites/${siteId}/assign`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body })
-      .then((r) => { if (r.ok) fetchSites(); })
-      .catch((e) => console.error("Failed to unassign dev:", e));
+      .then(async (r) => {
+        if (r.ok) { fetchSites(); return; }
+        const data = await r.json().catch(() => ({}));
+        setAssignError(data?.error || `Server error (${r.status})`);
+        setTimeout(() => setAssignError(""), 5000);
+      })
+      .catch((e) => {
+        setAssignError("Network error: " + e.message);
+        setTimeout(() => setAssignError(""), 5000);
+      });
   };
 
   const getCounts = (siteId: string) => {
@@ -618,7 +635,7 @@ export default function SitesPage() {
 
       <Modal
         open={!!assignSite}
-        onClose={() => { setAssignSite(null); setAssignMessage(""); setSelectedDev(""); }}
+        onClose={() => { setAssignSite(null); setAssignMessage(""); setSelectedDev(""); setAssignError(""); }}
         title="Assign Developer"
         size="lg"
       >
@@ -671,6 +688,9 @@ export default function SitesPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
+            {assignError && (
+              <p className="text-xs text-danger flex-1">{assignError}</p>
+            )}
             {assignSite && siteAssignments[assignSite]?.userId && (
               <button
                 onClick={() => handleUnassign(assignSite, siteAssignments[assignSite].userId)}
