@@ -1,12 +1,27 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAssignedFeedback, getClientFeedback, getTeamMemberName } from "@/lib/demo-data";
 import type { FeedbackStatus } from "@/types";
+
+interface FeedbackItem {
+  id: string;
+  type: string;
+  content: string;
+  status: string;
+  assigned_to: string | null;
+  created_by: string | null;
+  creator_name?: string;
+  created_at: string;
+  site_name?: string;
+  project_name?: string;
+  replies?: { id: string; creator_name: string; content: string; created_at: string }[];
+}
 import {
   MessageSquareText,
   Pin,
@@ -44,22 +59,77 @@ export default function MyFeedbackPage() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
-  const [feedback, setFeedback] = useState<ReturnType<typeof getAssignedFeedback>>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
 
   useEffect(() => {
     const userId = profile?.user_id;
-    if (!userId || !isDemo) return;
-    if (profile?.role === "client") {
-      setFeedback(getClientFeedback(userId));
-    } else {
-      setFeedback(getAssignedFeedback(userId));
+    if (!userId) return;
+
+    if (isDemo) {
+      if (profile?.role === "client") {
+        setFeedback(getClientFeedback(userId));
+      } else {
+        setFeedback(getAssignedFeedback(userId));
+      }
+      return;
     }
+
+    const supabase = createClient();
+    supabase
+      .from("feedback_items")
+      .select("id, type, content, status, assigned_to, created_by, created_at, parent_id, project:project_id(name, site:site_id(name))")
+      .eq("assigned_to", userId)
+      .is("parent_id", null)
+      .order("created_at", { ascending: false })
+      .then(async ({ data: items, error }) => {
+        if (error || !items) return;
+        const ids = items.map((i: any) => i.id);
+        if (ids.length === 0) { setFeedback([]); return; }
+
+        const { data: replies } = await supabase
+          .from("feedback_items")
+          .select("id, content, created_by, created_at, parent_id")
+          .in("parent_id", ids)
+          .order("created_at", { ascending: true });
+
+        const replyMap: Record<string, { id: string; creator_name: string; content: string; created_at: string }[]> = {};
+        if (replies) {
+          for (const r of replies as any[]) {
+            if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+            replyMap[r.parent_id].push({
+              id: r.id,
+              creator_name: r.created_by || "Unknown",
+              content: r.content,
+              created_at: r.created_at,
+            });
+          }
+        }
+
+        setFeedback(
+          items.map((i: any) => ({
+            id: i.id,
+            type: i.type,
+            content: i.content,
+            status: i.status,
+            assigned_to: i.assigned_to,
+            created_by: i.created_by,
+            created_at: i.created_at,
+            site_name: i.project?.site?.name || "",
+            project_name: i.project?.name || "",
+            replies: replyMap[i.id] || [],
+          }))
+        );
+      });
   }, [profile?.user_id, profile?.role, isDemo]);
 
   const updateStatus = (id: string, newStatus: FeedbackStatus) => {
     setFeedback((prev) =>
       prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f))
     );
+    if (!isDemo) {
+      const supabase = createClient();
+      supabase.from("feedback_items").update({ status: newStatus }).eq("id", id).then(() => {}, () => {});
+    }
   };
 
   const filtered =
@@ -182,7 +252,7 @@ export default function MyFeedbackPage() {
                       {/* Replies */}
                       {item.replies && item.replies.length > 0 && (
                         <div className="mt-2 space-y-1.5 pl-3 border-l-2 border-border">
-                          {item.replies.map((r) => (
+                          {item.replies.map((r: any) => (
                             <div key={r.id}>
                               <div className="flex items-center gap-1.5">
                                 <span className="text-[11px] font-medium text-foreground">{r.creator_name}</span>
