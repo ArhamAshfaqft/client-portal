@@ -136,8 +136,7 @@ export default function DashboardPage() {
             const { data: projects, count: pCount } = await supabase
               .from("projects")
               .select("id, name, site_id", { count: "exact", head: false })
-              .in("id", uniqueProjectIds)
-              .or("status.eq.active,status.is.null");
+              .in("id", uniqueProjectIds);
 
             projCount = pCount ?? 0;
 
@@ -353,7 +352,7 @@ export default function DashboardPage() {
                           {proj.feedback} open feedback items
                         </p>
                       </div>
-                      <Badge variant="success">active</Badge>
+                      <Badge variant="success">assigned</Badge>
                     </div>
                   ))
                 ) : devProjects.length > 0 ? (
@@ -370,7 +369,7 @@ export default function DashboardPage() {
                           {proj.siteName} · {proj.feedback} open
                         </p>
                       </div>
-                      <Badge variant="success">active</Badge>
+                      <Badge variant="info">assigned</Badge>
                     </div>
                   ))
                 ) : (
