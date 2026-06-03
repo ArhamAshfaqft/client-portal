@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -56,6 +56,15 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [filter, setFilter] = useState<FilterPeriod>("all");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isDemo) {
+      const supabase = createClient();
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      supabase.from("notifications").delete().lt("created_at", cutoff.toISOString()).then(() => {}, () => {});
+    }
+  }, [isDemo]);
 
   const filtered = useMemo(() => {
     const start = getPeriodStart(filter);
