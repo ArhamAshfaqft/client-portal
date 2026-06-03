@@ -23,12 +23,34 @@ export default function LoginPage() {
   const redirectedRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && user && !redirectedRef.current) {
+    if (redirectedRef.current) return;
+
+    if (!isLoading && user) {
       redirectedRef.current = true;
       if (window.location.hash.includes("access_token")) {
         sessionStorage.setItem("feedspace_invite_flow", "true");
+        window.history.replaceState(null, "", window.location.pathname);
       }
       router.replace("/dashboard");
+      return;
+    }
+
+    if (!isLoading && !user && window.location.hash.includes("access_token")) {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token") || "";
+
+      if (accessToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ data }) => {
+          if (data.session && !redirectedRef.current) {
+            redirectedRef.current = true;
+            sessionStorage.setItem("feedspace_invite_flow", "true");
+            window.history.replaceState(null, "", window.location.pathname);
+            router.replace("/dashboard");
+          }
+        });
+      }
     }
   }, [user, isLoading, router]);
 
