@@ -410,21 +410,23 @@ export default function SitesPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
-          {(["all", "assigned", "unassigned"] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setAssignmentFilter(opt)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                assignmentFilter === opt
-                  ? "bg-primary text-white"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {opt === "all" ? "All" : opt === "assigned" ? "Assigned" : "Unassigned"}
-            </button>
-          ))}
-        </div>
+        {profile?.role === "owner" && (
+          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+            {(["all", "assigned", "unassigned"] as const).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setAssignmentFilter(opt)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  assignmentFilter === opt
+                    ? "bg-primary text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt === "all" ? "All" : opt === "assigned" ? "Assigned" : "Unassigned"}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="relative">
           <select
             value={sortBy}
