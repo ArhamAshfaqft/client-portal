@@ -203,11 +203,11 @@ export default function MyFeedbackPage() {
                                 {new Date(proj.latest_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                               </p>
                               <div className="flex items-center gap-3 mt-1.5">
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span className="text-xs text-danger flex items-center gap-1">
                                   <ListTodo className="w-3 h-3" />
                                   {proj.pending} pending
                                 </span>
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span className="text-xs text-emerald-600 flex items-center gap-1">
                                   <CheckCircle2 className="w-3 h-3" />
                                   {proj.resolved} resolved
                                 </span>

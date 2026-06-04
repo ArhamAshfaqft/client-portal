@@ -512,13 +512,16 @@ export default function SitesPage() {
                           </p>
                           {siteAssignments[site.id]?.userId && (
                             <div className="flex items-center gap-2 mt-0.5">
-                              <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {teamMembers.find((m) => m.user_id === siteAssignments[site.id].userId)?.full_name || siteAssignments[site.id].assignedBy || "Developer"}
+                              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                <User className="w-3 h-3 text-muted-foreground/70" />
+                                Assigned to{" "}
+                                <span className="text-foreground/80 font-medium">
+                                  {teamMembers.find((m) => m.user_id === siteAssignments[site.id].userId)?.full_name || siteAssignments[site.id].assignedBy || "Developer"}
+                                </span>
                               </p>
                               {siteAssignments[site.id]?.message && (
-                                <span className="text-[10px] text-muted-foreground/50 truncate max-w-[140px]">
-                                  &quot;{siteAssignments[site.id].message}&quot;
+                                <span className="text-[10px] text-muted-foreground/50 truncate max-w-[140px] hidden sm:inline">
+                                  — &ldquo;{siteAssignments[site.id].message}&rdquo;
                                 </span>
                               )}
                             </div>

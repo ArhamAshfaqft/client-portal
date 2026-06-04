@@ -54,7 +54,7 @@ function getPeriodStart(period: FilterPeriod): Date | null {
 export default function NotificationsPage() {
   const { isDemo } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  const [filter, setFilter] = useState<FilterPeriod>("all");
+  const [filter, setFilter] = useState<FilterPeriod>("today");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
