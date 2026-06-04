@@ -1230,7 +1230,13 @@ class FeedspaceConnector
         }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
-        if ($pageUrl) {
+        if ($pageUrl && $projectId) {
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
+                $pageUrl,
+                $projectId
+            ));
+        } elseif ($pageUrl) {
             $results = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM $tableName WHERE page_url = %s ORDER BY created_at ASC",
                 $pageUrl
