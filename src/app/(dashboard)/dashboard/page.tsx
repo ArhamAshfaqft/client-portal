@@ -507,7 +507,7 @@ export default function DashboardPage() {
           className="inline-flex items-center justify-center w-full sm:w-auto gap-2 px-6 py-3 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
         >
           <MessageSquareText className="w-4 h-4" />
-          View My Feedback
+          View Sessions
         </Link>
       </div>
     );

@@ -155,8 +155,8 @@ export default function MyFeedbackPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">My Feedback</h2>
-        <p className="text-sm text-muted-foreground">Sessions with feedback assigned to you</p>
+        <h2 className="text-lg font-semibold text-foreground">Sessions</h2>
+        <p className="text-sm text-muted-foreground">Feedback sessions grouped by site</p>
       </div>
 
       {loading ? (
@@ -171,7 +171,7 @@ export default function MyFeedbackPage() {
             <div className="text-center py-12">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-500/50" />
               <h3 className="text-lg font-semibold text-foreground mb-1">All caught up</h3>
-              <p className="text-sm text-muted-foreground">No feedback assigned to you</p>
+              <p className="text-sm text-muted-foreground">No sessions with feedback</p>
             </div>
           </CardContent>
         </Card>
