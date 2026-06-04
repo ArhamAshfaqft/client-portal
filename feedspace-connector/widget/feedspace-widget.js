@@ -1181,14 +1181,47 @@
       const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
       if (!el) return;
       const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
-      const badge = this.createBadge(index + 1, annotation.id, annotation.status);
+      const num = index + 1;
+      if (annotation.type === "rect") {
+        const rect = el.getBoundingClientRect();
+        const g2 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        box.setAttribute("x", String(rect.left + scrollX));
+        box.setAttribute("y", String(rect.top + scrollY));
+        box.setAttribute("width", String(rect.width));
+        box.setAttribute("height", String(rect.height));
+        box.setAttribute("fill", "rgba(99,102,241,0.08)");
+        box.setAttribute("stroke", "#6366f1");
+        box.setAttribute("stroke-width", "2");
+        box.setAttribute("stroke-dasharray", "6,3");
+        box.setAttribute("rx", "4");
+        const badge2 = this.createBadge(num, annotation.id, annotation.status);
+        badge2.setAttribute("transform", `translate(${rect.left + scrollX - 10}, ${rect.top + scrollY - 10})`);
+        g2.appendChild(box);
+        g2.appendChild(badge2);
+        g2.style.pointerEvents = "auto";
+        this.svg.appendChild(g2);
+        return;
+      }
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      if (annotation.type === "arrow") {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(anchor.x - 40));
+        line.setAttribute("y1", String(anchor.y - 40));
+        line.setAttribute("x2", String(anchor.x));
+        line.setAttribute("y2", String(anchor.y));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2.5");
+        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        g.appendChild(line);
+      }
+      const badge = this.createBadge(num, annotation.id, annotation.status, annotation.type);
+      badge.setAttribute("transform", `translate(${anchor.x}, ${anchor.y})`);
       g.appendChild(badge);
-      g.setAttribute("transform", `translate(${anchor.x}, ${anchor.y})`);
       g.style.pointerEvents = "auto";
       this.svg.appendChild(g);
     }
-    createBadge(num, id, status) {
+    createBadge(num, id, status, type) {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("data-annotation-id", id);
       g.classList.add("feedspace-annotation-pin");
@@ -1196,13 +1229,21 @@
       let color = "#6366f1";
       if (status === "resolved" || status === "closed") color = "#10b981";
       if (status === "in_progress") color = "#f59e0b";
-      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      circle.setAttribute("cx", "10");
-      circle.setAttribute("cy", "10");
-      circle.setAttribute("r", "10");
-      circle.setAttribute("fill", color);
-      circle.setAttribute("stroke", "#fff");
-      circle.setAttribute("stroke-width", "2");
+      const shape = document.createElementNS("http://www.w3.org/2000/svg", type === "rect" ? "rect" : "circle");
+      if (type === "rect") {
+        shape.setAttribute("x", "1");
+        shape.setAttribute("y", "1");
+        shape.setAttribute("width", "18");
+        shape.setAttribute("height", "18");
+        shape.setAttribute("rx", "3");
+      } else {
+        shape.setAttribute("cx", "10");
+        shape.setAttribute("cy", "10");
+        shape.setAttribute("r", "10");
+      }
+      shape.setAttribute("fill", color);
+      shape.setAttribute("stroke", "#fff");
+      shape.setAttribute("stroke-width", "2");
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", "10");
       text.setAttribute("y", "10");
@@ -1234,7 +1275,7 @@
         pulse.appendChild(animOpacity);
         g.appendChild(pulse);
       }
-      g.appendChild(circle);
+      g.appendChild(shape);
       g.appendChild(text);
       g.addEventListener("click", (e) => {
         var _a;
@@ -2078,6 +2119,8 @@
   var SVG_ICONS3 = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
     pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+    arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+    rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
     list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
     desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
     tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
@@ -2193,10 +2236,8 @@
       <div class="feedspace-toolbar">
         ${dev ? "" : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS3.select}</button>
         <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
-        <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS3.mobile}</button>
+        <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS3.arrow}</button>
+        <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS3.rect}</button>
         <div class="feedspace-toolbar-divider"></div>`}
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
           ${SVG_ICONS3.list}
@@ -2327,7 +2368,7 @@
       const rel = toRelative(el, e.pageX, e.pageY);
       this.drawStart = { x: e.pageX, y: e.pageY, el, dna };
       this.drawPoints = [{ x: rel.x, y: rel.y }];
-      if (this.currentTool === "pin") {
+      if (this.currentTool === "pin" || this.currentTool === "arrow" || this.currentTool === "rect") {
         this.finishDrawing(el, dna, [{ x: rel.x, y: rel.y }]);
       }
     }
@@ -2384,7 +2425,7 @@
       const payload = {
         projectId: this.config.projectId,
         previewToken: this.config.token,
-        type: "pin",
+        type: this.currentTool,
         content,
         pageUrl: this.config.pageUrl,
         selector: startDna.selector,

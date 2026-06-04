@@ -17,6 +17,8 @@ function dbg(msg: string, data?: unknown): void {
 const SVG_ICONS = {
   select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
   pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+  rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
   list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
   desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
   tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
@@ -148,10 +150,8 @@ export class AnnotationEngine {
       <div class="feedspace-toolbar">
         ${dev ? '' : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
         <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
-        <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
+        <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
         <div class="feedspace-toolbar-divider"></div>`}
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
           ${SVG_ICONS.list}
@@ -301,7 +301,7 @@ export class AnnotationEngine {
     this.drawStart = { x: e.pageX, y: e.pageY, el, dna };
     this.drawPoints = [{ x: rel.x, y: rel.y }];
 
-    if (this.currentTool === 'pin') {
+    if (this.currentTool === 'pin' || this.currentTool === 'arrow' || this.currentTool === 'rect') {
       this.finishDrawing(el, dna, [{ x: rel.x, y: rel.y }]);
     }
   }
@@ -377,7 +377,7 @@ export class AnnotationEngine {
     const payload: CreateAnnotationPayload = {
       projectId: this.config.projectId,
       previewToken: this.config.token,
-      type: 'pin',
+      type: this.currentTool as 'pin' | 'arrow' | 'rect',
       content,
       pageUrl: this.config.pageUrl,
       selector: startDna.selector,

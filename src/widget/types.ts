@@ -83,6 +83,6 @@ export interface CreateAnnotationPayload {
   media?: AnnotationMedia[];
 }
 
-export type ToolMode = 'select' | 'pin' | 'rect' | 'arrow' | 'draw';
+export type ToolMode = 'select' | 'pin' | 'arrow' | 'rect' | 'draw';
 export type DeviceMode = 'desktop' | 'tablet' | 'mobile';
 export type FilterMode = 'all' | 'open' | 'in_progress' | 'resolved' | 'pending';

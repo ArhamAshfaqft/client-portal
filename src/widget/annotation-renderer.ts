@@ -105,16 +105,55 @@ export class AnnotationRenderer {
     if (!el) return;
 
     const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
-    const badge = this.createBadge(index + 1, annotation.id, annotation.status);
+    const num = index + 1;
+
+    if (annotation.type === 'rect') {
+      const rect = el.getBoundingClientRect();
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', String(rect.left + scrollX));
+      box.setAttribute('y', String(rect.top + scrollY));
+      box.setAttribute('width', String(rect.width));
+      box.setAttribute('height', String(rect.height));
+      box.setAttribute('fill', 'rgba(99,102,241,0.08)');
+      box.setAttribute('stroke', '#6366f1');
+      box.setAttribute('stroke-width', '2');
+      box.setAttribute('stroke-dasharray', '6,3');
+      box.setAttribute('rx', '4');
+
+      const badge = this.createBadge(num, annotation.id, annotation.status);
+      badge.setAttribute('transform', `translate(${rect.left + scrollX - 10}, ${rect.top + scrollY - 10})`);
+
+      g.appendChild(box);
+      g.appendChild(badge);
+      g.style.pointerEvents = 'auto';
+      this.svg!.appendChild(g);
+      return;
+    }
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+    if (annotation.type === 'arrow') {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(anchor.x - 40));
+      line.setAttribute('y1', String(anchor.y - 40));
+      line.setAttribute('x2', String(anchor.x));
+      line.setAttribute('y2', String(anchor.y));
+      line.setAttribute('stroke', '#6366f1');
+      line.setAttribute('stroke-width', '2.5');
+      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      g.appendChild(line);
+    }
+
+    const badge = this.createBadge(num, annotation.id, annotation.status, annotation.type);
+    badge.setAttribute('transform', `translate(${anchor.x}, ${anchor.y})`);
     g.appendChild(badge);
-    g.setAttribute('transform', `translate(${anchor.x}, ${anchor.y})`);
     g.style.pointerEvents = 'auto';
     this.svg!.appendChild(g);
   }
 
-  private createBadge(num: number, id: string, status: string): SVGGElement {
+  private createBadge(num: number, id: string, status: string, type?: string): SVGGElement {
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('data-annotation-id', id);
     g.classList.add('feedspace-annotation-pin');
@@ -124,13 +163,21 @@ export class AnnotationRenderer {
     if (status === 'resolved' || status === 'closed') color = '#10b981';
     if (status === 'in_progress') color = '#f59e0b';
 
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', '10');
-    circle.setAttribute('cy', '10');
-    circle.setAttribute('r', '10');
-    circle.setAttribute('fill', color);
-    circle.setAttribute('stroke', '#fff');
-    circle.setAttribute('stroke-width', '2');
+    const shape = document.createElementNS('http://www.w3.org/2000/svg', type === 'rect' ? 'rect' : 'circle');
+    if (type === 'rect') {
+      shape.setAttribute('x', '1');
+      shape.setAttribute('y', '1');
+      shape.setAttribute('width', '18');
+      shape.setAttribute('height', '18');
+      shape.setAttribute('rx', '3');
+    } else {
+      shape.setAttribute('cx', '10');
+      shape.setAttribute('cy', '10');
+      shape.setAttribute('r', '10');
+    }
+    shape.setAttribute('fill', color);
+    shape.setAttribute('stroke', '#fff');
+    shape.setAttribute('stroke-width', '2');
 
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     text.setAttribute('x', '10');
@@ -165,7 +212,7 @@ export class AnnotationRenderer {
       g.appendChild(pulse);
     }
 
-    g.appendChild(circle);
+    g.appendChild(shape);
     g.appendChild(text);
 
     g.addEventListener('click', (e) => {
