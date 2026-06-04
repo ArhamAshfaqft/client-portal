@@ -522,7 +522,7 @@ export default function DashboardPage() {
       bg: "bg-primary-light",
     },
     {
-      label: "Active Projects",
+      label: "Active Sessions",
       value: data.active_projects,
       icon: FolderKanban,
       color: "text-emerald-600 dark:text-emerald-400",

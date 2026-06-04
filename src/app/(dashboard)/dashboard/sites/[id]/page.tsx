@@ -324,7 +324,7 @@ export default function SiteDetailPage() {
         {can(Permissions.PROJECTS_CREATE) && (
           <Button onClick={() => setShowNewProject(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            New Project
+            New Session
           </Button>
         )}
       </div>
@@ -516,7 +516,7 @@ export default function SiteDetailPage() {
       <Modal
         open={showNewProject}
         onClose={() => setShowNewProject(false)}
-        title="Create New Project"
+        title="Create New Session"
       >
         <div className="space-y-4">
           <Input
