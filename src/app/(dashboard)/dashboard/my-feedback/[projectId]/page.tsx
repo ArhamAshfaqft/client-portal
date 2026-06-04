@@ -187,7 +187,7 @@ export default function SessionDetailPage() {
             <Copy className="w-3.5 h-3.5" />
             {copied ? "Copied" : "Copy Link"}
           </button>
-          <Badge variant="info" className="text-xs">Active</Badge>
+          <Badge variant={project?.status === "active" ? "success" : project?.status === "completed" ? "info" : "default"} className="text-xs">{project?.status || "draft"}</Badge>
         </div>
       </div>
 
