@@ -106,6 +106,7 @@ export default function TeamPage() {
   const [invitePosition, setInvitePosition] = useState<PositionType>("developer");
   const [customPermissions, setCustomPermissions] = useState<string[]>(getDefaultPermissions("developer", "developer"));
   const [showPermissions, setShowPermissions] = useState(false);
+  const [assignedCounts, setAssignedCounts] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -140,7 +141,23 @@ export default function TeamPage() {
         .select("*")
         .eq("agency_id", profile.agency_id)
         .order("created_at", { ascending: false });
-      if (data) setMembers(data as MemberEntry[]);
+      if (data) {
+        setMembers(data as MemberEntry[]);
+
+        // Fetch site assignment counts for each member
+        const devIds = data.filter((m) => m.role === "developer").map((m) => m.user_id);
+        if (devIds.length > 0) {
+          const { data: assignments } = await supabase
+            .from("site_members")
+            .select("user_id")
+            .in("user_id", devIds);
+          if (assignments) {
+            const countMap: Record<string, number> = {};
+            for (const a of assignments) countMap[a.user_id] = (countMap[a.user_id] || 0) + 1;
+            setAssignedCounts(countMap);
+          }
+        }
+      }
     } catch {
       // keep empty
     }
@@ -414,6 +431,21 @@ export default function TeamPage() {
                           <p className="text-sm text-muted-foreground">
                             {member.email}
                           </p>
+                          {member.role !== "owner" && (
+                            <p className="text-xs mt-0.5">
+                              {assignedCounts[member.user_id] ? (
+                                <span className="text-emerald-600/80">
+                                  {assignedCounts[member.user_id]} site{assignedCounts[member.user_id] !== 1 ? "s" : ""} assigned
+                                </span>
+                              ) : isDemo ? (
+                                <span className="text-muted-foreground/60">
+                                  {member.user_id === "demo-dev-1" || member.user_id === "demo-dev-2" ? "1 site assigned" : "No sites assigned"}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/60">No sites assigned</span>
+                              )}
+                            </p>
+                          )}
                         </div>
                       </div>
                       {can(Permissions.TEAM_INVITE) && member.role !== "owner" && (
