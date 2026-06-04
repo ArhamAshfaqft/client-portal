@@ -56,6 +56,7 @@ export class AnnotationEngine {
   private nameModal: HTMLElement | null = null;
   private hoverHighlightEl: HTMLElement | null = null;
   private arrowPreviewEl: SVGElement | null = null;
+  private pendingAnnotationEl: SVGElement | null = null;
 
   constructor(config: WidgetConfig, api: ApiClient) {
     this.config = config;
@@ -373,15 +374,71 @@ export class AnnotationEngine {
     const firstPoint = points[0];
     const rel = toRelative(el, this.drawStart!.x, this.drawStart!.y);
 
+    // Show pending annotation visual for arrow/rect so it stays visible
+    if (this.currentTool === 'arrow' || this.currentTool === 'rect') {
+      this.showPendingAnnotation(el, startDna);
+    }
+
     this.commentPanel.open(this.drawStart!.x, this.drawStart!.y, null, {
       onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
       onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
       isRecording: () => this.isRecording,
-    }, () => { });
+    }, () => {
+      this.removePendingAnnotation();
+    });
 
     this.setTool('select');
     this.cleanupDrawState();
+  }
+
+  private showPendingAnnotation(el: Element, dna: ElementDNA): void {
+    const svg = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+    if (!svg) return;
+    this.removePendingAnnotation();
+
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const rect = el.getBoundingClientRect();
+
+    if (this.currentTool === 'arrow') {
+      const cx = rect.left + rect.width / 2 + scrollX;
+      const cy = rect.top + rect.height / 2 + scrollY;
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(cx - 80));
+      line.setAttribute('y1', String(cy - 80));
+      line.setAttribute('x2', String(cx));
+      line.setAttribute('y2', String(cy));
+      line.setAttribute('stroke', '#6366f1');
+      line.setAttribute('stroke-width', '2.5');
+      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      g.appendChild(line);
+      svg.appendChild(g);
+      this.pendingAnnotationEl = g;
+    } else if (this.currentTool === 'rect') {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      box.setAttribute('x', String(rect.left + scrollX));
+      box.setAttribute('y', String(rect.top + scrollY));
+      box.setAttribute('width', String(rect.width));
+      box.setAttribute('height', String(rect.height));
+      box.setAttribute('fill', 'rgba(99,102,241,0.08)');
+      box.setAttribute('stroke', '#6366f1');
+      box.setAttribute('stroke-width', '2');
+      box.setAttribute('stroke-dasharray', '6,3');
+      box.setAttribute('rx', '4');
+      g.appendChild(box);
+      svg.appendChild(g);
+      this.pendingAnnotationEl = g;
+    }
+  }
+
+  private removePendingAnnotation(): void {
+    if (this.pendingAnnotationEl && this.pendingAnnotationEl.parentNode) {
+      this.pendingAnnotationEl.parentNode.removeChild(this.pendingAnnotationEl);
+      this.pendingAnnotationEl = null;
+    }
   }
 
   private cleanupDrawState(): void {
@@ -451,6 +508,7 @@ export class AnnotationEngine {
         payload.media = media;
       }
 
+      this.removePendingAnnotation();
       const annotation = await this.api.createAnnotation(payload);
       annotation._num = this.annotations.length + 1;
       this.annotations.push(annotation);
@@ -805,6 +863,7 @@ export class AnnotationEngine {
 
   destroy(): void {
     this.clearHoverHighlight();
+    this.removePendingAnnotation();
     this.renderer.destroy();
     this.commentPanel.close();
     this.feedbackList.close();
