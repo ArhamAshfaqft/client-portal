@@ -104,7 +104,6 @@ export class AnnotationRenderer {
     const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
     if (!el) return;
 
-    const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
     const num = index + 1;
 
     if (annotation.type === 'rect') {
@@ -122,7 +121,7 @@ export class AnnotationRenderer {
       box.setAttribute('stroke-dasharray', '6,3');
       box.setAttribute('rx', '4');
 
-      const badge = this.createBadge(num, annotation.id, annotation.status);
+      const badge = this.createBadge(num, annotation.id, annotation.status, 'rect');
       badge.setAttribute('transform', `translate(${rect.left + scrollX - 10}, ${rect.top + scrollY - 10})`);
 
       g.appendChild(box);
@@ -132,22 +131,34 @@ export class AnnotationRenderer {
       return;
     }
 
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
 
     if (annotation.type === 'arrow') {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const tailX = anchor.x - 80;
+      const tailY = anchor.y - 80;
+
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(anchor.x - 40));
-      line.setAttribute('y1', String(anchor.y - 40));
+      line.setAttribute('x1', String(tailX));
+      line.setAttribute('y1', String(tailY));
       line.setAttribute('x2', String(anchor.x));
       line.setAttribute('y2', String(anchor.y));
       line.setAttribute('stroke', '#6366f1');
       line.setAttribute('stroke-width', '2.5');
       line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
       g.appendChild(line);
+
+      const badge = this.createBadge(num, annotation.id, annotation.status, 'arrow');
+      badge.setAttribute('transform', `translate(${tailX - 10}, ${tailY - 10})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = 'auto';
+      this.svg!.appendChild(g);
+      return;
     }
 
-    const badge = this.createBadge(num, annotation.id, annotation.status, annotation.type);
-    badge.setAttribute('transform', `translate(${anchor.x}, ${anchor.y})`);
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const badge = this.createBadge(num, annotation.id, annotation.status);
+    badge.setAttribute('transform', `translate(${anchor.x - 10}, ${anchor.y - 10})`);
     g.appendChild(badge);
     g.style.pointerEvents = 'auto';
     this.svg!.appendChild(g);

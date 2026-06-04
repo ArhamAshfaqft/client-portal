@@ -55,6 +55,7 @@ export class AnnotationEngine {
   private toolbarRoot: HTMLElement | null = null;
   private nameModal: HTMLElement | null = null;
   private hoverHighlightEl: HTMLElement | null = null;
+  private arrowPreviewEl: SVGElement | null = null;
 
   constructor(config: WidgetConfig, api: ApiClient) {
     this.config = config;
@@ -273,15 +274,46 @@ export class AnnotationEngine {
     const target = closestTargetable(e.target as Element) as HTMLElement | null;
     if (target === this.hoverHighlightEl) return;
     this.clearHoverHighlight();
-    if (target && target !== document.body) {
+    if (!target || target === document.body) return;
+
+    if (this.currentTool === 'arrow') {
+      // Show a preview arrow pointing to the hovered element
+      const rect = target.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2 + window.scrollX;
+      const cy = rect.top + rect.height / 2 + window.scrollY;
+      const svg = document.getElementById('feedspace-overlay');
+      if (svg) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', String(cx - 80));
+        line.setAttribute('y1', String(cy - 80));
+        line.setAttribute('x2', String(cx));
+        line.setAttribute('y2', String(cy));
+        line.setAttribute('stroke', '#6366f1');
+        line.setAttribute('stroke-width', '2.5');
+        line.setAttribute('stroke-dasharray', '6,3');
+        line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+        line.setAttribute('opacity', '0.6');
+        svg.appendChild(line);
+        this.arrowPreviewEl = line;
+      }
+      this.hoverHighlightEl = target;
+    } else if (this.currentTool === 'rect') {
+      target.classList.add('feedspace-hover-dashed');
+      this.hoverHighlightEl = target;
+    } else {
       target.classList.add('feedspace-hover-highlight');
       this.hoverHighlightEl = target;
     }
   }
 
   private clearHoverHighlight(): void {
+    if (this.arrowPreviewEl && this.arrowPreviewEl.parentNode) {
+      this.arrowPreviewEl.parentNode.removeChild(this.arrowPreviewEl);
+      this.arrowPreviewEl = null;
+    }
     if (this.hoverHighlightEl) {
       this.hoverHighlightEl.classList.remove('feedspace-hover-highlight');
+      this.hoverHighlightEl.classList.remove('feedspace-hover-dashed');
       this.hoverHighlightEl = null;
     }
   }

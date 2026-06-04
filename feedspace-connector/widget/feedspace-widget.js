@@ -791,6 +791,12 @@
   border-radius: 2px;
 }
 
+.feedspace-hover-dashed {
+  outline: 2px dashed #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 [data-feedspace-tool="pin"] {
   cursor: crosshair;
 }
@@ -1180,7 +1186,6 @@
     renderOne(annotation, index, scrollX, scrollY) {
       const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
       if (!el) return;
-      const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
       const num = index + 1;
       if (annotation.type === "rect") {
         const rect = el.getBoundingClientRect();
@@ -1195,7 +1200,7 @@
         box.setAttribute("stroke-width", "2");
         box.setAttribute("stroke-dasharray", "6,3");
         box.setAttribute("rx", "4");
-        const badge2 = this.createBadge(num, annotation.id, annotation.status);
+        const badge2 = this.createBadge(num, annotation.id, annotation.status, "rect");
         badge2.setAttribute("transform", `translate(${rect.left + scrollX - 10}, ${rect.top + scrollY - 10})`);
         g2.appendChild(box);
         g2.appendChild(badge2);
@@ -1203,20 +1208,30 @@
         this.svg.appendChild(g2);
         return;
       }
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
       if (annotation.type === "arrow") {
+        const g2 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const tailX = anchor.x - 80;
+        const tailY = anchor.y - 80;
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", String(anchor.x - 40));
-        line.setAttribute("y1", String(anchor.y - 40));
+        line.setAttribute("x1", String(tailX));
+        line.setAttribute("y1", String(tailY));
         line.setAttribute("x2", String(anchor.x));
         line.setAttribute("y2", String(anchor.y));
         line.setAttribute("stroke", "#6366f1");
         line.setAttribute("stroke-width", "2.5");
         line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
-        g.appendChild(line);
+        g2.appendChild(line);
+        const badge2 = this.createBadge(num, annotation.id, annotation.status, "arrow");
+        badge2.setAttribute("transform", `translate(${tailX - 10}, ${tailY - 10})`);
+        g2.appendChild(badge2);
+        g2.style.pointerEvents = "auto";
+        this.svg.appendChild(g2);
+        return;
       }
-      const badge = this.createBadge(num, annotation.id, annotation.status, annotation.type);
-      badge.setAttribute("transform", `translate(${anchor.x}, ${anchor.y})`);
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const badge = this.createBadge(num, annotation.id, annotation.status);
+      badge.setAttribute("transform", `translate(${anchor.x - 10}, ${anchor.y - 10})`);
       g.appendChild(badge);
       g.style.pointerEvents = "auto";
       this.svg.appendChild(g);
@@ -2149,6 +2164,7 @@
       this.toolbarRoot = null;
       this.nameModal = null;
       this.hoverHighlightEl = null;
+      this.arrowPreviewEl = null;
       this.projectNameCache = {};
       this.config = config;
       this.api = api;
@@ -2345,14 +2361,43 @@
       const target = closestTargetable(e.target);
       if (target === this.hoverHighlightEl) return;
       this.clearHoverHighlight();
-      if (target && target !== document.body) {
+      if (!target || target === document.body) return;
+      if (this.currentTool === "arrow") {
+        const rect = target.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2 + window.scrollX;
+        const cy = rect.top + rect.height / 2 + window.scrollY;
+        const svg = document.getElementById("feedspace-overlay");
+        if (svg) {
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", String(cx - 80));
+          line.setAttribute("y1", String(cy - 80));
+          line.setAttribute("x2", String(cx));
+          line.setAttribute("y2", String(cy));
+          line.setAttribute("stroke", "#6366f1");
+          line.setAttribute("stroke-width", "2.5");
+          line.setAttribute("stroke-dasharray", "6,3");
+          line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+          line.setAttribute("opacity", "0.6");
+          svg.appendChild(line);
+          this.arrowPreviewEl = line;
+        }
+        this.hoverHighlightEl = target;
+      } else if (this.currentTool === "rect") {
+        target.classList.add("feedspace-hover-dashed");
+        this.hoverHighlightEl = target;
+      } else {
         target.classList.add("feedspace-hover-highlight");
         this.hoverHighlightEl = target;
       }
     }
     clearHoverHighlight() {
+      if (this.arrowPreviewEl && this.arrowPreviewEl.parentNode) {
+        this.arrowPreviewEl.parentNode.removeChild(this.arrowPreviewEl);
+        this.arrowPreviewEl = null;
+      }
       if (this.hoverHighlightEl) {
         this.hoverHighlightEl.classList.remove("feedspace-hover-highlight");
+        this.hoverHighlightEl.classList.remove("feedspace-hover-dashed");
         this.hoverHighlightEl = null;
       }
     }

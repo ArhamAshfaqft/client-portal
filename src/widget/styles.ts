@@ -788,6 +788,12 @@ const STYLES = `
   border-radius: 2px;
 }
 
+.feedspace-hover-dashed {
+  outline: 2px dashed #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 [data-feedspace-tool="pin"] {
   cursor: crosshair;
 }
