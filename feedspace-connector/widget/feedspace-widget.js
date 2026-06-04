@@ -2255,6 +2255,10 @@
         <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
         <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS3.arrow}</button>
         <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS3.rect}</button>
+        <div class="feedspace-toolbar-divider"></div>
+        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
+        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
+        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS3.mobile}</button>
         <div class="feedspace-toolbar-divider"></div>`}
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
           ${SVG_ICONS3.list}
