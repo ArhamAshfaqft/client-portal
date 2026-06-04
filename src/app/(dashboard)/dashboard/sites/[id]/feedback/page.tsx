@@ -164,6 +164,7 @@ export default function SiteFeedbackPage() {
   const [loading, setLoading] = useState(!isDemo);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [siteCreds, setSiteCreds] = useState<{ wpRestUrl: string; wpApiKey: string } | null>(null);
+  const [assigneeNames, setAssigneeNames] = useState<Record<string, string>>({});
 
   const fetchFeedback = async () => {
     if (isDemo) return;
@@ -311,6 +312,15 @@ export default function SiteFeedbackPage() {
       });
 
       setFeedback(enriched);
+      const assignedIds = [...new Set(enriched.filter((e) => e.assigned_to).map((e) => e.assigned_to))];
+      if (assignedIds.length > 0) {
+        const { data: profiles } = await supabase.from("profiles").select("user_id, full_name").in("user_id", assignedIds as any);
+        if (profiles) {
+          const nameMap: Record<string, string> = {};
+          for (const p of profiles) nameMap[p.user_id] = p.full_name;
+          setAssigneeNames(nameMap);
+        }
+      }
     } catch (err) {
       console.error("Error fetching feedback:", err);
     } finally {
@@ -823,7 +833,7 @@ export default function SiteFeedbackPage() {
                     const ActionIcon = action?.icon;
                     const ViewportIcon = getViewportIcon(item.viewport_width);
                     const viewportLabel = getViewportLabel(item.viewport_width, item.viewport_height);
-                    const assigneeName = isDemo ? getTeamMemberName(item.assigned_to) : null;
+                    const assigneeName = assigneeNames[item.assigned_to || ""] || (isDemo ? getTeamMemberName(item.assigned_to) : null);
 
                     return (
                       <Card key={item.id} className="hover:shadow-md transition-shadow">
