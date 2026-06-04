@@ -73,7 +73,7 @@ export default function LoginPage() {
     router.push("/dashboard");
   };
 
-  const handleDemoLogin = (role: "owner" | "developer" | "client" = "owner") => {
+  const handleDemoLogin = (role: "owner" | "developer" = "owner") => {
     demoLogin(role);
     router.push("/dashboard");
   };
@@ -139,13 +139,6 @@ export default function LoginPage() {
             onClick={() => handleDemoLogin("developer")}
           >
             Demo as Dev
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => handleDemoLogin("client")}
-          >
-            Demo as Client
           </Button>
         </div>
 

@@ -77,14 +77,13 @@ export default function DashboardPage() {
   const [showBetaBanner, setShowBetaBanner] = useState(true);
 
   const isDev = profile?.role === "developer";
-  const isClient = profile?.role === "client";
   const agencyId = profile?.agency_id;
   const role = profile?.role;
 
   useEffect(() => {
     let cancelled = false;
 
-    if (isDemo && (isDev || isClient)) {
+    if (isDemo && isDev) {
       setLoading(false);
       return;
     }
@@ -250,7 +249,7 @@ export default function DashboardPage() {
 
     fetchData();
     return () => { cancelled = true; };
-  }, [agencyId, isDemo, isDev, isClient, role]);
+  }, [agencyId, isDemo, isDev, role]);
 
   if (isDev) {
     const devStats = [
@@ -443,72 +442,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
-  }
-
-  if (isClient) {
-    return (
-      <div className="space-y-6">
-        {showBetaBanner && (
-          <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
-              We&apos;re working closely with a handful of agencies to polish the experience before public launch.
-            </p>
-            <button
-              onClick={() => setShowBetaBanner(false)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Welcome, {profile?.full_name || "Client"}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Track your submitted feedback and their status
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-            <CardContent className="py-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Open</p>
-                  <p className="text-xl font-bold text-foreground">{isDemo ? 4 : 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Resolved</p>
-                  <p className="text-xl font-bold text-foreground">{isDemo ? 3 : 0}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Link
-          href="/dashboard/my-feedback"
-          className="inline-flex items-center justify-center w-full sm:w-auto gap-2 px-6 py-3 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors"
-        >
-          <MessageSquareText className="w-4 h-4" />
-          View Sessions
-        </Link>
       </div>
     );
   }
