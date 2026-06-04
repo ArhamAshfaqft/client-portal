@@ -69,6 +69,9 @@ export default function SitesPage() {
   const [teamMembers, setTeamMembers] = useState<{ user_id: string; full_name: string; email: string; position: string | null }[]>([]);
   const [assignError, setAssignError] = useState("");
   const [loginLoading, setLoginLoading] = useState<string | null>(null);
+  const [newSessionSite, setNewSessionSite] = useState<string | null>(null);
+  const [newSessionName, setNewSessionName] = useState("");
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const openWpAdmin = async (siteId: string) => {
     setLoginLoading(siteId);
@@ -314,18 +317,27 @@ export default function SitesPage() {
     return site?.feedback_counts || { pending_count: 0, resolved_count: 0 };
   };
 
-  const addSession = async (siteId: string) => {
-    const name = prompt("Session name:");
-    if (!name || !name.trim()) return;
+  const addSession = (siteId: string) => {
     setMenuOpen(null);
-    const s = sites.find((s) => s.id === siteId) as any;
+    setNewSessionSite(siteId);
+    setNewSessionName("");
+    setCreatingSession(false);
+  };
+
+  const createSession = async () => {
+    if (!newSessionSite || !newSessionName.trim()) return;
+    setCreatingSession(true);
+    const s = sites.find((si) => si.id === newSessionSite) as any;
     await supabase.from("projects").insert({
       agency_id: s?.agency_id || profile?.agency_id,
-      site_id: siteId,
-      name: name.trim(),
+      site_id: newSessionSite,
+      name: newSessionName.trim(),
       status: "draft",
     });
-    router.push(`/dashboard/sites/${siteId}`);
+    setNewSessionSite(null);
+    setNewSessionName("");
+    setCreatingSession(false);
+    router.push(`/dashboard/sites/${newSessionSite}`);
   };
 
   const filteredSites = sites.filter((site) => {
@@ -817,6 +829,30 @@ export default function SitesPage() {
             >
               <UserPlus className="w-4 h-4 mr-1.5" />
               Assign
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!newSessionSite}
+        onClose={() => { setNewSessionSite(null); setNewSessionName(""); }}
+        title="Create New Session"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Session Name"
+            placeholder="Homepage Redesign"
+            value={newSessionName}
+            onChange={(e) => setNewSessionName(e.target.value)}
+          />
+          <div className="flex justify-end gap-3 pt-2 border-t border-border">
+            <Button variant="outline" onClick={() => { setNewSessionSite(null); setNewSessionName(""); }}>
+              Cancel
+            </Button>
+            <Button onClick={createSession} loading={creatingSession} disabled={!newSessionName.trim()}>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Create Session
             </Button>
           </div>
         </div>
