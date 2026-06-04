@@ -465,7 +465,7 @@ export class FeedbackListPanel {
       return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <span class="fs-number-badge">${idx + 1}</span>
+            <span class="fs-number-badge">${a._num || idx + 1}</span>
             <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
             ${tagChip}
           </div>

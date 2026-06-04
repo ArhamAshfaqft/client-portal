@@ -420,6 +420,7 @@ export class AnnotationEngine {
       }
 
       const annotation = await this.api.createAnnotation(payload);
+      annotation._num = this.annotations.length + 1;
       this.annotations.push(annotation);
       this.renderer.setAnnotations(this.annotations);
       this.updateBadge();
@@ -492,6 +493,7 @@ export class AnnotationEngine {
   private async loadAnnotations(): Promise<void> {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+      this.annotations.forEach((a, i) => a._num = i + 1);
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
       await this.backfillProjectNames();
       this.renderer.setAnnotations(this.annotations);

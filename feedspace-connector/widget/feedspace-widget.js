@@ -1910,7 +1910,7 @@
         return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <span class="fs-number-badge">${idx + 1}</span>
+            <span class="fs-number-badge">${a._num || idx + 1}</span>
             <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
             ${tagChip}
           </div>
@@ -2424,6 +2424,7 @@
           payload.media = media;
         }
         const annotation = await this.api.createAnnotation(payload);
+        annotation._num = this.annotations.length + 1;
         this.annotations.push(annotation);
         this.renderer.setAnnotations(this.annotations);
         this.updateBadge();
@@ -2492,6 +2493,7 @@
     async loadAnnotations() {
       try {
         this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+        this.annotations.forEach((a, i) => a._num = i + 1);
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
         await this.backfillProjectNames();
         this.renderer.setAnnotations(this.annotations);
