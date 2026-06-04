@@ -109,9 +109,10 @@ export function Sidebar() {
 
       <div className="px-3 py-4 border-t border-border">
         {!collapsed && (
-          <p className="text-xs text-sidebar-muted px-3">
-            Feedspace v1.0.0
-          </p>
+          <div className="flex items-center gap-2 px-3">
+            <span className="text-xs text-sidebar-muted">Feedspace</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary leading-none">Beta</span>
+          </div>
         )}
       </div>
     </aside>
