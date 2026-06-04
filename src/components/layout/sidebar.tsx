@@ -44,7 +44,7 @@ export function Sidebar() {
         { href: "/dashboard/team", label: "Team", icon: Users, show: can(Permissions.TEAM_VIEW) },
         { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: can(Permissions.FEEDBACK_VIEW_ALL) },
         { href: "/dashboard/reports", label: "Reports", icon: Clock, show: false },
-        { href: "/dashboard/activity", label: "Activity", icon: History, show: profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ALL) },
+        { href: "/dashboard/activity", label: "Activity", icon: History, show: false },
         { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
         { href: "/dashboard/settings", label: "Settings", icon: Settings, show: can(Permissions.SETTINGS_VIEW) },
       ].filter((item: any) => item.show !== false);
