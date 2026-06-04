@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 
   const { data: link } = await supabase
     .from("preview_links")
-    .select("project_id")
+    .select("project_id, projects(name)")
     .eq("token", token)
     .single();
 
@@ -51,6 +51,8 @@ export async function GET(request: Request) {
       { status: 404, headers: corsHeaders() }
     );
   }
+
+  const projectName = (link as any)?.projects?.name;
 
   const { data, error } = await supabase
     .from("feedback_items")
@@ -82,7 +84,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json(
-    data.map(item => mapFeedbackItem(item, mediaByItem[item.id] || [])),
+    data.map(item => mapFeedbackItem(item, mediaByItem[item.id] || [], link.project_id, projectName)),
     { headers: corsHeaders() }
   );
 }
@@ -357,7 +359,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { ...mapFeedbackItem(feedbackItem, mediaRecords), _mediaCount: mediaRecords.length, _hasMedia: hasMedia, _debug: { notif: _notifStatus, agencyId: _agencyId, siteId: _siteResolved, projectId, siteToken: siteToken || null } },
+      { ...mapFeedbackItem(feedbackItem, mediaRecords, projectId), _mediaCount: mediaRecords.length, _hasMedia: hasMedia, _debug: { notif: _notifStatus, agencyId: _agencyId, siteId: _siteResolved, projectId, siteToken: siteToken || null } },
       { status: 201, headers: corsHeaders() }
     );
   } catch (err: any) {
@@ -421,13 +423,15 @@ async function handleAutoRegister(body: any) {
   );
 }
 
-function mapFeedbackItem(item: any, mediaRecords: any[] = []) {
+function mapFeedbackItem(item: any, mediaRecords: any[] = [], projectId?: string, projectName?: string) {
   return {
     id: item.id,
     type: item.type,
     status: item.status,
     content: item.content,
     pageUrl: item.page_url,
+    projectId: projectId || item.project_id,
+    projectName: projectName || item.project_name,
     elementDna: item.element_dna,
     anchorXPct: item.coordinates_x ?? 50,
     anchorYPct: item.coordinates_y ?? 50,

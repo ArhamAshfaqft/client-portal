@@ -687,6 +687,13 @@ class FeedspaceConnector
             'callback' => array($this, 'handleWebhook'),
             'permission_callback' => array($this, 'checkApiAuth'),
         ));
+
+        // Auto-login: one-click WP Admin access from Feedspace dashboard
+        register_rest_route('feedspace/v1', '/auto-login', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'handleAutoLogin'),
+            'permission_callback' => '__return_true',
+        ));
     }
 
     public function handleWebhook($request)
@@ -740,6 +747,58 @@ class FeedspaceConnector
         }
 
         return hash_equals($storedKey, $apiKey);
+    }
+
+    public function handleAutoLogin(WP_REST_Request $request)
+    {
+        $token = $request->get_param('token');
+        if (!$token || !str_contains($token, '.')) {
+            wp_die('Invalid token format.', 'Feedspace Login', array('response' => 400));
+        }
+
+        list($payloadB64, $signature) = explode('.', $token, 2);
+        $payload = json_decode(base64_decode($payloadB64), true);
+
+        if (!$payload || empty($payload['sub']) || empty($payload['sid'])) {
+            wp_die('Invalid token payload.', 'Feedspace Login', array('response' => 400));
+        }
+
+        if (isset($payload['exp']) && $payload['exp'] < time()) {
+            wp_die('Token expired. Please re-login from the Feedspace dashboard.', 'Feedspace Login', array('response' => 401));
+        }
+
+        $apiKey = get_option('feedspace_api_key');
+        if (!$apiKey) {
+            $apiKey = get_option('feedspace_connector_api_key');
+        }
+        if (!$apiKey) {
+            wp_die('Feedspace API key not found. Reconnect the Connector plugin.', 'Feedspace Login', array('response' => 500));
+        }
+
+        $expectedSig = hash_hmac('sha256', $payloadB64, $apiKey, true);
+        $expectedB64 = rtrim(strtr(base64_encode($expectedSig), '+/', '-_'), '=');
+
+        if (!hash_equals($expectedB64, $signature)) {
+            wp_die('Token signature mismatch.', 'Feedspace Login', array('response' => 403));
+        }
+
+        $adminUser = get_users(array('role' => 'administrator', 'number' => 1));
+        if (empty($adminUser)) {
+            wp_die('No admin user found.', 'Feedspace Login', array('response' => 500));
+        }
+
+        $admin = $adminUser[0];
+        wp_set_current_user($admin->ID);
+        wp_set_auth_cookie($admin->ID);
+
+        $devName = $payload['name'] ?? 'Unknown';
+        update_option('feedspace_last_login', array(
+            'dev_name' => $devName,
+            'time'     => current_time('mysql'),
+        ));
+
+        wp_redirect(admin_url());
+        exit;
     }
 
     public function getStatus()

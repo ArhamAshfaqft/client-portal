@@ -75,6 +75,7 @@ export default function SessionDetailPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pageFilter, setPageFilter] = useState<string>("all");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLink, setPreviewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -82,8 +83,11 @@ export default function SessionDetailPage() {
     const supabase = createClient();
     const isOwner = profile?.role === "owner";
 
+    const now = new Date().toISOString();
+
     Promise.all([
       supabase.from("projects").select("*, site:site_id(name)").eq("id", projectId).single(),
+      supabase.from("preview_links").select("target_url").eq("project_id", projectId).eq("is_active", true).or(`expires_at.is.null,expires_at.gt.${now}`).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       (() => {
         let q = supabase
           .from("feedback_items")
@@ -94,8 +98,9 @@ export default function SessionDetailPage() {
         if (!isOwner) q = q.eq("assigned_to", profile?.user_id);
         return q;
       })(),
-    ]).then(async ([{ data: proj }, { data: items }]) => {
+    ]).then(async ([{ data: proj }, { data: link }, { data: items }]) => {
       setProject(proj);
+      if (link?.target_url) setPreviewLink(link.target_url);
       if (!items || items.length === 0) { setFeedback([]); setLoading(false); return; }
 
       const ids = items.map((i: any) => i.id);
@@ -161,7 +166,8 @@ export default function SessionDetailPage() {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    const url = previewLink || window.location.href;
+    navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
