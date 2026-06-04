@@ -28,6 +28,7 @@ import {
   User,
   Check,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import type { Site } from "@/types";
@@ -55,6 +56,8 @@ export default function SitesPage() {
   const canDelete = can(Permissions.SITES_DELETE);
   const [search, setSearch] = useState("");
   const [wpFilter, setWpFilter] = useState<"all" | "connected" | "disconnected">("all");
+  const [assignmentFilter, setAssignmentFilter] = useState<"all" | "assigned" | "unassigned">("all");
+  const [sortBy, setSortBy] = useState<"name" | "name_desc" | "newest" | "oldest" | "most_feedback" | "least_feedback">("newest");
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [assignSite, setAssignSite] = useState<string | null>(null);
   const [assignMessage, setAssignMessage] = useState("");
@@ -299,7 +302,25 @@ export default function SitesPage() {
       wpFilter === "all" ||
       (wpFilter === "connected" && site.wp_connected) ||
       (wpFilter === "disconnected" && !site.wp_connected);
-    return matchesSearch && matchesWp;
+    const matchesAssignment =
+      assignmentFilter === "all" ||
+      (assignmentFilter === "assigned" && !!siteAssignments[site.id]) ||
+      (assignmentFilter === "unassigned" && !siteAssignments[site.id]);
+    return matchesSearch && matchesWp && matchesAssignment;
+  }).sort((a, b) => {
+    const countsA = getCounts(a.id);
+    const countsB = getCounts(b.id);
+    const totalA = countsA.pending_count + countsA.resolved_count;
+    const totalB = countsB.pending_count + countsB.resolved_count;
+    switch (sortBy) {
+      case "name": return a.name.localeCompare(b.name);
+      case "name_desc": return b.name.localeCompare(a.name);
+      case "newest": return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      case "oldest": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "most_feedback": return totalB - totalA;
+      case "least_feedback": return totalA - totalB;
+      default: return 0;
+    }
   });
 
   return (
@@ -317,7 +338,7 @@ export default function SitesPage() {
       </div>
 
       {/* Search + filter */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -342,6 +363,36 @@ export default function SitesPage() {
               {opt === "all" ? "All" : opt === "connected" ? "WP Connected" : "No WP"}
             </button>
           ))}
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+          {(["all", "assigned", "unassigned"] as const).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => setAssignmentFilter(opt)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                assignmentFilter === opt
+                  ? "bg-primary text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {opt === "all" ? "All" : opt === "assigned" ? "Assigned" : "Unassigned"}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="px-2.5 py-1.5 pr-7 text-xs font-medium rounded-lg border border-border bg-background text-foreground cursor-pointer outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name">Name A-Z</option>
+            <option value="name_desc">Name Z-A</option>
+            <option value="most_feedback">Most Feedback</option>
+            <option value="least_feedback">Least Feedback</option>
+          </select>
+          <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         </div>
       </div>
 
