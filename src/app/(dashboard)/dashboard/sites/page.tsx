@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { usePermissions } from "@/lib/use-permissions";
@@ -37,6 +38,7 @@ import type { Site } from "@/types";
 const supabase = createClient();
 
 export default function SitesPage() {
+  const router = useRouter();
   const { profile, isDemo } = useAuth();
   const { can } = usePermissions();
   const [sites, setSites] = useState<Site[]>([]);
@@ -323,7 +325,7 @@ export default function SitesPage() {
       name: name.trim(),
       status: "draft",
     });
-    fetchSites();
+    router.push(`/dashboard/sites/${siteId}`);
   };
 
   const filteredSites = sites.filter((site) => {
