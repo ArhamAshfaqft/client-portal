@@ -15,6 +15,7 @@ import {
   ListTodo,
   CheckCircle2,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 function timeAgo(dateStr: string): string {
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const [devProjects, setDevProjects] = useState<{ name: string; feedback: number; siteName: string }[]>([]);
   const [devActivity, setDevActivity] = useState<{ action: string; time: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBetaBanner, setShowBetaBanner] = useState(true);
 
   const isDev = profile?.role === "developer";
   const isClient = profile?.role === "client";
@@ -277,6 +279,20 @@ export default function DashboardPage() {
 
     return (
       <div className="space-y-6">
+        {showBetaBanner && (
+          <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
+              We&apos;re working closely with a handful of agencies to polish the experience before public launch.
+            </p>
+            <button
+              onClick={() => setShowBetaBanner(false)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div>
           <h2 className="text-lg font-semibold text-foreground">
             Welcome back, {profile?.full_name?.split(" ")[0] || "Developer"}
@@ -434,6 +450,20 @@ export default function DashboardPage() {
   if (isClient) {
     return (
       <div className="space-y-6">
+        {showBetaBanner && (
+          <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
+            <p className="text-sm text-foreground/80 leading-relaxed">
+              <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
+              We&apos;re working closely with a handful of agencies to polish the experience before public launch.
+            </p>
+            <button
+              onClick={() => setShowBetaBanner(false)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div>
           <h2 className="text-lg font-semibold text-foreground">
             Welcome, {profile?.full_name || "Client"}
@@ -516,6 +546,20 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {showBetaBanner && (
+        <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
+          <p className="text-sm text-foreground/80 leading-relaxed">
+            <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
+            We&apos;re working closely with a handful of agencies to polish the experience before public launch.
+          </p>
+          <button
+            onClick={() => setShowBetaBanner(false)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
