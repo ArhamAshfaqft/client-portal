@@ -6,13 +6,12 @@ import {
   LayoutDashboard,
   Globe,
   Users,
-  MessageSquareText,
   Settings,
   Bell,
   ChevronLeft,
   PanelLeft,
-  Clock,
   ListTodo,
+  Clock,
   History,
 } from "lucide-react";
 import { useState } from "react";
@@ -40,9 +39,8 @@ export function Sidebar() {
     : [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/dashboard/sites", label: "Sites", icon: Globe, show: can(Permissions.SITES_VIEW) },
-        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: profile?.role === "owner" || (can(Permissions.FEEDBACK_VIEW_ASSIGNED) && !can(Permissions.FEEDBACK_VIEW_ALL)) },
+        { href: "/dashboard/my-feedback", label: "My Feedback", icon: ListTodo, show: profile?.role === "owner" || can(Permissions.FEEDBACK_VIEW_ASSIGNED) },
         { href: "/dashboard/team", label: "Team", icon: Users, show: can(Permissions.TEAM_VIEW) },
-        { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquareText, show: can(Permissions.FEEDBACK_VIEW_ALL) },
         { href: "/dashboard/reports", label: "Reports", icon: Clock, show: false },
         { href: "/dashboard/activity", label: "Activity", icon: History, show: false },
         { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
