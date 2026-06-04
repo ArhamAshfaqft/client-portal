@@ -65,6 +65,23 @@ export default function SitesPage() {
   const [siteAssignments, setSiteAssignments] = useState<Record<string, { userId: string; message: string; assignedBy: string }>>({});
   const [teamMembers, setTeamMembers] = useState<{ user_id: string; full_name: string; email: string; position: string | null }[]>([]);
   const [assignError, setAssignError] = useState("");
+  const [loginLoading, setLoginLoading] = useState<string | null>(null);
+
+  const openWpAdmin = async (siteId: string) => {
+    setLoginLoading(siteId);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/auto-login`, { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.open(data.url, "_blank");
+      } else {
+        alert(data.error || "Failed to generate login link");
+      }
+    } catch {
+      alert("Network error");
+    }
+    setLoginLoading(null);
+  };
 
   useEffect(() => {
     if (isDemo) {
@@ -575,7 +592,21 @@ export default function SitesPage() {
                   </div>
 
                   {/* Action footer */}
-                  <div className="px-5 pb-5">
+                  <div className="px-5 pb-5 space-y-2">
+                    {(site as any).wp_api_key && (
+                      <button
+                        onClick={() => openWpAdmin(site.id)}
+                        disabled={loginLoading === site.id}
+                        className="inline-flex items-center justify-center w-full gap-1.5 px-4 py-2 text-sm font-medium rounded-lg border border-border bg-background text-foreground hover:bg-accent transition-colors disabled:opacity-50"
+                      >
+                        {loginLoading === site.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <ExternalLink className="w-4 h-4" />
+                        )}
+                        Open WP Admin
+                      </button>
+                    )}
                     <Link
                       href={`/dashboard/sites/${site.id}/feedback`}
                       className="inline-flex items-center justify-center w-full gap-1.5 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:bg-border transition-colors"
