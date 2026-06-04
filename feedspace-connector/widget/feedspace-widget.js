@@ -2445,11 +2445,12 @@
     finishDrawing(el, startDna, points) {
       const firstPoint = points[0];
       const rel = toRelative(el, this.drawStart.x, this.drawStart.y);
-      if (this.currentTool === "arrow" || this.currentTool === "rect") {
+      const toolType = this.currentTool;
+      if (toolType === "arrow" || toolType === "rect") {
         this.showPendingAnnotation(el, startDna);
       }
       this.commentPanel.open(this.drawStart.x, this.drawStart.y, null, {
-        onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
+        onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points, toolType),
         onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
         isRecording: () => this.isRecording
@@ -2510,7 +2511,7 @@
       this.drawPoints = [];
       this.tempSvgEl = null;
     }
-    async saveAnnotation(content, files, el, startDna, firstPoint, _points) {
+    async saveAnnotation(content, files, el, startDna, firstPoint, _points, toolType) {
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
@@ -2520,7 +2521,7 @@
       const payload = {
         projectId: this.config.projectId,
         previewToken: this.config.token,
-        type: this.currentTool,
+        type: toolType,
         content,
         pageUrl: this.config.pageUrl,
         selector: startDna.selector,

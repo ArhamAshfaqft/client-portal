@@ -373,14 +373,15 @@ export class AnnotationEngine {
   private finishDrawing(el: Element, startDna: ElementDNA, points: Array<{ x: number; y: number }>): void {
     const firstPoint = points[0];
     const rel = toRelative(el, this.drawStart!.x, this.drawStart!.y);
+    const toolType = this.currentTool as 'pin' | 'arrow' | 'rect';
 
     // Show pending annotation visual for arrow/rect so it stays visible
-    if (this.currentTool === 'arrow' || this.currentTool === 'rect') {
+    if (toolType === 'arrow' || toolType === 'rect') {
       this.showPendingAnnotation(el, startDna);
     }
 
     this.commentPanel.open(this.drawStart!.x, this.drawStart!.y, null, {
-      onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
+      onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points, toolType),
       onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
       isRecording: () => this.isRecording,
@@ -454,7 +455,8 @@ export class AnnotationEngine {
     el: Element,
     startDna: ElementDNA,
     firstPoint: { x: number; y: number },
-    _points: Array<{ x: number; y: number }>
+    _points: Array<{ x: number; y: number }>,
+    toolType: 'pin' | 'arrow' | 'rect'
   ): Promise<void> {
     const metaData: Record<string, unknown> = {
       device: this.deviceMode,
@@ -466,7 +468,7 @@ export class AnnotationEngine {
     const payload: CreateAnnotationPayload = {
       projectId: this.config.projectId,
       previewToken: this.config.token,
-      type: this.currentTool as 'pin' | 'arrow' | 'rect',
+      type: toolType,
       content,
       pageUrl: this.config.pageUrl,
       selector: startDna.selector,
