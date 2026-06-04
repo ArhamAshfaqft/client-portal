@@ -54,6 +54,7 @@ export default function SitesPage() {
 
   const canCreate = can(Permissions.SITES_CREATE);
   const canDelete = can(Permissions.SITES_DELETE);
+  const canCreateSession = can(Permissions.PROJECTS_CREATE);
   const [search, setSearch] = useState("");
   const [wpFilter, setWpFilter] = useState<"all" | "connected" | "disconnected">("all");
   const [assignmentFilter, setAssignmentFilter] = useState<"all" | "assigned" | "unassigned">("all");
@@ -311,6 +312,20 @@ export default function SitesPage() {
     return site?.feedback_counts || { pending_count: 0, resolved_count: 0 };
   };
 
+  const addSession = async (siteId: string) => {
+    const name = prompt("Session name:");
+    if (!name || !name.trim()) return;
+    setMenuOpen(null);
+    const s = sites.find((s) => s.id === siteId) as any;
+    await supabase.from("projects").insert({
+      agency_id: s?.agency_id || profile?.agency_id,
+      site_id: siteId,
+      name: name.trim(),
+      status: "draft",
+    });
+    fetchSites();
+  };
+
   const filteredSites = sites.filter((site) => {
     const matchesSearch = !search.trim() ||
       site.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -530,6 +545,15 @@ export default function SitesPage() {
                                   <UserPlus className="w-4 h-4 text-muted-foreground" />
                                   {siteAssignments[site.id]?.userId ? "Reassign" : "Assign Developer"}
                                 </button>
+                                {canCreateSession && (
+                                  <button
+                                    onClick={() => addSession(site.id)}
+                                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
+                                  >
+                                    <Plus className="w-4 h-4 text-muted-foreground" />
+                                    Add Session
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => {
                                     setMenuOpen(null);
