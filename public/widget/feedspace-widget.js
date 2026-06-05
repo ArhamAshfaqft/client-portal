@@ -1837,7 +1837,7 @@
         const icon = `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ""}</span>`;
         return `<button class="fs-df-btn${active ? " active" : ""}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active ? "#2563eb" : "transparent"};color:${active ? "#fff" : "#64748b"};">${icon}${label} <span class="fs-df-count" style="background:${active ? "rgba(255,255,255,0.2)" : "#f1f5f9"};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
       };
-      deviceRow.innerHTML = deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
+      deviceRow.innerHTML = `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feedspace-total-count">0</span></span>` + deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>`;
       this.root.appendChild(deviceRow);
@@ -1962,6 +1962,11 @@
           const countEl = btn.querySelector(".fs-df-count");
           if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
         });
+        const totalEl = deviceRow.querySelector("#feedspace-total-count");
+        if (totalEl) {
+          const total = Object.values(deviceCounts).reduce((s, v) => s + v, 0);
+          totalEl.textContent = String(total);
+        }
       }
       filtered.sort((a, b) => {
         const ta = new Date(a.createdAt).getTime();

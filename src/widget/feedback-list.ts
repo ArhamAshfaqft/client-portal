@@ -263,6 +263,7 @@ export class FeedbackListPanel {
       return `<button class="fs-df-btn${active?' active':''}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active?'#2563eb':'transparent'};color:${active?'#fff':'#64748b'};">${icon}${label} <span class="fs-df-count" style="background:${active?'rgba(255,255,255,0.2)':'#f1f5f9'};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
     };
     deviceRow.innerHTML =
+      `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feedspace-total-count">0</span></span>` +
       deviceBtnHtml('desktop', 'Desktop') +
       deviceBtnHtml('tablet', 'Tablet') +
       deviceBtnHtml('mobile', 'Mobile') +
@@ -398,6 +399,12 @@ export class FeedbackListPanel {
         const countEl = btn.querySelector('.fs-df-count');
         if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
       });
+      // Update total count indicator
+      const totalEl = deviceRow.querySelector('#feedspace-total-count');
+      if (totalEl) {
+        const total = Object.values(deviceCounts).reduce((s, v) => s + v, 0);
+        totalEl.textContent = String(total);
+      }
     }
 
     // Sort
