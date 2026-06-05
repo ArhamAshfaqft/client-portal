@@ -264,107 +264,86 @@ export default function SessionDetailPage() {
             return (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="py-3 px-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
-                      <span className="text-xs text-muted-foreground font-mono">#{idx + 1}</span>
-                      <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-foreground">{item.created_by || "Anonymous"}</span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(item.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                        </span>
-                        <Badge variant={statusVariants[item.status] || "default"} className="text-[10px] px-1.5 py-0">
-                          {item.status === "open" ? "pending" : item.status}
-                        </Badge>
-                        {item.device && (
-                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border border-border rounded px-1.5 py-0">
-                            {item.device}
-                          </span>
-                        )}
-                      </div>
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                    <span className="text-xs text-muted-foreground font-mono font-semibold">#{idx + 1}</span>
+                    <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
+                    <span className="text-xs font-medium text-foreground ml-1">{item.created_by || "Anonymous"}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                    <Badge variant={statusVariants[item.status] || "default"} className="text-[10px] px-1.5 py-0">
+                      {item.status === "open" ? "pending" : item.status}
+                    </Badge>
+                    {item.device && (
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border border-border rounded px-1.5 py-0">
+                        {item.device}
+                      </span>
+                    )}
+                  </div>
 
-                      <p className="text-sm text-foreground">{item.content}</p>
+                  <p className="text-sm text-foreground mb-1.5">{item.content}</p>
 
-                      {/* Images */}
-                      {hasImages.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {hasImages.map((m) => (
-                            <div key={m.id} className="relative group">
-                              <div
-                                onClick={() => setPreviewUrl(m.file_url)}
-                                className="w-20 h-20 rounded-lg border border-border overflow-hidden cursor-pointer bg-accent hover:border-primary transition-colors"
-                              >
-                                <img src={m.file_url} alt={m.file_name} className="w-full h-full object-cover" />
-                              </div>
-                              <button
-                                onClick={() => setPreviewUrl(m.file_url)}
-                                className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg"
-                              >
-                                <Maximize2 className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Audio */}
-                      {hasAudio.length > 0 && hasAudio.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2 p-2 bg-accent rounded-lg mt-1">
-                          <Mic className="w-4 h-4 text-primary flex-shrink-0" />
-                          <span className="text-xs text-muted-foreground flex-1 truncate">{m.file_name || "Voice Note"}</span>
-                          <audio controls className="h-8 max-w-[180px]" preload="none">
-                            <source src={m.file_url} />
-                          </audio>
+                  {/* Images */}
+                  {hasImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-1.5">
+                      {hasImages.map((m) => (
+                        <div key={m.id} className="relative group">
+                          <div
+                            onClick={() => setPreviewUrl(m.file_url)}
+                            className="w-20 h-20 rounded-lg border border-border overflow-hidden cursor-pointer bg-accent hover:border-primary transition-colors"
+                          >
+                            <img src={m.file_url} alt={m.file_name} className="w-full h-full object-cover" />
+                          </div>
+                          <button
+                            onClick={() => setPreviewUrl(m.file_url)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg"
+                          >
+                            <Maximize2 className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
                         </div>
                       ))}
-
-                      {/* Files */}
-                      {hasFiles.length > 0 && (
-                        <div className="space-y-1 mt-1">
-                          {hasFiles.map((m) => (
-                            <a
-                              key={m.id}
-                              href={m.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors"
-                            >
-                              <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                              <span className="text-xs text-foreground flex-1 truncate">{getFileName(m.file_name)}</span>
-                              <span className="text-[10px] text-muted-foreground flex-shrink-0">{formatFileSize(m.file_size)}</span>
-                              <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                            </a>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Page URL */}
-                      {item.page_url && (
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
-                          <Globe className="w-3 h-3" />
-                          Page: {item.page_url}
-                        </p>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 pt-1">
-                        {can(Permissions.FEEDBACK_RESOLVE) && (
-                          <Button size="sm" variant={item.status === "resolved" ? "outline" : "primary"} onClick={() => handleStatus(item.id, action.next)}>
-                            <ActionIcon className="w-3 h-3 mr-1" />
-                            {action.label}
-                          </Button>
-                        )}
-                        {can(Permissions.FEEDBACK_DELETE) && (
-                          <button onClick={() => handleDelete(item.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/5 transition-colors">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Audio */}
+                  {hasAudio.length > 0 && hasAudio.map((m) => (
+                    <div key={m.id} className="flex items-center gap-2 p-2 bg-accent rounded-lg mb-1.5">
+                      <Mic className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{m.file_name || "Voice Note"}</span>
+                      <audio controls className="h-8 max-w-[180px]" preload="none">
+                        <source src={m.file_url} />
+                      </audio>
+                    </div>
+                  ))}
+
+                  {/* Files */}
+                  {hasFiles.length > 0 && (
+                    <div className="space-y-1 mb-1.5">
+                      {hasFiles.map((m) => (
+                        <a
+                          key={m.id}
+                          href={m.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors"
+                        >
+                          <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-xs text-foreground flex-1 truncate">{getFileName(m.file_name)}</span>
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{formatFileSize(m.file_size)}</span>
+                          <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Page URL */}
+                  {item.page_url && (
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Globe className="w-3 h-3" />
+                      {item.page_url}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
