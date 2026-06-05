@@ -291,14 +291,10 @@ export default function SessionDetailPage() {
             return (
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{item.stableNum}</span>
                     <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
-                    <span className="text-xs font-medium text-foreground ml-1">{item.created_by || "Anonymous"}</span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
                     <Badge variant={statusVariants[item.status] || "default"} className="text-[10px] px-1.5 py-0">
                       {item.status === "open" ? "pending" : item.status}
                     </Badge>
@@ -308,6 +304,11 @@ export default function SessionDetailPage() {
                       </span>
                     )}
                   </div>
+
+                  <p className="text-xs text-foreground font-medium mb-0.5">{item.created_by || "Anonymous"}</p>
+                  <p className="text-[10px] text-muted-foreground mb-1.5">
+                    {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
 
                   <p className="text-sm text-foreground mb-1.5">{item.content}</p>
 
