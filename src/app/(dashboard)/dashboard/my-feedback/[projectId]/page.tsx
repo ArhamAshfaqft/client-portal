@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Pin, MessageSquareText, Mic, Image,
+  Pin, MessageSquareText, Mic, Image, Square, ArrowUpRight, Pencil,
   CheckCircle2, ArrowRight, Globe, Copy,
   Trash2, Play, FileText, ChevronDown,
   ChevronRight, ExternalLink, Maximize2, X,
@@ -21,7 +21,12 @@ import { Permissions } from "@/lib/permissions";
 
 const typeIcons: Record<string, typeof Pin> = {
   pin: Pin, comment: MessageSquareText, voice: Mic, media: Image,
-  rect: Pin, arrow: Pin, draw: Pin,
+  rect: Square, arrow: ArrowUpRight, draw: Pencil,
+};
+
+const typeLabels: Record<string, string> = {
+  pin: "Pin", comment: "Comment", voice: "Voice Note", media: "Media",
+  rect: "Rectangle", arrow: "Arrow", draw: "Freehand",
 };
 
 const statusVariants: Record<string, "warning" | "info" | "success" | "default"> = {
@@ -262,6 +267,7 @@ export default function SessionDetailPage() {
                     <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                       <span className="text-xs text-muted-foreground font-mono">#{idx + 1}</span>
                       <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
                     </div>
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">

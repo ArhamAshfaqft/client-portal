@@ -59,7 +59,8 @@ export async function GET(request: Request) {
     .select("*")
     .eq("project_id", link.project_id)
     .eq("page_url", pageUrl)
-    .order("created_at", { ascending: true });
+    .is("parent_id", null)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return NextResponse.json(
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const { projectId, previewToken, type, content, pageUrl, selector, elementDna, createdBy } = body;
+    const { projectId, previewToken, type, content, pageUrl, selector, elementDna, endElementDna, createdBy } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;
     const { media } = body;
@@ -219,6 +220,7 @@ export async function POST(request: Request) {
         height: height ?? null,
         draw_data: drawData || null,
         element_dna: elementDna || null,
+        end_element_dna: endElementDna || null,
         meta_data: metaData || null,
         viewport_width: viewportWidth ?? null,
         viewport_height: viewportHeight ?? null,
@@ -426,6 +428,7 @@ async function handleAutoRegister(body: any) {
 function mapFeedbackItem(item: any, mediaRecords: any[] = [], projectId?: string, projectName?: string) {
   return {
     id: item.id,
+    parentId: item.parent_id || null,
     type: item.type,
     status: item.status,
     content: item.content,
@@ -439,7 +442,7 @@ function mapFeedbackItem(item: any, mediaRecords: any[] = [], projectId?: string
     heightPct: item.height,
     endAnchorXPct: item.coordinates_x_end,
     endAnchorYPct: item.coordinates_y_end,
-    endElementDna: null,
+    endElementDna: item.end_element_dna || null,
     drawData: item.draw_data ? JSON.parse(item.draw_data) : null,
     viewportWidth: item.viewport_width || 0,
     viewportHeight: item.viewport_height || 0,

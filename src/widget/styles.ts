@@ -794,7 +794,9 @@ const STYLES = `
   border-radius: 2px;
 }
 
-[data-feedspace-tool="pin"] {
+[data-feedspace-tool="pin"],
+[data-feedspace-tool="arrow"],
+[data-feedspace-tool="rect"] {
   cursor: crosshair;
 }
 
@@ -861,6 +863,26 @@ const STYLES = `
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.fs-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+.fs-type-tag svg {
+  width: 10px;
+  height: 10px;
+  display: block;
 }
 
 .fs-dot-menu {

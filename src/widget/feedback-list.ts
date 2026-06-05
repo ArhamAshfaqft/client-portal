@@ -122,6 +122,9 @@ const SVG_ICONS = {
   file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
   music: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
   play: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/></svg>',
+  arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
 };
 
 export class FeedbackListPanel {
@@ -130,7 +133,7 @@ export class FeedbackListPanel {
   private callbacks: FeedbackListCallbacks | null = null;
   private annotations: Annotation[] = [];
   private currentFilter: FilterMode = 'all';
-  private currentDeviceFilter: string = 'all';
+  private currentDeviceFilter: string = 'desktop';
   private currentSort: 'newest' | 'oldest' = 'newest';
   private currentProjectFilter: string = '';
   private onClose: (() => void) | null = null;
@@ -256,11 +259,10 @@ export class FeedbackListPanel {
     const deviceIcons: Record<string, string> = { desktop: SVG_ICONS.desktop, tablet: SVG_ICONS.tablet, mobile: SVG_ICONS.mobile };
     const deviceBtnHtml = (dv: string, label: string) => {
       const active = dv === this.currentDeviceFilter;
-      const icon = dv !== 'all' ? `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ''}</span>` : '';
+      const icon = `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ''}</span>`;
       return `<button class="fs-df-btn${active?' active':''}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active?'#2563eb':'transparent'};color:${active?'#fff':'#64748b'};">${icon}${label} <span class="fs-df-count" style="background:${active?'rgba(255,255,255,0.2)':'#f1f5f9'};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
     };
     deviceRow.innerHTML =
-      deviceBtnHtml('all', 'All') +
       deviceBtnHtml('desktop', 'Desktop') +
       deviceBtnHtml('tablet', 'Tablet') +
       deviceBtnHtml('mobile', 'Mobile') +
@@ -290,7 +292,7 @@ export class FeedbackListPanel {
         btn.classList.add('active');
         btn.style.background = '#2563eb';
         btn.style.color = '#fff';
-        this.currentDeviceFilter = btn.dataset.device || 'all';
+        this.currentDeviceFilter = btn.dataset.device || 'desktop';
         this.callbacks?.onDeviceFilterChange(this.currentDeviceFilter);
         this.renderList();
       });
@@ -376,25 +378,23 @@ export class FeedbackListPanel {
     }
 
     // Filter by device
-    if (this.currentDeviceFilter && this.currentDeviceFilter !== 'all') {
-      filtered = filtered.filter(a => (a.device || 'desktop') === this.currentDeviceFilter);
-    }
+    filtered = filtered.filter(a => (a.device || 'desktop') === this.currentDeviceFilter);
 
     // Count per device
-    const deviceCounts: Record<string, number> = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
+    const deviceCounts: Record<string, number> = { desktop: 0, tablet: 0, mobile: 0 };
     let baseForCounts = this.currentFilter === 'all' ? this.annotations :
       this.currentFilter === 'pending' ? this.annotations.filter(a => a.status === 'open' || a.status === 'in_progress') :
       this.annotations.filter(a => a.status === this.currentFilter);
     if (this.currentProjectFilter) {
       baseForCounts = baseForCounts.filter(a => String(a.projectId) === this.currentProjectFilter);
     }
-    baseForCounts.forEach(a => { deviceCounts.all++; const d = a.device || 'desktop'; if (deviceCounts[d] !== undefined) deviceCounts[d]++; });
+    baseForCounts.forEach(a => { const d = a.device || 'desktop'; if (deviceCounts[d] !== undefined) deviceCounts[d]++; });
 
     // Update device filter counts
     const deviceRow = this.root?.querySelector('.feedspace-device-filter');
     if (deviceRow) {
       deviceRow.querySelectorAll('.fs-df-btn').forEach(btn => {
-        const dv = (btn as HTMLElement).dataset.device || 'all';
+        const dv = (btn as HTMLElement).dataset.device || 'desktop';
         const countEl = btn.querySelector('.fs-df-count');
         if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
       });
@@ -462,12 +462,26 @@ export class FeedbackListPanel {
         tagChip = `<span class="fs-tag-chip">${escHtml(tag.toUpperCase())}${tagText ? ' ' + escHtml(tagText) : ''}</span>`;
       }
 
+      // Type tag (like reference plugin)
+      const typeLabels: Record<string, string> = {
+        pin: 'Pin', rect: 'Rectangle', arrow: 'Arrow', draw: 'Freehand',
+        comment: 'Comment', voice: 'Voice Note', media: 'Media',
+      };
+      const typeIcons: Record<string, string> = {
+        pin: SVG_ICONS.pin, rect: SVG_ICONS.rect, arrow: SVG_ICONS.arrow,
+        draw: SVG_ICONS.pin, comment: SVG_ICONS.file, voice: SVG_ICONS.mic, media: SVG_ICONS.file,
+      };
+      const typeTag = typeLabels[a.type]
+        ? `<span class="fs-type-tag"><span style="width:10px;height:10px;display:inline-flex;align-items:center;">${typeIcons[a.type] || ''}</span>${typeLabels[a.type]}</span>`
+        : '';
+
       return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
             <span class="fs-number-badge">${a._num || idx + 1}</span>
             <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
-            ${tagChip}
+            ${typeTag}
+            ${a.type === 'pin' ? tagChip : ''}
           </div>
           <div class="fs-dots-trigger" style="padding:4px;cursor:pointer;opacity:0.4;flex-shrink:0;line-height:1;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>

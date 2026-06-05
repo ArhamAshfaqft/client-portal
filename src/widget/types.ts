@@ -20,6 +20,7 @@ export interface ElementDNA {
 
 export interface Annotation {
   id: string;
+  parentId?: string | null;
   type: 'pin' | 'rect' | 'arrow' | 'draw';
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
   content: string;
@@ -68,6 +69,7 @@ export interface CreateAnnotationPayload {
   pageUrl: string;
   selector: string | null;
   elementDna: ElementDNA | null;
+  endElementDna?: ElementDNA | null;
   coordinatesX: number;
   coordinatesY: number;
   coordinatesXEnd: number | null;

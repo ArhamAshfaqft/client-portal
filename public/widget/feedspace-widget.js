@@ -791,7 +791,15 @@
   border-radius: 2px;
 }
 
-[data-feedspace-tool="pin"] {
+.feedspace-hover-dashed {
+  outline: 2px dashed #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+[data-feedspace-tool="pin"],
+[data-feedspace-tool="arrow"],
+[data-feedspace-tool="rect"] {
   cursor: crosshair;
 }
 
@@ -858,6 +866,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.fs-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+.fs-type-tag svg {
+  width: 10px;
+  height: 10px;
+  display: block;
 }
 
 .fs-dot-menu {
@@ -962,6 +990,9 @@
           return wpRequest("GET", `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId)}`);
         }
         return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
+      },
+      getReplyIds: (pageUrl) => {
+        return vercelRequest(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`).then((r) => r.replyIds);
       },
       createAnnotation: (payload) => {
         if (useWp) {
@@ -1102,7 +1133,7 @@
       this.annotations = [];
       this.callbacks = null;
       this.filter = "all";
-      this.deviceFilter = "all";
+      this.deviceFilter = "desktop";
       this.projectFilter = "";
       this.selectedId = null;
     }
@@ -1178,17 +1209,89 @@
       }
     }
     renderOne(annotation, index, scrollX, scrollY) {
+      var _a, _b, _c, _d;
+      const num = annotation._num || index + 1;
+      if (annotation.type === "arrow" && !annotation.elementDna) {
+        const startPos = { x: annotation.anchorXPct, y: annotation.anchorYPct };
+        const endPos = {
+          x: (_a = annotation.endAnchorXPct) != null ? _a : startPos.x + 100,
+          y: (_b = annotation.endAnchorYPct) != null ? _b : startPos.y + 50
+        };
+        const g2 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(startPos.x));
+        line.setAttribute("y1", String(startPos.y));
+        line.setAttribute("x2", String(endPos.x));
+        line.setAttribute("y2", String(endPos.y));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2.5");
+        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        g2.appendChild(line);
+        const badge2 = this.createBadge(num, annotation.id, annotation.status, "arrow");
+        badge2.setAttribute("transform", `translate(${startPos.x - 10}, ${startPos.y - 10})`);
+        g2.appendChild(badge2);
+        g2.style.pointerEvents = "auto";
+        this.svg.appendChild(g2);
+        return;
+      }
       const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
       if (!el) return;
+      if (annotation.type === "rect") {
+        const rect = el.getBoundingClientRect();
+        const g2 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        box.setAttribute("x", String(rect.left + scrollX));
+        box.setAttribute("y", String(rect.top + scrollY));
+        box.setAttribute("width", String(rect.width));
+        box.setAttribute("height", String(rect.height));
+        box.setAttribute("fill", "rgba(99,102,241,0.08)");
+        box.setAttribute("stroke", "#6366f1");
+        box.setAttribute("stroke-width", "2");
+        box.setAttribute("stroke-dasharray", "6,3");
+        box.setAttribute("rx", "4");
+        const badge2 = this.createBadge(num, annotation.id, annotation.status, "rect");
+        badge2.setAttribute("transform", `translate(${rect.left + scrollX - 10}, ${rect.top + scrollY - 10})`);
+        g2.appendChild(box);
+        g2.appendChild(badge2);
+        g2.style.pointerEvents = "auto";
+        this.svg.appendChild(g2);
+        return;
+      }
+      if (annotation.type === "arrow") {
+        const startPos = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
+        let endPos;
+        if (annotation.endElementDna) {
+          const endEl = findElement(annotation.endElementDna);
+          endPos = endEl ? toAbsolute(endEl, (_c = annotation.endAnchorXPct) != null ? _c : 50, (_d = annotation.endAnchorYPct) != null ? _d : 50) : { x: startPos.x + 100, y: startPos.y + 50 };
+        } else {
+          endPos = { x: startPos.x + 100, y: startPos.y + 50 };
+        }
+        const g2 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(startPos.x));
+        line.setAttribute("y1", String(startPos.y));
+        line.setAttribute("x2", String(endPos.x));
+        line.setAttribute("y2", String(endPos.y));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2.5");
+        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        g2.appendChild(line);
+        const badge2 = this.createBadge(num, annotation.id, annotation.status, "arrow");
+        badge2.setAttribute("transform", `translate(${startPos.x - 10}, ${startPos.y - 10})`);
+        g2.appendChild(badge2);
+        g2.style.pointerEvents = "auto";
+        this.svg.appendChild(g2);
+        return;
+      }
       const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
-      const badge = this.createBadge(index + 1, annotation.id, annotation.status);
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const badge = this.createBadge(num, annotation.id, annotation.status);
+      badge.setAttribute("transform", `translate(${anchor.x - 10}, ${anchor.y - 10})`);
       g.appendChild(badge);
-      g.setAttribute("transform", `translate(${anchor.x}, ${anchor.y})`);
       g.style.pointerEvents = "auto";
       this.svg.appendChild(g);
     }
-    createBadge(num, id, status) {
+    createBadge(num, id, status, type) {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("data-annotation-id", id);
       g.classList.add("feedspace-annotation-pin");
@@ -1196,13 +1299,21 @@
       let color = "#6366f1";
       if (status === "resolved" || status === "closed") color = "#10b981";
       if (status === "in_progress") color = "#f59e0b";
-      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      circle.setAttribute("cx", "10");
-      circle.setAttribute("cy", "10");
-      circle.setAttribute("r", "10");
-      circle.setAttribute("fill", color);
-      circle.setAttribute("stroke", "#fff");
-      circle.setAttribute("stroke-width", "2");
+      const shape = document.createElementNS("http://www.w3.org/2000/svg", type === "rect" ? "rect" : "circle");
+      if (type === "rect") {
+        shape.setAttribute("x", "1");
+        shape.setAttribute("y", "1");
+        shape.setAttribute("width", "18");
+        shape.setAttribute("height", "18");
+        shape.setAttribute("rx", "3");
+      } else {
+        shape.setAttribute("cx", "10");
+        shape.setAttribute("cy", "10");
+        shape.setAttribute("r", "10");
+      }
+      shape.setAttribute("fill", color);
+      shape.setAttribute("stroke", "#fff");
+      shape.setAttribute("stroke-width", "2");
       const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
       text.setAttribute("x", "10");
       text.setAttribute("y", "10");
@@ -1234,7 +1345,7 @@
         pulse.appendChild(animOpacity);
         g.appendChild(pulse);
       }
-      g.appendChild(circle);
+      g.appendChild(shape);
       g.appendChild(text);
       g.addEventListener("click", (e) => {
         var _a;
@@ -1582,7 +1693,10 @@
     mobile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="18.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
     file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
     music: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-    play: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+    play: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+    pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/></svg>',
+    arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
   };
   var FeedbackListPanel = class {
     constructor() {
@@ -1591,7 +1705,7 @@
       this.callbacks = null;
       this.annotations = [];
       this.currentFilter = "all";
-      this.currentDeviceFilter = "all";
+      this.currentDeviceFilter = "desktop";
       this.currentSort = "newest";
       this.currentProjectFilter = "";
       this.onClose = null;
@@ -1720,10 +1834,10 @@
       const deviceIcons = { desktop: SVG_ICONS2.desktop, tablet: SVG_ICONS2.tablet, mobile: SVG_ICONS2.mobile };
       const deviceBtnHtml = (dv, label) => {
         const active = dv === this.currentDeviceFilter;
-        const icon = dv !== "all" ? `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ""}</span>` : "";
+        const icon = `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ""}</span>`;
         return `<button class="fs-df-btn${active ? " active" : ""}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active ? "#2563eb" : "transparent"};color:${active ? "#fff" : "#64748b"};">${icon}${label} <span class="fs-df-count" style="background:${active ? "rgba(255,255,255,0.2)" : "#f1f5f9"};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
       };
-      deviceRow.innerHTML = deviceBtnHtml("all", "All") + deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
+      deviceRow.innerHTML = deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>`;
       this.root.appendChild(deviceRow);
@@ -1745,7 +1859,7 @@
           btn.classList.add("active");
           btn.style.background = "#2563eb";
           btn.style.color = "#fff";
-          this.currentDeviceFilter = btn.dataset.device || "all";
+          this.currentDeviceFilter = btn.dataset.device || "desktop";
           (_a = this.callbacks) == null ? void 0 : _a.onDeviceFilterChange(this.currentDeviceFilter);
           this.renderList();
         });
@@ -1831,23 +1945,20 @@
       if (this.currentProjectFilter) {
         filtered = filtered.filter((a) => String(a.projectId) === this.currentProjectFilter);
       }
-      if (this.currentDeviceFilter && this.currentDeviceFilter !== "all") {
-        filtered = filtered.filter((a) => (a.device || "desktop") === this.currentDeviceFilter);
-      }
-      const deviceCounts = { all: 0, desktop: 0, tablet: 0, mobile: 0 };
+      filtered = filtered.filter((a) => (a.device || "desktop") === this.currentDeviceFilter);
+      const deviceCounts = { desktop: 0, tablet: 0, mobile: 0 };
       let baseForCounts = this.currentFilter === "all" ? this.annotations : this.currentFilter === "pending" ? this.annotations.filter((a) => a.status === "open" || a.status === "in_progress") : this.annotations.filter((a) => a.status === this.currentFilter);
       if (this.currentProjectFilter) {
         baseForCounts = baseForCounts.filter((a) => String(a.projectId) === this.currentProjectFilter);
       }
       baseForCounts.forEach((a) => {
-        deviceCounts.all++;
         const d = a.device || "desktop";
         if (deviceCounts[d] !== void 0) deviceCounts[d]++;
       });
       const deviceRow = (_c = this.root) == null ? void 0 : _c.querySelector(".feedspace-device-filter");
       if (deviceRow) {
         deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
-          const dv = btn.dataset.device || "all";
+          const dv = btn.dataset.device || "desktop";
           const countEl = btn.querySelector(".fs-df-count");
           if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
         });
@@ -1907,12 +2018,32 @@
         if (tag && !skipTags.includes(tag.toLowerCase())) {
           tagChip = `<span class="fs-tag-chip">${escHtml2(tag.toUpperCase())}${tagText ? " " + escHtml2(tagText) : ""}</span>`;
         }
+        const typeLabels = {
+          pin: "Pin",
+          rect: "Rectangle",
+          arrow: "Arrow",
+          draw: "Freehand",
+          comment: "Comment",
+          voice: "Voice Note",
+          media: "Media"
+        };
+        const typeIcons = {
+          pin: SVG_ICONS2.pin,
+          rect: SVG_ICONS2.rect,
+          arrow: SVG_ICONS2.arrow,
+          draw: SVG_ICONS2.pin,
+          comment: SVG_ICONS2.file,
+          voice: SVG_ICONS2.mic,
+          media: SVG_ICONS2.file
+        };
+        const typeTag = typeLabels[a.type] ? `<span class="fs-type-tag"><span style="width:10px;height:10px;display:inline-flex;align-items:center;">${typeIcons[a.type] || ""}</span>${typeLabels[a.type]}</span>` : "";
         return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <span class="fs-number-badge">${idx + 1}</span>
+            <span class="fs-number-badge">${a._num || idx + 1}</span>
             <span class="fs-device-pill ${d}">${d.charAt(0).toUpperCase() + d.slice(1)}</span>
-            ${tagChip}
+            ${typeTag}
+            ${a.type === "pin" ? tagChip : ""}
           </div>
           <div class="fs-dots-trigger" style="padding:4px;cursor:pointer;opacity:0.4;flex-shrink:0;line-height:1;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
@@ -2078,6 +2209,8 @@
   var SVG_ICONS3 = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
     pin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+    arrow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="12 5 19 5 19 12"/></svg>',
+    rect: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
     list: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
     desktop: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
     tablet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
@@ -2106,6 +2239,9 @@
       this.toolbarRoot = null;
       this.nameModal = null;
       this.hoverHighlightEl = null;
+      this.arrowPreviewEl = null;
+      this.pendingAnnotationEl = null;
+      this.dragLineEl = null;
       this.projectNameCache = {};
       this.config = config;
       this.api = api;
@@ -2193,6 +2329,8 @@
       <div class="feedspace-toolbar">
         ${dev ? "" : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS3.select}</button>
         <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
+        <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS3.arrow}</button>
+        <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS3.rect}</button>
         <div class="feedspace-toolbar-divider"></div>
         <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
         <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
@@ -2221,6 +2359,7 @@
       (_a = this.toolbarRoot.querySelector('[data-action="list"]')) == null ? void 0 : _a.addEventListener("click", () => {
         if (this.feedbackList.isOpen()) {
           this.feedbackList.close();
+          this.renderer.setDeviceFilter(this.deviceMode);
           return;
         }
         this.feedbackList.open(this.annotations, {
@@ -2281,14 +2420,16 @@
         body.style.maxWidth = "";
         body.style.margin = "";
         body.style.boxShadow = "";
+        body.style.minHeight = "";
       } else {
         const width = device === "tablet" ? "768px" : "375px";
         body.style.maxWidth = width;
         body.style.margin = "0 auto";
         body.style.boxShadow = "0 0 0 1px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.1)";
+        body.style.minHeight = "100vh";
       }
       document.documentElement.style.background = device !== "desktop" ? "#e5e7eb" : "";
-      this.renderer.renderAll();
+      this.renderer.setDeviceFilter(device);
     }
     attachDrawingListeners() {
       document.addEventListener("mousedown", (e) => this.onMouseDown(e));
@@ -2304,14 +2445,26 @@
       const target = closestTargetable(e.target);
       if (target === this.hoverHighlightEl) return;
       this.clearHoverHighlight();
-      if (target && target !== document.body) {
+      if (!target || target === document.body) return;
+      if (this.currentTool === "arrow") {
+        return;
+      }
+      if (this.currentTool === "rect") {
+        target.classList.add("feedspace-hover-dashed");
+        this.hoverHighlightEl = target;
+      } else {
         target.classList.add("feedspace-hover-highlight");
         this.hoverHighlightEl = target;
       }
     }
     clearHoverHighlight() {
+      if (this.arrowPreviewEl && this.arrowPreviewEl.parentNode) {
+        this.arrowPreviewEl.parentNode.removeChild(this.arrowPreviewEl);
+        this.arrowPreviewEl = null;
+      }
       if (this.hoverHighlightEl) {
         this.hoverHighlightEl.classList.remove("feedspace-hover-highlight");
+        this.hoverHighlightEl.classList.remove("feedspace-hover-dashed");
         this.hoverHighlightEl = null;
       }
     }
@@ -2322,12 +2475,16 @@
       if ((_a = e.target) == null ? void 0 : _a.closest("#feedspace-widget-root, #feedspace-overlay, .feedspace-panel, .feedspace-panel-overlay, .feedspace-name-modal")) return;
       e.preventDefault();
       this.isDrawing = true;
+      if (this.currentTool === "arrow") {
+        this.drawStart = { x: e.pageX, y: e.pageY, el: null, dna: null };
+        return;
+      }
       const el = closestTargetable(e.target);
       const dna = getElementDNA(el);
       const rel = toRelative(el, e.pageX, e.pageY);
       this.drawStart = { x: e.pageX, y: e.pageY, el, dna };
       this.drawPoints = [{ x: rel.x, y: rel.y }];
-      if (this.currentTool === "pin") {
+      if (this.currentTool === "pin" || this.currentTool === "rect") {
         this.finishDrawing(el, dna, [{ x: rel.x, y: rel.y }]);
       }
     }
@@ -2336,18 +2493,37 @@
         this.updateHoverHighlight(e);
         return;
       }
+      if (this.currentTool === "arrow") {
+        const overlay = document.getElementById("feedspace-overlay");
+        if (!overlay) return;
+        if (this.dragLineEl && this.dragLineEl.parentNode) {
+          this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+        }
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(this.drawStart.x));
+        line.setAttribute("y1", String(this.drawStart.y));
+        line.setAttribute("x2", String(e.pageX));
+        line.setAttribute("y2", String(e.pageY));
+        line.setAttribute("stroke", "#6366f1");
+        line.setAttribute("stroke-width", "2.5");
+        line.setAttribute("stroke-dasharray", "6,3");
+        line.setAttribute("opacity", "0.6");
+        overlay.appendChild(line);
+        this.dragLineEl = line;
+      }
     }
     onMouseUp(e) {
       if (!this.isDrawing || !this.drawStart) return;
-      if (this.currentTool === "pin") {
-        this.isDrawing = false;
+      this.isDrawing = false;
+      if (this.dragLineEl && this.dragLineEl.parentNode) {
+        this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+        this.dragLineEl = null;
+      }
+      if (this.currentTool === "pin") return;
+      if (this.currentTool === "arrow") {
+        this.finishDrawingArrow(this.drawStart.x, this.drawStart.y, e.pageX, e.pageY);
         return;
       }
-      this.isDrawing = false;
-      const overlay = document.getElementById("feedspace-overlay");
-      if (overlay) this.removeTempPreview(overlay);
-      const { el, dna } = this.drawStart;
-      this.finishDrawing(el, dna, this.drawPoints.length > 1 ? this.drawPoints : [{ x: 50, y: 50 }]);
     }
     removeTempPreview(overlay) {
       if (this.tempSvgEl && overlay.contains(this.tempSvgEl)) {
@@ -2357,24 +2533,134 @@
     }
     finishDrawing(el, startDna, points) {
       const firstPoint = points[0];
-      const rel = toRelative(el, this.drawStart.x, this.drawStart.y);
+      const toolType = this.currentTool;
+      if (toolType === "rect") {
+        this.showPendingAnnotation(el, startDna);
+      }
       this.commentPanel.open(this.drawStart.x, this.drawStart.y, null, {
-        onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points),
+        onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points, toolType),
         onToggleRecording: () => this.toggleRecording(),
         onDeleteRecording: () => this.deleteRecording(),
         isRecording: () => this.isRecording
       }, () => {
+        this.removePendingAnnotation();
       });
       this.setTool("select");
       this.cleanupDrawState();
+    }
+    finishDrawingArrow(startX, startY, endX, endY) {
+      this.showPendingArrow(startX, startY, endX, endY);
+      this.commentPanel.open(startX, startY, null, {
+        onSubmit: (content, files) => this.saveAnnotation(content, files, startX, startY, endX, endY),
+        onToggleRecording: () => this.toggleRecording(),
+        onDeleteRecording: () => this.deleteRecording(),
+        isRecording: () => this.isRecording
+      }, () => {
+        this.removePendingAnnotation();
+      });
+      this.setTool("select");
+      this.cleanupDrawState();
+    }
+    showPendingAnnotation(el, dna) {
+      const svg = document.getElementById("feedspace-overlay");
+      if (!svg) return;
+      this.removePendingAnnotation();
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+      const rect = el.getBoundingClientRect();
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      box.setAttribute("x", String(rect.left + scrollX));
+      box.setAttribute("y", String(rect.top + scrollY));
+      box.setAttribute("width", String(rect.width));
+      box.setAttribute("height", String(rect.height));
+      box.setAttribute("fill", "rgba(99,102,241,0.08)");
+      box.setAttribute("stroke", "#6366f1");
+      box.setAttribute("stroke-width", "2");
+      box.setAttribute("stroke-dasharray", "6,3");
+      box.setAttribute("rx", "4");
+      g.appendChild(box);
+      svg.appendChild(g);
+      this.pendingAnnotationEl = g;
+    }
+    showPendingArrow(startX, startY, endX, endY) {
+      const svg = document.getElementById("feedspace-overlay");
+      if (!svg) return;
+      this.removePendingAnnotation();
+      const x1 = startX;
+      const y1 = startY;
+      const x2 = endX;
+      const y2 = endY;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", String(x1));
+      line.setAttribute("y1", String(y1));
+      line.setAttribute("x2", String(x2));
+      line.setAttribute("y2", String(y2));
+      line.setAttribute("stroke", "#6366f1");
+      line.setAttribute("stroke-width", "2.5");
+      line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+      g.appendChild(line);
+      svg.appendChild(g);
+      this.pendingAnnotationEl = g;
+    }
+    removePendingAnnotation() {
+      if (this.pendingAnnotationEl && this.pendingAnnotationEl.parentNode) {
+        this.pendingAnnotationEl.parentNode.removeChild(this.pendingAnnotationEl);
+        this.pendingAnnotationEl = null;
+      }
     }
     cleanupDrawState() {
       this.isDrawing = false;
       this.drawStart = null;
       this.drawPoints = [];
       this.tempSvgEl = null;
+      if (this.dragLineEl && this.dragLineEl.parentNode) {
+        this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+      }
+      this.dragLineEl = null;
     }
-    async saveAnnotation(content, files, el, startDna, firstPoint, _points) {
+    async saveAnnotation(content, files, arg3, arg4, arg5, arg6, arg7) {
+      const isFreeFormArrow = typeof arg3 === "number";
+      if (isFreeFormArrow) {
+        const startX = arg3;
+        const startY = arg4;
+        const endX = arg5;
+        const endY = arg6;
+        const payload2 = {
+          projectId: this.config.projectId,
+          previewToken: this.config.token,
+          type: "arrow",
+          content,
+          pageUrl: this.config.pageUrl,
+          selector: null,
+          elementDna: null,
+          endElementDna: null,
+          coordinatesX: startX,
+          coordinatesY: startY,
+          coordinatesXEnd: endX,
+          coordinatesYEnd: endY,
+          width: null,
+          height: null,
+          drawData: null,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          device: this.deviceMode,
+          createdBy: this.clientName,
+          metaData: {
+            device: this.deviceMode,
+            elementTag: "",
+            elementText: "",
+            projectName: this.config.siteName || ""
+          }
+        };
+        await this._doSaveAnnotation(payload2, files);
+        return;
+      }
+      const el = arg3;
+      const startDna = arg4;
+      const firstPoint = arg5;
+      const savedToolType = arg7 || this.currentTool;
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
@@ -2384,7 +2670,7 @@
       const payload = {
         projectId: this.config.projectId,
         previewToken: this.config.token,
-        type: "pin",
+        type: savedToolType,
         content,
         pageUrl: this.config.pageUrl,
         selector: startDna.selector,
@@ -2402,6 +2688,9 @@
         createdBy: this.clientName,
         metaData
       };
+      await this._doSaveAnnotation(payload, files);
+    }
+    async _doSaveAnnotation(payload, files) {
       try {
         const media = [];
         if (files.length > 0) {
@@ -2423,7 +2712,9 @@
         if (media.length > 0) {
           payload.media = media;
         }
+        this.removePendingAnnotation();
         const annotation = await this.api.createAnnotation(payload);
+        annotation._num = this.annotations.length + 1;
         this.annotations.push(annotation);
         this.renderer.setAnnotations(this.annotations);
         this.updateBadge();
@@ -2492,6 +2783,20 @@
     async loadAnnotations() {
       try {
         this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+        this.annotations.forEach((a, i) => a._num = i + 1);
+        const hasParentIds = this.annotations.some((a) => a.parentId);
+        if (!hasParentIds) {
+          try {
+            const replyIds = await this.api.getReplyIds(this.config.pageUrl);
+            const replySet = new Set(replyIds);
+            for (const a of this.annotations) {
+              if (replySet.has(a.id)) a.parentId = a.id;
+            }
+          } catch {
+          }
+        }
+        this.annotations = this.annotations.filter((a) => !a.parentId);
+        this.annotations.forEach((a, i) => a._num = i + 1);
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
         await this.backfillProjectNames();
         this.renderer.setAnnotations(this.annotations);
@@ -2605,12 +2910,49 @@
     focusAnnotation(id) {
       this.renderer.setSelected(id);
       const annotation = this.annotations.find((a) => a.id === id);
-      if (annotation == null ? void 0 : annotation.elementDna) {
-        const el = findElement(annotation.elementDna);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
+      if (!(annotation == null ? void 0 : annotation.elementDna)) return;
+      const el = findElement(annotation.elementDna);
+      if (!el) {
+        this.showToast("Element not found on page");
+        return;
       }
+      const device = annotation.device || "desktop";
+      const widths = { desktop: "", tablet: "768px", mobile: "375px" };
+      document.body.style.maxWidth = widths[device] || "";
+      document.body.style.margin = device === "desktop" ? "" : "0 auto";
+      document.body.style.boxShadow = device === "desktop" ? "" : "0 0 60px rgba(0,0,0,0.3)";
+      document.body.style.minHeight = device === "desktop" ? "" : "100vh";
+      document.documentElement.style.background = device !== "desktop" ? "#e5e7eb" : "";
+      this.renderer.setDeviceFilter(device);
+      this.deviceMode = device;
+      let revealEl = el;
+      const semanticTags = ["H1", "H2", "H3", "H4", "H5", "H6", "P", "A", "BUTTON", "INPUT", "TEXTAREA", "IMG", "SPAN", "LABEL"];
+      if (annotation.elementDna.tag && semanticTags.includes(annotation.elementDna.tag.toUpperCase())) {
+        const inner = el.querySelector(annotation.elementDna.tag.toLowerCase());
+        if (inner) revealEl = inner;
+      }
+      window.dispatchEvent(new Event("resize"));
+      revealEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      const htmlEl = revealEl;
+      const prev = {
+        outline: htmlEl.style.outline,
+        outlineOffset: htmlEl.style.outlineOffset,
+        transition: htmlEl.style.transition
+      };
+      htmlEl.style.transition = "outline 0.15s";
+      htmlEl.style.outline = "2px dashed #6366f1";
+      htmlEl.style.outlineOffset = "4px";
+      let count = 0;
+      const pulse = setInterval(() => {
+        count++;
+        htmlEl.style.outline = count % 2 === 0 ? "2px dashed #6366f1" : "2px dashed transparent";
+        if (count >= 6) {
+          clearInterval(pulse);
+          htmlEl.style.outline = prev.outline;
+          htmlEl.style.outlineOffset = prev.outlineOffset;
+          htmlEl.style.transition = prev.transition;
+        }
+      }, 300);
     }
     updateBadge() {
       const badge = document.getElementById("feedspace-list-count");
@@ -2710,6 +3052,7 @@
     destroy() {
       var _a;
       this.clearHoverHighlight();
+      this.removePendingAnnotation();
       this.renderer.destroy();
       this.commentPanel.close();
       this.feedbackList.close();
@@ -2724,6 +3067,7 @@
       document.body.style.maxWidth = "";
       document.body.style.margin = "";
       document.body.style.boxShadow = "";
+      document.body.style.minHeight = "";
       document.documentElement.style.background = "";
     }
   };

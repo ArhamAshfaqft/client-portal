@@ -43,7 +43,7 @@ export class AnnotationEngine {
   private clientName: string = '';
 
   private isDrawing = false;
-  private drawStart: { x: number; y: number; el: Element; dna: ElementDNA } | null = null;
+  private drawStart: { x: number; y: number; el: Element | null; dna: ElementDNA | null } | null = null;
   private drawPoints: Array<{ x: number; y: number }> = [];
   private tempSvgEl: SVGElement | null = null;
   private isRecording = false;
@@ -57,6 +57,7 @@ export class AnnotationEngine {
   private hoverHighlightEl: HTMLElement | null = null;
   private arrowPreviewEl: SVGElement | null = null;
   private pendingAnnotationEl: SVGElement | null = null;
+  private dragLineEl: SVGElement | null = null;
 
   constructor(config: WidgetConfig, api: ApiClient) {
     this.config = config;
@@ -184,9 +185,10 @@ export class AnnotationEngine {
 
     this.toolbarRoot.querySelector('[data-action="list"]')?.addEventListener('click', () => {
       if (this.feedbackList.isOpen()) {
-        this.feedbackList.close();
-        return;
-      }
+          this.feedbackList.close();
+          this.renderer.setDeviceFilter(this.deviceMode);
+          return;
+        }
       this.feedbackList.open(this.annotations, {
         onSelectAnnotation: (id) => this.focusAnnotation(id),
         onFilterChange: (filter) => {
@@ -252,16 +254,18 @@ export class AnnotationEngine {
       body.style.maxWidth = '';
       body.style.margin = '';
       body.style.boxShadow = '';
+      body.style.minHeight = '';
     } else {
       const width = device === 'tablet' ? '768px' : '375px';
       body.style.maxWidth = width;
       body.style.margin = '0 auto';
       body.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.1)';
+      body.style.minHeight = '100vh';
     }
 
     document.documentElement.style.background = device !== 'desktop' ? '#e5e7eb' : '';
 
-    this.renderer.renderAll();
+    this.renderer.setDeviceFilter(device);
   }
 
   private attachDrawingListeners(): void {
@@ -282,27 +286,9 @@ export class AnnotationEngine {
     if (!target || target === document.body) return;
 
     if (this.currentTool === 'arrow') {
-      // Show a preview arrow pointing to the hovered element
-      const rect = target.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2 + window.scrollX;
-      const cy = rect.top + rect.height / 2 + window.scrollY;
-      const svg = document.getElementById('feedspace-overlay');
-      if (svg) {
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', String(cx - 80));
-        line.setAttribute('y1', String(cy - 80));
-        line.setAttribute('x2', String(cx));
-        line.setAttribute('y2', String(cy));
-        line.setAttribute('stroke', '#6366f1');
-        line.setAttribute('stroke-width', '2.5');
-        line.setAttribute('stroke-dasharray', '6,3');
-        line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
-        line.setAttribute('opacity', '0.6');
-        svg.appendChild(line);
-        this.arrowPreviewEl = line;
-      }
-      this.hoverHighlightEl = target;
-    } else if (this.currentTool === 'rect') {
+      return;
+    }
+    if (this.currentTool === 'rect') {
       target.classList.add('feedspace-hover-dashed');
       this.hoverHighlightEl = target;
     } else {
@@ -331,6 +317,12 @@ export class AnnotationEngine {
     e.preventDefault();
     this.isDrawing = true;
 
+    if (this.currentTool === 'arrow') {
+      // Free-form arrow: store absolute page coordinates only, no element snap
+      this.drawStart = { x: e.pageX, y: e.pageY, el: null, dna: null };
+      return;
+    }
+
     const el = closestTargetable(e.target as Element);
     const dna = getElementDNA(el);
     const rel = toRelative(el, e.pageX, e.pageY);
@@ -338,7 +330,7 @@ export class AnnotationEngine {
     this.drawStart = { x: e.pageX, y: e.pageY, el, dna };
     this.drawPoints = [{ x: rel.x, y: rel.y }];
 
-    if (this.currentTool === 'pin' || this.currentTool === 'arrow' || this.currentTool === 'rect') {
+    if (this.currentTool === 'pin' || this.currentTool === 'rect') {
       this.finishDrawing(el, dna, [{ x: rel.x, y: rel.y }]);
     }
   }
@@ -348,23 +340,45 @@ export class AnnotationEngine {
       this.updateHoverHighlight(e);
       return;
     }
+
+    // Draw preview line during arrow drag
+    if (this.currentTool === 'arrow') {
+      const overlay = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+      if (!overlay) return;
+      if (this.dragLineEl && this.dragLineEl.parentNode) {
+        this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+      }
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(this.drawStart.x));
+      line.setAttribute('y1', String(this.drawStart.y));
+      line.setAttribute('x2', String(e.pageX));
+      line.setAttribute('y2', String(e.pageY));
+      line.setAttribute('stroke', '#6366f1');
+      line.setAttribute('stroke-width', '2.5');
+      line.setAttribute('stroke-dasharray', '6,3');
+      line.setAttribute('opacity', '0.6');
+      overlay.appendChild(line);
+      this.dragLineEl = line;
+    }
   }
 
   private onMouseUp(e: MouseEvent): void {
     if (!this.isDrawing || !this.drawStart) return;
-    if (this.currentTool === 'pin') {
-      this.isDrawing = false;
-      return;
-    }
-
     this.isDrawing = false;
 
-    const overlay = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
-    if (overlay) this.removeTempPreview(overlay);
+    // Remove drag preview line
+    if (this.dragLineEl && this.dragLineEl.parentNode) {
+      this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+      this.dragLineEl = null;
+    }
 
-    const { el, dna } = this.drawStart;
-    this.finishDrawing(el, dna, this.drawPoints.length > 1 ? this.drawPoints : 
-      [{ x: 50, y: 50 }]);
+    if (this.currentTool === 'pin') return;
+
+    if (this.currentTool === 'arrow') {
+      // Free-form arrow: use absolute page coordinates, no element snap
+      this.finishDrawingArrow(this.drawStart.x, this.drawStart.y, e.pageX, e.pageY);
+      return;
+    }
   }
 
   private removeTempPreview(overlay: SVGSVGElement): void {
@@ -376,16 +390,31 @@ export class AnnotationEngine {
 
   private finishDrawing(el: Element, startDna: ElementDNA, points: Array<{ x: number; y: number }>): void {
     const firstPoint = points[0];
-    const rel = toRelative(el, this.drawStart!.x, this.drawStart!.y);
-    const toolType = this.currentTool as 'pin' | 'arrow' | 'rect';
+    const toolType = this.currentTool as 'pin' | 'rect';
 
-    // Show pending annotation visual for arrow/rect so it stays visible
-    if (toolType === 'arrow' || toolType === 'rect') {
+    if (toolType === 'rect') {
       this.showPendingAnnotation(el, startDna);
     }
 
     this.commentPanel.open(this.drawStart!.x, this.drawStart!.y, null, {
       onSubmit: (content, files) => this.saveAnnotation(content, files, el, startDna, firstPoint, points, toolType),
+      onToggleRecording: () => this.toggleRecording(),
+      onDeleteRecording: () => this.deleteRecording(),
+      isRecording: () => this.isRecording,
+    }, () => {
+      this.removePendingAnnotation();
+    });
+
+    this.setTool('select');
+    this.cleanupDrawState();
+  }
+
+  private finishDrawingArrow(startX: number, startY: number, endX: number, endY: number): void {
+    // Show pending arrow from start to end using absolute coords
+    this.showPendingArrow(startX, startY, endX, endY);
+
+    this.commentPanel.open(startX, startY, null, {
+      onSubmit: (content, files) => this.saveAnnotation(content, files, startX, startY, endX, endY),
       onToggleRecording: () => this.toggleRecording(),
       onDeleteRecording: () => this.deleteRecording(),
       isRecording: () => this.isRecording,
@@ -406,37 +435,44 @@ export class AnnotationEngine {
     const scrollY = window.scrollY;
     const rect = el.getBoundingClientRect();
 
-    if (this.currentTool === 'arrow') {
-      const cx = rect.left + rect.width / 2 + scrollX;
-      const cy = rect.top + rect.height / 2 + scrollY;
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(cx - 80));
-      line.setAttribute('y1', String(cy - 80));
-      line.setAttribute('x2', String(cx));
-      line.setAttribute('y2', String(cy));
-      line.setAttribute('stroke', '#6366f1');
-      line.setAttribute('stroke-width', '2.5');
-      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
-      g.appendChild(line);
-      svg.appendChild(g);
-      this.pendingAnnotationEl = g;
-    } else if (this.currentTool === 'rect') {
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      box.setAttribute('x', String(rect.left + scrollX));
-      box.setAttribute('y', String(rect.top + scrollY));
-      box.setAttribute('width', String(rect.width));
-      box.setAttribute('height', String(rect.height));
-      box.setAttribute('fill', 'rgba(99,102,241,0.08)');
-      box.setAttribute('stroke', '#6366f1');
-      box.setAttribute('stroke-width', '2');
-      box.setAttribute('stroke-dasharray', '6,3');
-      box.setAttribute('rx', '4');
-      g.appendChild(box);
-      svg.appendChild(g);
-      this.pendingAnnotationEl = g;
-    }
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const box = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    box.setAttribute('x', String(rect.left + scrollX));
+    box.setAttribute('y', String(rect.top + scrollY));
+    box.setAttribute('width', String(rect.width));
+    box.setAttribute('height', String(rect.height));
+    box.setAttribute('fill', 'rgba(99,102,241,0.08)');
+    box.setAttribute('stroke', '#6366f1');
+    box.setAttribute('stroke-width', '2');
+    box.setAttribute('stroke-dasharray', '6,3');
+    box.setAttribute('rx', '4');
+    g.appendChild(box);
+    svg.appendChild(g);
+    this.pendingAnnotationEl = g;
+  }
+
+  private showPendingArrow(startX: number, startY: number, endX: number, endY: number): void {
+    const svg = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+    if (!svg) return;
+    this.removePendingAnnotation();
+
+    const x1 = startX;
+    const y1 = startY;
+    const x2 = endX;
+    const y2 = endY;
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', String(x1));
+    line.setAttribute('y1', String(y1));
+    line.setAttribute('x2', String(x2));
+    line.setAttribute('y2', String(y2));
+    line.setAttribute('stroke', '#6366f1');
+    line.setAttribute('stroke-width', '2.5');
+    line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+    g.appendChild(line);
+    svg.appendChild(g);
+    this.pendingAnnotationEl = g;
   }
 
   private removePendingAnnotation(): void {
@@ -451,6 +487,10 @@ export class AnnotationEngine {
     this.drawStart = null;
     this.drawPoints = [];
     this.tempSvgEl = null;
+    if (this.dragLineEl && this.dragLineEl.parentNode) {
+      this.dragLineEl.parentNode.removeChild(this.dragLineEl);
+    }
+    this.dragLineEl = null;
   }
 
   private async saveAnnotation(
@@ -460,8 +500,72 @@ export class AnnotationEngine {
     startDna: ElementDNA,
     firstPoint: { x: number; y: number },
     _points: Array<{ x: number; y: number }>,
-    toolType: 'pin' | 'arrow' | 'rect'
+    toolType: 'pin' | 'rect'
+  ): Promise<void>;
+  private async saveAnnotation(
+    content: string,
+    files: File[],
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number
+  ): Promise<void>;
+  private async saveAnnotation(
+    content: string,
+    files: File[],
+    arg3: any,
+    arg4: any,
+    arg5?: any,
+    arg6?: any,
+    arg7?: any
   ): Promise<void> {
+    // Detect overload: if arg3 is a number, it's the arrow overload (free-form)
+    const isFreeFormArrow = typeof arg3 === 'number';
+
+    if (isFreeFormArrow) {
+      const startX = arg3 as number;
+      const startY = arg4 as number;
+      const endX = arg5 as number;
+      const endY = arg6 as number;
+
+      const payload: CreateAnnotationPayload = {
+        projectId: this.config.projectId,
+        previewToken: this.config.token,
+        type: 'arrow',
+        content,
+        pageUrl: this.config.pageUrl,
+        selector: null,
+        elementDna: null,
+        endElementDna: null,
+        coordinatesX: startX,
+        coordinatesY: startY,
+        coordinatesXEnd: endX,
+        coordinatesYEnd: endY,
+        width: null,
+        height: null,
+        drawData: null,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        device: this.deviceMode,
+        createdBy: this.clientName,
+        metaData: {
+          device: this.deviceMode,
+          elementTag: '',
+          elementText: '',
+          projectName: this.config.siteName || '',
+        },
+      };
+
+      await this._doSaveAnnotation(payload, files);
+      return;
+    }
+
+    // Pin/rect overload
+    const el = arg3 as Element;
+    const startDna = arg4 as ElementDNA;
+    const firstPoint = arg5 as { x: number; y: number };
+    const savedToolType = (arg7 as 'pin' | 'rect') || this.currentTool as 'pin' | 'rect';
+
     const metaData: Record<string, unknown> = {
       device: this.deviceMode,
       elementTag: startDna.tag,
@@ -472,7 +576,7 @@ export class AnnotationEngine {
     const payload: CreateAnnotationPayload = {
       projectId: this.config.projectId,
       previewToken: this.config.token,
-      type: toolType,
+      type: savedToolType,
       content,
       pageUrl: this.config.pageUrl,
       selector: startDna.selector,
@@ -491,6 +595,10 @@ export class AnnotationEngine {
       metaData,
     };
 
+    await this._doSaveAnnotation(payload, files);
+  }
+
+  private async _doSaveAnnotation(payload: CreateAnnotationPayload, files: File[]): Promise<void> {
     try {
       const media: AnnotationMedia[] = [];
       if (files.length > 0) {
@@ -589,6 +697,22 @@ export class AnnotationEngine {
   private async loadAnnotations(): Promise<void> {
     try {
       this.annotations = await this.api.getAnnotations(this.config.pageUrl, this.config.projectId);
+      this.annotations.forEach((a, i) => a._num = i + 1);
+      // Filter out reply items (parentId set) — Vercel path already does this server-side,
+      // WP path needs a supplemental fetch to mark replies
+      const hasParentIds = this.annotations.some(a => a.parentId);
+      if (!hasParentIds) {
+        try {
+          const replyIds = await this.api.getReplyIds(this.config.pageUrl);
+          const replySet = new Set(replyIds);
+          for (const a of this.annotations) {
+            if (replySet.has(a.id)) a.parentId = a.id;  // mark so it gets filtered
+          }
+        } catch {
+          // non-critical; fall back to WP-only data
+        }
+      }
+      this.annotations = this.annotations.filter(a => !a.parentId);
       this.annotations.forEach((a, i) => a._num = i + 1);
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
       await this.backfillProjectNames();
@@ -722,7 +846,10 @@ export class AnnotationEngine {
     document.body.style.maxWidth = widths[device] || '';
     document.body.style.margin = device === 'desktop' ? '' : '0 auto';
     document.body.style.boxShadow = device === 'desktop' ? '' : '0 0 60px rgba(0,0,0,0.3)';
+    document.body.style.minHeight = device === 'desktop' ? '' : '100vh';
     document.documentElement.style.background = device !== 'desktop' ? '#e5e7eb' : '';
+    this.renderer.setDeviceFilter(device);
+    this.deviceMode = device as DeviceMode;
 
     // Find the specific semantic element within the widget
     let revealEl: Element = el;
@@ -884,6 +1011,7 @@ export class AnnotationEngine {
     document.body.style.maxWidth = '';
     document.body.style.margin = '';
     document.body.style.boxShadow = '';
+    document.body.style.minHeight = '';
     document.documentElement.style.background = '';
   }
 }

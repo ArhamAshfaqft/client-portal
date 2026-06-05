@@ -597,6 +597,15 @@ class FeedspaceConnector
             }
         }
 
+        // Migration: add parent_id column if missing
+        $piCol = $wpdb->get_row("SHOW COLUMNS FROM $annotationsTable LIKE 'parent_id'");
+        if (!$piCol) {
+            $wpdb->query("ALTER TABLE $annotationsTable ADD COLUMN parent_id VARCHAR(36) DEFAULT NULL AFTER annotation_id");
+            if (!$wpdb->last_error) {
+                error_log('[Feedspace] Added parent_id column to annotations table');
+            }
+        }
+
         $queueTable = $wpdb->prefix . 'feedspace_sync_queue';
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $queueTable));
         if ($exists !== $queueTable) {
@@ -729,8 +738,12 @@ class FeedspaceConnector
                 $replyLine = "\n\n--- Reply from " . ($data['createdBy'] ?? 'Team') . " ---\n" . ($data['content'] ?? '');
                 $wpdb->update($tableName, array('content' => $existing->content . $replyLine), array('annotation_id' => $data['parentMirrorId']));
                 self::logDebug('webhook_reply_stored', array('annotation_id' => $data['parentMirrorId'], 'reply' => substr($data['content'] ?? '', 0, 100)));
-                return new WP_REST_Response(array('ok' => true, 'updated' => 'reply'), 200);
             }
+            // Also mark the reply's own WP row (if it exists) as a reply so it gets filtered out
+            if (!empty($data['replyId'])) {
+                $wpdb->update($tableName, array('parent_id' => $data['parentId'] ?? ''), array('annotation_id' => $data['replyId']));
+            }
+            return new WP_REST_Response(array('ok' => true, 'updated' => 'reply'), 200);
         }
 
         self::logDebug('webhook_unknown', array('action' => $action, 'body' => json_encode($body)));
@@ -1230,20 +1243,21 @@ class FeedspaceConnector
         }
         $projectId = sanitize_text_field($request->get_param('projectId') ?? '');
 
+        $parentFilter = ' AND parent_id IS NULL';
         if ($pageUrl && $projectId) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s ORDER BY created_at ASC",
+                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s$parentFilter ORDER BY created_at DESC",
                 $pageUrl,
                 $projectId
             ));
         } elseif ($pageUrl) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE page_url = %s ORDER BY created_at ASC",
+                "SELECT * FROM $tableName WHERE page_url = %s$parentFilter ORDER BY created_at DESC",
                 $pageUrl
             ));
         } elseif ($projectId) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE project_id = %s ORDER BY created_at ASC",
+                "SELECT * FROM $tableName WHERE project_id = %s$parentFilter ORDER BY created_at DESC",
                 $projectId
             ));
         } else {
@@ -1317,6 +1331,7 @@ class FeedspaceConnector
             ));
             $annotations[] = array(
                 'id' => $row->annotation_id,
+                'parentId' => $row->parent_id ? (string)$row->parent_id : null,
                 'type' => $row->type,
                 'status' => $row->status,
                 'content' => $row->content,

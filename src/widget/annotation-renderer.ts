@@ -10,7 +10,7 @@ export class AnnotationRenderer {
   private annotations: Annotation[] = [];
   private callbacks: RendererCallbacks | null = null;
   private filter: FilterMode = 'all';
-  private deviceFilter: string = 'all';
+  private deviceFilter: string = 'desktop';
   private projectFilter: string = '';
   private selectedId: string | null = null;
 
@@ -101,10 +101,35 @@ export class AnnotationRenderer {
   }
 
   private renderOne(annotation: Annotation, index: number, scrollX: number, scrollY: number): void {
+    const num = annotation._num || index + 1;
+
+    // Free-form arrow: no element DNA needed, use absolute coordinates
+    if (annotation.type === 'arrow' && !annotation.elementDna) {
+      const startPos = { x: annotation.anchorXPct, y: annotation.anchorYPct };
+      const endPos = {
+        x: annotation.endAnchorXPct ?? startPos.x + 100,
+        y: annotation.endAnchorYPct ?? startPos.y + 50,
+      };
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', String(startPos.x));
+      line.setAttribute('y1', String(startPos.y));
+      line.setAttribute('x2', String(endPos.x));
+      line.setAttribute('y2', String(endPos.y));
+      line.setAttribute('stroke', '#6366f1');
+      line.setAttribute('stroke-width', '2.5');
+      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      g.appendChild(line);
+      const badge = this.createBadge(num, annotation.id, annotation.status, 'arrow');
+      badge.setAttribute('transform', `translate(${startPos.x - 10}, ${startPos.y - 10})`);
+      g.appendChild(badge);
+      g.style.pointerEvents = 'auto';
+      this.svg!.appendChild(g);
+      return;
+    }
+
     const el = annotation.elementDna ? findElement(annotation.elementDna) : null;
     if (!el) return;
-
-    const num = index + 1;
 
     if (annotation.type === 'rect') {
       const rect = el.getBoundingClientRect();
@@ -131,30 +156,37 @@ export class AnnotationRenderer {
       return;
     }
 
-    const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
-
+    // Element-snapped arrow (legacy, pre free-form)
     if (annotation.type === 'arrow') {
+      const startPos = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
+      let endPos: { x: number; y: number };
+      if (annotation.endElementDna) {
+        const endEl = findElement(annotation.endElementDna);
+        endPos = endEl
+          ? toAbsolute(endEl, annotation.endAnchorXPct ?? 50, annotation.endAnchorYPct ?? 50)
+          : { x: startPos.x + 100, y: startPos.y + 50 };
+      } else {
+        endPos = { x: startPos.x + 100, y: startPos.y + 50 };
+      }
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      const tailX = anchor.x - 80;
-      const tailY = anchor.y - 80;
-
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', String(tailX));
-      line.setAttribute('y1', String(tailY));
-      line.setAttribute('x2', String(anchor.x));
-      line.setAttribute('y2', String(anchor.y));
+      line.setAttribute('x1', String(startPos.x));
+      line.setAttribute('y1', String(startPos.y));
+      line.setAttribute('x2', String(endPos.x));
+      line.setAttribute('y2', String(endPos.y));
       line.setAttribute('stroke', '#6366f1');
       line.setAttribute('stroke-width', '2.5');
       line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
       g.appendChild(line);
-
       const badge = this.createBadge(num, annotation.id, annotation.status, 'arrow');
-      badge.setAttribute('transform', `translate(${tailX - 10}, ${tailY - 10})`);
+      badge.setAttribute('transform', `translate(${startPos.x - 10}, ${startPos.y - 10})`);
       g.appendChild(badge);
       g.style.pointerEvents = 'auto';
       this.svg!.appendChild(g);
       return;
     }
+
+    const anchor = toAbsolute(el, annotation.anchorXPct, annotation.anchorYPct);
 
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     const badge = this.createBadge(num, annotation.id, annotation.status);

@@ -55,6 +55,11 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
       return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
     },
 
+    getReplyIds: (pageUrl: string): Promise<string[]> => {
+      return vercelRequest<{ replyIds: string[] }>(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`)
+        .then(r => r.replyIds);
+    },
+
     createAnnotation: (payload: CreateAnnotationPayload): Promise<Annotation> => {
       if (useWp) {
         return wpRequest('POST', '/annotations', payload);
