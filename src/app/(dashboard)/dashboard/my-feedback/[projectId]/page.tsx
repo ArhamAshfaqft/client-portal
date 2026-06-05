@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Pin, MessageSquareText, Mic, Image, Square, ArrowUpRight, Pencil,
-  CheckCircle2, ArrowRight, Globe, Copy,
+  CheckCircle2, ArrowRight, Globe, Copy, RefreshCw,
   Trash2, Play, FileText, ChevronDown,
   ChevronRight, ExternalLink, Maximize2, X,
   ArrowLeft,
@@ -81,6 +81,7 @@ export default function SessionDetailPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pageFilter, setPageFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLink, setPreviewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -139,7 +140,7 @@ export default function SessionDetailPage() {
       );
       setLoading(false);
     });
-  }, [projectId, profile?.user_id, isDemo]);
+  }, [projectId, profile?.user_id, isDemo, refreshKey]);
 
   const pages = useMemo(() => {
     const p = new Set<string>();
@@ -202,6 +203,13 @@ export default function SessionDetailPage() {
           >
             <Copy className="w-3.5 h-3.5" />
             {copied ? "Copied" : "Copy Link"}
+          </button>
+          <button
+            onClick={() => setRefreshKey(k => k + 1)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
           </button>
           <Badge variant={project?.status === "active" ? "success" : project?.status === "completed" ? "info" : "default"} className="text-xs">{project?.status || "draft"}</Badge>
         </div>
