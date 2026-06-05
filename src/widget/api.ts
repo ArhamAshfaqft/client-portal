@@ -55,6 +55,11 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
       return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
     },
 
+    getStatuses: (ids: string[]): Promise<Record<string, string>> => {
+      return vercelRequest<{ statuses: Record<string, string> }>(`/widget/statuses?token=${encodeURIComponent(token)}&ids=${encodeURIComponent(ids.join(','))}`)
+        .then(r => r.statuses);
+    },
+
     getReplyIds: (pageUrl: string): Promise<string[]> => {
       return vercelRequest<{ replyIds: string[] }>(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`)
         .then(r => r.replyIds);

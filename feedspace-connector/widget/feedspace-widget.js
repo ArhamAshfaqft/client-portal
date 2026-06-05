@@ -991,6 +991,9 @@
         }
         return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
       },
+      getStatuses: (ids) => {
+        return vercelRequest(`/widget/statuses?token=${encodeURIComponent(token)}&ids=${encodeURIComponent(ids.join(","))}`).then((r) => r.statuses);
+      },
       getReplyIds: (pageUrl) => {
         return vercelRequest(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`).then((r) => r.replyIds);
       },
@@ -2788,6 +2791,16 @@
         }
         this.annotations = this.annotations.filter((a) => !a.parentId);
         this.annotations.forEach((a, i) => a._num = i + 1);
+        try {
+          const ids = this.annotations.map((a) => a.id);
+          if (ids.length > 0) {
+            const statuses = await this.api.getStatuses(ids);
+            for (const a of this.annotations) {
+              if (statuses[a.id]) a.status = statuses[a.id];
+            }
+          }
+        } catch {
+        }
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
         await this.backfillProjectNames();
         this.renderer.setAnnotations(this.annotations);

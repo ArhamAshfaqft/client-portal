@@ -714,6 +714,18 @@ export class AnnotationEngine {
       }
       this.annotations = this.annotations.filter(a => !a.parentId);
       this.annotations.forEach((a, i) => a._num = i + 1);
+      // Sync latest statuses from Vercel (overrides WP local statuses)
+      try {
+        const ids = this.annotations.map(a => a.id);
+        if (ids.length > 0) {
+          const statuses = await this.api.getStatuses(ids);
+          for (const a of this.annotations) {
+            if (statuses[a.id]) a.status = statuses[a.id] as typeof a.status;
+          }
+        }
+      } catch {
+        // non-critical; WP local status is the fallback
+      }
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
       await this.backfillProjectNames();
       this.renderer.setAnnotations(this.annotations);
