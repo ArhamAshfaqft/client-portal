@@ -56,11 +56,9 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
     },
 
     getStatuses: (ids: string[]): Promise<Record<string, string>> => {
-      let qs = '';
+      let qs = `&token=${encodeURIComponent(token)}`;
       if (useWp && wpApiKey) {
-        qs = `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
-      } else {
-        qs = `&token=${encodeURIComponent(token)}`;
+        qs += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
       }
       const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}${qs}`;
       const fullUrl = `${baseUrl.replace(/\/+$/, '')}/api${fullPath}`;

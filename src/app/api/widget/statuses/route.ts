@@ -63,25 +63,25 @@ export async function GET(request: Request) {
         { status: 404, headers: corsHeaders() }
       );
     }
-    // Get the first project for this site (or any project)
-    const { data: proj } = await sb
-      .from("projects")
-      .select("id")
-      .eq("site_id", site.id)
-      .limit(1)
-      .maybeSingle();
-    projectId = proj?.id || null;
+    // Don't filter by project — the IDs themselves are scoped to the site's projects
+    projectId = '__any__';
   }
 
-  if (!projectId) {
-    return NextResponse.json({ statuses: {} }, { headers: corsHeaders() });
+  let data;
+  if (projectId === '__any__') {
+    const { data: items } = await sb
+      .from("feedback_items")
+      .select("id, status")
+      .in("id", ids);
+    data = items;
+  } else if (projectId) {
+    const { data: items } = await sb
+      .from("feedback_items")
+      .select("id, status")
+      .eq("project_id", projectId)
+      .in("id", ids);
+    data = items;
   }
-
-  const { data } = await sb
-    .from("feedback_items")
-    .select("id, status")
-    .eq("project_id", projectId)
-    .in("id", ids);
 
   const statuses: Record<string, string> = {};
   if (data) {
