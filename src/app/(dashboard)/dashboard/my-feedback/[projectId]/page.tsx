@@ -12,7 +12,7 @@ import {
   CheckCircle2, ArrowRight, Globe, Copy, RefreshCw,
   Trash2, Play, FileText, ChevronDown,
   ChevronRight, ExternalLink, Maximize2, X,
-  ArrowLeft,
+  ArrowLeft, Monitor, Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import type { FeedbackStatus } from "@/types";
@@ -375,11 +375,13 @@ export default function SessionDetailPage() {
                       </span>
                       {item.device && (
                         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-accent px-2.5 py-1 rounded-lg border border-border">
-                          🖥 {item.device.charAt(0).toUpperCase() + item.device.slice(1)}
+                          <Monitor className="w-3 h-3" />
+                          {item.device.charAt(0).toUpperCase() + item.device.slice(1)}
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-accent px-2.5 py-1 rounded-lg border border-border">
-                        📅 {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        <Calendar className="w-3 h-3" />
+                        {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                     </div>
                     {action && (
