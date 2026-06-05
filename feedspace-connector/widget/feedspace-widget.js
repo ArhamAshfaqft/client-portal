@@ -1855,10 +1855,14 @@
             b.classList.remove("active");
             b.style.background = "transparent";
             b.style.color = "#64748b";
+            const cnt2 = b.querySelector(".fs-df-count");
+            if (cnt2) cnt2.style.background = "#f1f5f9";
           });
           btn.classList.add("active");
           btn.style.background = "#2563eb";
           btn.style.color = "#fff";
+          const cnt = btn.querySelector(".fs-df-count");
+          if (cnt) cnt.style.background = "rgba(255,255,255,0.2)";
           this.currentDeviceFilter = btn.dataset.device || "desktop";
           (_a = this.callbacks) == null ? void 0 : _a.onDeviceFilterChange(this.currentDeviceFilter);
           this.renderList();

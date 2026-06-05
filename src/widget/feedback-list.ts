@@ -289,10 +289,14 @@ export class FeedbackListPanel {
           b.classList.remove('active');
           b.style.background = 'transparent';
           b.style.color = '#64748b';
+          const cnt = b.querySelector('.fs-df-count') as HTMLElement | null;
+          if (cnt) cnt.style.background = '#f1f5f9';
         });
         btn.classList.add('active');
         btn.style.background = '#2563eb';
         btn.style.color = '#fff';
+        const cnt = btn.querySelector('.fs-df-count') as HTMLElement | null;
+        if (cnt) cnt.style.background = 'rgba(255,255,255,0.2)';
         this.currentDeviceFilter = btn.dataset.device || 'desktop';
         this.callbacks?.onDeviceFilterChange(this.currentDeviceFilter);
         this.renderList();
