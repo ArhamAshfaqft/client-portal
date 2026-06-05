@@ -289,32 +289,25 @@ export default function SessionDetailPage() {
             const hasFiles = item.media.filter((m) => !isImage(m.file_type) && !isAudio(m.file_type));
 
             return (
-              <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{item.stableNum}</span>
-                    <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
-                    <Badge variant={statusVariants[item.status] || "default"} className="text-[10px] px-1.5 py-0">
-                      {item.status === "open" ? "pending" : item.status}
+              <Card key={item.id} className="hover:shadow-md transition-shadow rounded-xl">
+                <CardContent className="p-5">
+                  {/* Header: number + name | status */}
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 text-sm font-bold">{item.stableNum}</span>
+                      <span className="text-lg font-semibold text-foreground">{item.created_by || "Anonymous"}</span>
+                    </div>
+                    <Badge variant={statusVariants[item.status] || "default"} className="text-xs px-3 py-1 rounded-full font-semibold">
+                      {item.status === "open" ? "Pending" : item.status === "resolved" ? "Resolved" : item.status}
                     </Badge>
-                    {item.device && (
-                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border border-border rounded px-1.5 py-0">
-                        {item.device}
-                      </span>
-                    )}
                   </div>
 
-                  <p className="text-xs text-foreground font-medium mb-0.5">{item.created_by || "Anonymous"}</p>
-                  <p className="text-[10px] text-muted-foreground mb-1.5">
-                    {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </p>
-
-                  <p className="text-sm text-foreground mb-1.5">{item.content}</p>
+                  {/* Content */}
+                  <p className="text-sm text-foreground leading-relaxed mb-4">{item.content}</p>
 
                   {/* Images */}
                   {hasImages.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-1.5">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {hasImages.map((m) => (
                         <div key={m.id} className="relative group">
                           <div
@@ -336,7 +329,7 @@ export default function SessionDetailPage() {
 
                   {/* Audio */}
                   {hasAudio.length > 0 && hasAudio.map((m) => (
-                    <div key={m.id} className="flex items-center gap-2 p-2 bg-accent rounded-lg mb-1.5">
+                    <div key={m.id} className="flex items-center gap-2 p-2 bg-accent rounded-lg mb-4">
                       <Mic className="w-4 h-4 text-primary flex-shrink-0" />
                       <span className="text-xs text-muted-foreground flex-1 truncate">{m.file_name || "Voice Note"}</span>
                       <audio controls className="h-8 max-w-[180px]" preload="none">
@@ -347,7 +340,7 @@ export default function SessionDetailPage() {
 
                   {/* Files */}
                   {hasFiles.length > 0 && (
-                    <div className="space-y-1 mb-1.5">
+                    <div className="space-y-1 mb-4">
                       {hasFiles.map((m) => (
                         <a
                           key={m.id}
@@ -365,26 +358,40 @@ export default function SessionDetailPage() {
                     </div>
                   )}
 
-                  {/* Page URL */}
+                  {/* URL */}
                   {item.page_url && (
-                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                      <Globe className="w-3 h-3" />
-                      {item.page_url}
-                    </p>
+                    <a href={item.page_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-4">
+                      <Globe className="w-4 h-4" />
+                      {item.page_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </a>
                   )}
 
-                  {/* Action */}
-                  {action && (
-                    <div className="flex justify-end">
+                  {/* Bottom meta: tags | action */}
+                  <div className="flex items-center justify-between border-t border-border pt-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-accent px-2.5 py-1 rounded-lg border border-border">
+                        <TypeIcon className="w-3 h-3" />
+                        {typeLabels[item.type] || item.type}
+                      </span>
+                      {item.device && (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-accent px-2.5 py-1 rounded-lg border border-border">
+                          🖥 {item.device.charAt(0).toUpperCase() + item.device.slice(1)}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-accent px-2.5 py-1 rounded-lg border border-border">
+                        📅 {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                    {action && (
                       <button
                         onClick={() => handleStatus(item.id, action.next)}
-                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                        className="flex items-center gap-1.5 text-sm font-semibold text-white bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg transition-colors"
                       >
-                        <ActionIcon className="w-3.5 h-3.5" />
+                        <ActionIcon className="w-4 h-4" />
                         {action.label}
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );
