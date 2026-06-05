@@ -363,6 +363,17 @@ export default function SessionDetailPage() {
                       {item.page_url}
                     </p>
                   )}
+
+                  {/* Action */}
+                  {action && (
+                    <button
+                      onClick={() => handleStatus(item.id, action.next)}
+                      className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <ActionIcon className="w-3.5 h-3.5" />
+                      {action.label}
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             );
