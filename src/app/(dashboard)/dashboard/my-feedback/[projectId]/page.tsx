@@ -66,6 +66,7 @@ interface FeedbackWithMedia {
   created_by: string | null;
   created_at: string;
   page_url: string;
+  device: string | null;
   media: { id: string; file_url: string; file_type: string; file_name: string; file_size: number }[];
 }
 
@@ -96,7 +97,7 @@ export default function SessionDetailPage() {
       (() => {
         let q = supabase
           .from("feedback_items")
-          .select("id, type, content, status, created_by, created_at, page_url, parent_id")
+          .select("id, type, content, status, created_by, created_at, page_url, parent_id, device")
           .eq("project_id", projectId)
           .is("parent_id", null)
           .order("created_at", { ascending: true });
@@ -123,7 +124,7 @@ export default function SessionDetailPage() {
       }
 
       setFeedback(
-        items.map((i: any, idx: number) => ({
+        items.map((i: any) => ({
           id: i.id,
           type: i.type,
           content: i.content,
@@ -131,8 +132,8 @@ export default function SessionDetailPage() {
           created_by: i.created_by,
           created_at: i.created_at,
           page_url: i.page_url || "",
+          device: i.device || null,
           media: mediaMap[i.id] || [],
-          _num: items.length - idx,
         }))
       );
       setLoading(false);
@@ -278,6 +279,11 @@ export default function SessionDetailPage() {
                         <Badge variant={statusVariants[item.status] || "default"} className="text-[10px] px-1.5 py-0">
                           {item.status === "open" ? "pending" : item.status}
                         </Badge>
+                        {item.device && (
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border border-border rounded px-1.5 py-0">
+                            {item.device}
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-sm text-foreground">{item.content}</p>
