@@ -99,7 +99,7 @@ export default function SessionDetailPage() {
           .select("id, type, content, status, created_by, created_at, page_url, parent_id")
           .eq("project_id", projectId)
           .is("parent_id", null)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: true });
         if (!isOwner) q = q.eq("assigned_to", profile?.user_id);
         return q;
       })(),

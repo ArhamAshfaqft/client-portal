@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     .eq("project_id", link.project_id)
     .eq("page_url", pageUrl)
     .is("parent_id", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (error) {
     return NextResponse.json(

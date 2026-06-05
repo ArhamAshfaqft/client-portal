@@ -1246,18 +1246,18 @@ class FeedspaceConnector
         $parentFilter = ' AND parent_id IS NULL';
         if ($pageUrl && $projectId) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s$parentFilter ORDER BY created_at DESC",
+                "SELECT * FROM $tableName WHERE page_url = %s AND project_id = %s$parentFilter ORDER BY created_at ASC",
                 $pageUrl,
                 $projectId
             ));
         } elseif ($pageUrl) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE page_url = %s$parentFilter ORDER BY created_at DESC",
+                "SELECT * FROM $tableName WHERE page_url = %s$parentFilter ORDER BY created_at ASC",
                 $pageUrl
             ));
         } elseif ($projectId) {
             $results = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM $tableName WHERE project_id = %s$parentFilter ORDER BY created_at DESC",
+                "SELECT * FROM $tableName WHERE project_id = %s$parentFilter ORDER BY created_at ASC",
                 $projectId
             ));
         } else {
