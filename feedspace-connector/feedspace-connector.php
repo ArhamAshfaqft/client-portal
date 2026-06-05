@@ -28,6 +28,7 @@ class FeedspaceConnector
 
     private function __construct()
     {
+        add_filter('rest_allowed_cors_headers', function($headers) { $headers[] = 'X-Feedspace-Key'; return $headers; });
         add_action('rest_api_init', array($this, 'registerRoutes'));
         add_action('template_redirect', array($this, 'maybeInitPreview'));
         add_filter('upload_mimes', array($this, 'allowAdditionalMimeTypes'));
