@@ -33,7 +33,7 @@ function initWidget(config: WidgetConfig): AnnotationEngine {
     } catch { /* leave as-is if not a valid URL */ }
   }
 
-  const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
+  const api = createApiClient(config.apiUrl, config.token, config.projectId, config.wpApiUrl, config.wpApiKey);
   dbg('API client created');
 
   const engine = new AnnotationEngine(config, api);

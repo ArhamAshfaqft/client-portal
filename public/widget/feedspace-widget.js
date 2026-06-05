@@ -949,7 +949,7 @@
   }
 
   // src/widget/api.ts
-  function createApiClient(baseUrl, token, wpApiUrl, wpApiKey) {
+  function createApiClient(baseUrl, token, projectId, wpApiUrl, wpApiKey) {
     async function vercelRequest(path, options = {}) {
       const url = `${baseUrl.replace(/\/+$/, "")}/api${path}`;
       const res = await fetch(url, {
@@ -985,17 +985,19 @@
         method: "POST",
         body: JSON.stringify({ token })
       }),
-      getAnnotations: (pageUrl, projectId) => {
+      getAnnotations: (pageUrl, projectId2) => {
         if (useWp) {
-          return wpRequest("GET", `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId)}`);
+          return wpRequest("GET", `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId2)}`);
         }
         return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
       },
       getStatuses: (ids) => {
         var _a;
-        let qs = `&token=${encodeURIComponent(token)}`;
+        let qs = `&projectId=${encodeURIComponent(projectId)}`;
         if (useWp && wpApiKey) {
           qs += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+        } else {
+          qs += `&token=${encodeURIComponent(token)}`;
         }
         const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(","))}${qs}`;
         const fullUrl = `${baseUrl.replace(/\/+$/, "")}/api${fullPath}`;
@@ -3114,7 +3116,7 @@
       } catch {
       }
     }
-    const api = createApiClient(config.apiUrl, config.token, config.wpApiUrl, config.wpApiKey);
+    const api = createApiClient(config.apiUrl, config.token, config.projectId, config.wpApiUrl, config.wpApiKey);
     dbg2("API client created");
     const engine = new AnnotationEngine(config, api);
     dbg2("AnnotationEngine instance created");

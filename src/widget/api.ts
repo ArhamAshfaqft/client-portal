@@ -7,7 +7,7 @@ export interface VerifyResult {
   siteName?: string;
 }
 
-export function createApiClient(baseUrl: string, token: string, wpApiUrl?: string, wpApiKey?: string) {
+export function createApiClient(baseUrl: string, token: string, projectId: string, wpApiUrl?: string, wpApiKey?: string) {
   async function vercelRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${baseUrl.replace(/\/+$/, '')}/api${path}`;
     const res = await fetch(url, {
@@ -56,9 +56,11 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
     },
 
     getStatuses: (ids: string[]): Promise<Record<string, string>> => {
-      let qs = `&token=${encodeURIComponent(token)}`;
+      let qs = `&projectId=${encodeURIComponent(projectId)}`;
       if (useWp && wpApiKey) {
         qs += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+      } else {
+        qs += `&token=${encodeURIComponent(token)}`;
       }
       const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}${qs}`;
       const fullUrl = `${baseUrl.replace(/\/+$/, '')}/api${fullPath}`;
