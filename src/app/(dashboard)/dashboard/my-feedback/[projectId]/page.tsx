@@ -35,7 +35,7 @@ const statusVariants: Record<string, "warning" | "info" | "success" | "default">
 };
 
 const statusActions: Record<string, { next: FeedbackStatus; label: string; icon: typeof Play }> = {
-  open: { next: "resolved" as FeedbackStatus, label: "Resolve", icon: CheckCircle2 },
+  open: { next: "resolved" as FeedbackStatus, label: "Mark as Resolved", icon: CheckCircle2 },
   resolved: { next: "open" as FeedbackStatus, label: "Reopen", icon: ArrowRight },
 };
 
@@ -366,13 +366,15 @@ export default function SessionDetailPage() {
 
                   {/* Action */}
                   {action && (
-                    <button
-                      onClick={() => handleStatus(item.id, action.next)}
-                      className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      <ActionIcon className="w-3.5 h-3.5" />
-                      {action.label}
-                    </button>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleStatus(item.id, action.next)}
+                        className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <ActionIcon className="w-3.5 h-3.5" />
+                        {action.label}
+                      </button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
