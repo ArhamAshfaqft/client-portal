@@ -59,7 +59,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if ((user || isDemo) && isPublicPath) {
+  // Don't redirect API requests — they need to reach their handlers regardless of auth
+  if ((user || isDemo) && isPublicPath && !request.nextUrl.pathname.startsWith("/api/widget/")) {
     const dashUrl = request.nextUrl.clone();
     dashUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashUrl);
