@@ -56,7 +56,13 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
     },
 
     getStatuses: (ids: string[]): Promise<Record<string, string>> => {
-      return vercelRequest<{ statuses: Record<string, string> }>(`/widget/statuses?token=${encodeURIComponent(token)}&ids=${encodeURIComponent(ids.join(','))}`)
+      let url = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}`;
+      if (useWp && wpApiKey) {
+        url += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+      } else {
+        url += `&token=${encodeURIComponent(token)}`;
+      }
+      return vercelRequest<{ statuses: Record<string, string> }>(url)
         .then(r => r.statuses);
     },
 

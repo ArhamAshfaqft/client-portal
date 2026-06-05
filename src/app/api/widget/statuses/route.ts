@@ -17,10 +17,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token") || "";
   const idsParam = searchParams.get("ids") || "";
+  const wpApiKey = searchParams.get("wpApiKey") || "";
 
-  if (!token || !idsParam) {
+  if ((!token && !wpApiKey) || !idsParam) {
     return NextResponse.json(
-      { error: "Missing token or ids" },
+      { error: "Missing token/wpApiKey or ids" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -34,23 +35,52 @@ export async function GET(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-  const { data: link } = await sb
-    .from("preview_links")
-    .select("project_id")
-    .eq("token", token)
-    .single();
 
-  if (!link) {
-    return NextResponse.json(
-      { error: "Invalid token" },
-      { status: 404, headers: corsHeaders() }
-    );
+  // Auth: verify token (preview link) or wpApiKey (WP site)
+  let projectId: string | null = null;
+  if (token) {
+    const { data: link } = await sb
+      .from("preview_links")
+      .select("project_id")
+      .eq("token", token)
+      .single();
+    if (!link) {
+      return NextResponse.json(
+        { error: "Invalid token" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+    projectId = link.project_id;
+  } else if (wpApiKey) {
+    const { data: site } = await sb
+      .from("sites")
+      .select("id")
+      .eq("wp_api_key", wpApiKey)
+      .single();
+    if (!site) {
+      return NextResponse.json(
+        { error: "Invalid wpApiKey" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+    // Get the first project for this site (or any project)
+    const { data: proj } = await sb
+      .from("projects")
+      .select("id")
+      .eq("site_id", site.id)
+      .limit(1)
+      .maybeSingle();
+    projectId = proj?.id || null;
+  }
+
+  if (!projectId) {
+    return NextResponse.json({ statuses: {} }, { headers: corsHeaders() });
   }
 
   const { data } = await sb
     .from("feedback_items")
     .select("id, status")
-    .eq("project_id", link.project_id)
+    .eq("project_id", projectId)
     .in("id", ids);
 
   const statuses: Record<string, string> = {};

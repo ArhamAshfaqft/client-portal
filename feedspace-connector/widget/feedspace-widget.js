@@ -992,7 +992,13 @@
         return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
       },
       getStatuses: (ids) => {
-        return vercelRequest(`/widget/statuses?token=${encodeURIComponent(token)}&ids=${encodeURIComponent(ids.join(","))}`).then((r) => r.statuses);
+        let url = `/widget/statuses?ids=${encodeURIComponent(ids.join(","))}`;
+        if (useWp && wpApiKey) {
+          url += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+        } else {
+          url += `&token=${encodeURIComponent(token)}`;
+        }
+        return vercelRequest(url).then((r) => r.statuses);
       },
       getReplyIds: (pageUrl) => {
         return vercelRequest(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`).then((r) => r.replyIds);
