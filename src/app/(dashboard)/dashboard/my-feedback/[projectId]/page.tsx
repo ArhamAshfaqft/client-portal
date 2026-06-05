@@ -94,7 +94,7 @@ export default function SessionDetailPage() {
     const now = new Date().toISOString();
 
     Promise.all([
-      supabase.from("projects").select("*, site:site_id(name)").eq("id", projectId).single(),
+      supabase.from("projects").select("*, site:site_id(name, url, wp_api_key)").eq("id", projectId).single(),
       supabase.from("preview_links").select("target_url").eq("project_id", projectId).eq("is_active", true).or(`expires_at.is.null,expires_at.gt.${now}`).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       (() => {
         let q = supabase
@@ -168,6 +168,15 @@ export default function SessionDetailPage() {
     setFeedback((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)));
     const supabase = createClient();
     supabase.from("feedback_items").update({ status: newStatus }).eq("id", id).then(() => {}, () => {});
+    // Also push to WordPress directly (browser can reach .local)
+    const site = (project as any)?.site;
+    if (site?.url && site?.wp_api_key) {
+      fetch(`${site.url.replace(/\/$/, '')}/wp-json/feedspace/v1/webhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Feedspace-Key': site.wp_api_key },
+        body: JSON.stringify({ action: 'update_status', data: { id, status: newStatus } }),
+      }).catch(() => {});
+    }
   };
 
   const handleDelete = async (id: string) => {
