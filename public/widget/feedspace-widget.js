@@ -992,13 +992,23 @@
         return vercelRequest(`/widget/annotations?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`);
       },
       getStatuses: (ids) => {
-        let url = `/widget/statuses?ids=${encodeURIComponent(ids.join(","))}`;
+        var _a;
+        let qs = "";
         if (useWp && wpApiKey) {
-          url += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+          qs = `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
         } else {
-          url += `&token=${encodeURIComponent(token)}`;
+          qs = `&token=${encodeURIComponent(token)}`;
         }
-        return vercelRequest(url).then((r) => r.statuses);
+        const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(","))}${qs}`;
+        const fullUrl = `${baseUrl.replace(/\/+$/, "")}/api${fullPath}`;
+        if ((_a = window.__feedspaceDebug) == null ? void 0 : _a.push) {
+          window.__feedspaceDebug.push({ msg: "getStatuses URL", data: fullUrl.replace(wpApiKey || "", "***"), time: Date.now() });
+        }
+        console.log("[Feedspace] Fetching statuses from", fullUrl.replace(wpApiKey || "", "***"));
+        return vercelRequest(fullPath).then((r) => {
+          console.log("[Feedspace] Statuses response keys:", Object.keys(r.statuses).length);
+          return r.statuses;
+        });
       },
       getReplyIds: (pageUrl) => {
         return vercelRequest(`/widget/reply-ids?token=${encodeURIComponent(token)}&pageUrl=${encodeURIComponent(pageUrl)}`).then((r) => r.replyIds);
@@ -2799,13 +2809,19 @@
         this.annotations.forEach((a, i) => a._num = i + 1);
         try {
           const ids = this.annotations.map((a) => a.id);
+          dbg("statusSync: fetching statuses for", { count: ids.length, firstId: ids[0], wpMode: !!this.config.wpApiUrl });
           if (ids.length > 0) {
             const statuses = await this.api.getStatuses(ids);
+            const changed = Object.keys(statuses).filter((k) => statuses[k]);
+            dbg("statusSync: received", { count: changed.length, statuses: JSON.stringify(statuses) });
             for (const a of this.annotations) {
               if (statuses[a.id]) a.status = statuses[a.id];
             }
+            if (changed.length > 0) this.renderer.setAnnotations(this.annotations);
           }
-        } catch {
+        } catch (err) {
+          console.warn("[Feedspace] statusSync failed:", err);
+          dbg("statusSync: FAILED", typeof err === "object" ? String((err == null ? void 0 : err.message) || err) : String(err));
         }
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
         await this.backfillProjectNames();

@@ -717,14 +717,19 @@ export class AnnotationEngine {
       // Sync latest statuses from Vercel (overrides WP local statuses)
       try {
         const ids = this.annotations.map(a => a.id);
+        dbg('statusSync: fetching statuses for', { count: ids.length, firstId: ids[0], wpMode: !!this.config.wpApiUrl });
         if (ids.length > 0) {
           const statuses = await this.api.getStatuses(ids);
+          const changed = Object.keys(statuses).filter(k => statuses[k]);
+          dbg('statusSync: received', { count: changed.length, statuses: JSON.stringify(statuses) });
           for (const a of this.annotations) {
             if (statuses[a.id]) a.status = statuses[a.id] as typeof a.status;
           }
+          if (changed.length > 0) this.renderer.setAnnotations(this.annotations);
         }
-      } catch {
-        // non-critical; WP local status is the fallback
+      } catch (err) {
+        console.warn('[Feedspace] statusSync failed:', err);
+        dbg('statusSync: FAILED', typeof err === 'object' ? String((err as any)?.message || err) : String(err));
       }
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
       await this.backfillProjectNames();

@@ -56,14 +56,23 @@ export function createApiClient(baseUrl: string, token: string, wpApiUrl?: strin
     },
 
     getStatuses: (ids: string[]): Promise<Record<string, string>> => {
-      let url = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}`;
+      let qs = '';
       if (useWp && wpApiKey) {
-        url += `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
+        qs = `&wpApiKey=${encodeURIComponent(wpApiKey)}`;
       } else {
-        url += `&token=${encodeURIComponent(token)}`;
+        qs = `&token=${encodeURIComponent(token)}`;
       }
-      return vercelRequest<{ statuses: Record<string, string> }>(url)
-        .then(r => r.statuses);
+      const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}${qs}`;
+      const fullUrl = `${baseUrl.replace(/\/+$/, '')}/api${fullPath}`;
+      if ((window as any).__feedspaceDebug?.push) {
+        (window as any).__feedspaceDebug.push({ msg: 'getStatuses URL', data: fullUrl.replace(wpApiKey || '', '***'), time: Date.now() });
+      }
+      console.log('[Feedspace] Fetching statuses from', fullUrl.replace(wpApiKey || '', '***'));
+      return vercelRequest<{ statuses: Record<string, string> }>(fullPath)
+        .then(r => {
+          console.log('[Feedspace] Statuses response keys:', Object.keys(r.statuses).length);
+          return r.statuses;
+        });
     },
 
     getReplyIds: (pageUrl: string): Promise<string[]> => {
