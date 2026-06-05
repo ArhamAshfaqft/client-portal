@@ -424,11 +424,22 @@ class FeedspaceConnector
                 $headers['X-Site-Token'] = $siteToken;
                 $headers['X-WP-API-Key'] = $wpApiKey;
             }
-            $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
-                'headers' => $headers,
-                'body' => json_encode($payload),
-                'timeout' => 15,
-            ));
+            if ($item->action === 'delete') {
+                $result = wp_remote_request(
+                    trailingslashit($vercelUrl) . 'api/widget/annotations/' . $item->annotation_id . '?token=' . urlencode($siteToken),
+                    array(
+                        'method' => 'DELETE',
+                        'headers' => $headers,
+                        'timeout' => 15,
+                    )
+                );
+            } else {
+                $result = wp_remote_post(trailingslashit($vercelUrl) . 'api/widget/annotations', array(
+                    'headers' => $headers,
+                    'body' => json_encode($payload),
+                    'timeout' => 15,
+                ));
+            }
 
             if (is_wp_error($result)) {
                 self::handleSyncFailure($item->id, $result->get_error_message(), $item->attempts, $item->max_attempts);
@@ -1421,6 +1432,13 @@ class FeedspaceConnector
         $id = $request->get_param('id');
 
         $wpdb->delete($tableName, array('annotation_id' => $id));
+
+        // Mirror delete to Vercel/Supabase
+        $vercelUrl = get_option('feedspace_api_url', '');
+        if ($vercelUrl) {
+            self::enqueueSync($id, array('id' => $id, 'action' => 'delete'), 'delete');
+            self::processSyncQueue();
+        }
 
         return new WP_REST_Response(array('deleted' => true), 200);
     }

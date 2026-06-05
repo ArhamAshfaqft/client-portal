@@ -186,7 +186,10 @@ export async function DELETE(
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
+  const siteToken = request.headers.get("X-Site-Token");
+  const wpApiKey = request.headers.get("X-WP-API-Key");
 
+  let authorized = false;
   if (token) {
     const supabase = anonClient();
     const { data: link } = await supabase
@@ -194,20 +197,39 @@ export async function DELETE(
       .select("project_id")
       .eq("token", token)
       .single();
+    if (link) authorized = true;
+  }
+  if (!authorized && siteToken && wpApiKey) {
+    const supabase = adminClient();
+    const { data: site } = await supabase
+      .from("sites")
+      .select("wp_api_key")
+      .eq("id", siteToken)
+      .eq("wp_connected", true)
+      .maybeSingle();
+    if (site && site.wp_api_key === wpApiKey) authorized = true;
+  }
 
-    if (!link) {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 403, headers: corsHeaders() }
-      );
-    }
+  if (!authorized) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 403, headers: corsHeaders() }
+    );
   }
 
   const supabase = adminClient();
+  let lookupId = id;
+  const { data: mirrorItem } = await supabase
+    .from("feedback_items")
+    .select("id")
+    .eq("mirror_id", id)
+    .maybeSingle();
+  if (mirrorItem) lookupId = mirrorItem.id;
+
   const { error } = await supabase
     .from("feedback_items")
     .delete()
-    .eq("id", id);
+    .eq("id", lookupId);
 
   if (error) {
     return NextResponse.json(
@@ -216,7 +238,7 @@ export async function DELETE(
     );
   }
 
-  notifySiteWebhook(id, "delete", { id });
+  notifySiteWebhook(lookupId, "delete", { id: lookupId });
 
   return NextResponse.json({ deleted: true }, { headers: corsHeaders() });
 }
