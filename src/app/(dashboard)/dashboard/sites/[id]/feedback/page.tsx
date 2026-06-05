@@ -435,53 +435,28 @@ export default function SiteFeedbackPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from("feedback_items")
-        .update({ status: nextStatus })
-        .eq("id", feedbackId);
-      if (error) throw error;
+      // Use the server-side API route which uses adminClient (service role)
+      // to bypass RLS — the browser supabase client's update was silently
+      // returning 0 rows when RLS blocked it.
+      const res = await fetch(`/api/widget/annotations/${feedbackId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Status update failed (${res.status})`);
+      }
+
       setFeedback((prev) =>
         prev.map((f) => (f.id === feedbackId ? { ...f, status: nextStatus } : f))
       );
-      const item = feedback.find((f) => f.id === feedbackId);
-      if (siteCreds?.wpRestUrl && siteCreds?.wpApiKey) {
-        notifyWPWebhook(siteCreds.wpRestUrl, siteCreds.wpApiKey, "update_status", { id: item?.mirror_id || feedbackId, status: nextStatus });
-      }
-      if (nextStatus === "resolved" && profile?.agency_id) {
-        // Notify assigned devs and owners
-        supabase
-          .from("site_members")
-          .select("user_id")
-          .eq("site_id", id)
-          .then(({ data: members }) => {
-            const userIds = (members || []).map((m) => m.user_id);
-            supabase
-              .from("profiles")
-              .select("user_id")
-              .eq("agency_id", profile.agency_id)
-              .eq("role", "owner")
-              .then(({ data: owners }) => {
-                if (owners) for (const o of owners) {
-                  if (!userIds.includes(o.user_id)) userIds.push(o.user_id);
-                }
-                if (userIds.length > 0) {
-                  supabase.from("notifications").insert(
-                    userIds.map((uid) => ({
-                      agency_id: profile.agency_id,
-                      user_id: uid,
-                      type: "resolved",
-                      title: "Feedback resolved",
-                      message: `"${item?.content?.substring(0, 80) || "Feedback"}" — Marked as resolved`,
-                      site_id: id,
-                      feedback_id: feedbackId,
-                    }))
-                  ).then(({ error }) => { if (error) console.error("Notify error:", error); });
-                }
-              });
-          });
-      }
+
+      // Webhook to WP is already handled server-side by the PATCH route
     } catch (err) {
       console.error("Failed to update status:", err);
+      // Re-fetch to show the real state
+      fetchFeedback();
     }
   };
 

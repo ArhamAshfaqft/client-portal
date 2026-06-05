@@ -164,25 +164,31 @@ export default function SessionDetailPage() {
     resolved: feedback.filter((f) => f.status === "resolved").length,
   }), [feedback]);
 
-  const handleStatus = (id: string, newStatus: FeedbackStatus) => {
+  const handleStatus = async (id: string, newStatus: FeedbackStatus) => {
     setFeedback((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)));
-    const supabase = createClient();
-    supabase.from("feedback_items").update({ status: newStatus }).eq("id", id).then(() => {}, () => {});
-    // Also push to WordPress directly (browser can reach .local)
-    const site = (project as any)?.site;
-    if (site?.url && site?.wp_api_key) {
-      fetch(`${site.url.replace(/\/$/, '')}/wp-json/feedspace/v1/webhook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Feedspace-Key': site.wp_api_key },
-        body: JSON.stringify({ action: 'update_status', data: { id, status: newStatus } }),
-      }).catch(() => {});
+    try {
+      const res = await fetch(`/api/widget/annotations/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        console.error("Status update failed:", res.status);
+        setRefreshKey((k) => k + 1); // re-fetch to show real state
+      }
+    } catch (err) {
+      console.error("Status update error:", err);
+      setRefreshKey((k) => k + 1);
     }
   };
 
   const handleDelete = async (id: string) => {
     setFeedback((prev) => prev.filter((f) => f.id !== id));
-    const supabase = createClient();
-    supabase.from("feedback_items").delete().eq("id", id).then(() => {}, () => {});
+    try {
+      await fetch(`/api/widget/annotations/${id}`, { method: "DELETE" });
+    } catch {
+      // best effort
+    }
   };
 
   const copyLink = () => {
