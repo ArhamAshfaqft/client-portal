@@ -80,6 +80,7 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pageFilter, setPageFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLink, setPreviewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -147,11 +148,14 @@ export default function SessionDetailPage() {
   }, [feedback]);
 
   const filtered = useMemo(() => {
-    let result = feedback;
+    let result = feedback.map((f, i) => ({ ...f, stableNum: i + 1 }));
     if (statusFilter !== "all") result = result.filter((f) => f.status === statusFilter);
     if (pageFilter !== "all") result = result.filter((f) => f.page_url === pageFilter);
+    if (sortOrder === 'newest') {
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
     return result;
-  }, [feedback, statusFilter, pageFilter]);
+  }, [feedback, statusFilter, pageFilter, sortOrder]);
 
   const counts = useMemo(() => ({
     total: feedback.length,
@@ -244,6 +248,21 @@ export default function SessionDetailPage() {
             </select>
           </>
         )}
+        <span className="w-px h-4 bg-border mx-1" />
+        {[
+          { key: 'newest' as const, label: 'Recent' },
+          { key: 'oldest' as const, label: 'Oldest' },
+        ].map((s) => (
+          <button
+            key={s.key}
+            onClick={() => setSortOrder(s.key)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              sortOrder === s.key ? 'bg-primary text-white' : 'bg-accent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
       </div>
 
       {/* Feedback list */}
@@ -253,7 +272,7 @@ export default function SessionDetailPage() {
         <Card><CardContent><div className="text-center py-12 text-sm text-muted-foreground">No feedback items</div></CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {filtered.map((item, idx) => {
+          {filtered.map((item) => {
             const TypeIcon = typeIcons[item.type] || MessageSquareText;
             const action = statusActions[item.status];
             const ActionIcon = action?.icon;
@@ -265,7 +284,7 @@ export default function SessionDetailPage() {
               <Card key={item.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="py-3 px-4">
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                    <span className="text-xs text-muted-foreground font-mono font-semibold">#{idx + 1}</span>
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">{item.stableNum}</span>
                     <TypeIcon className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{typeLabels[item.type] || item.type}</span>
                     <span className="text-xs font-medium text-foreground ml-1">{item.created_by || "Anonymous"}</span>
