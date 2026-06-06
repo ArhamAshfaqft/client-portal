@@ -67,6 +67,7 @@ interface FeedbackWithMedia {
   created_at: string;
   page_url: string;
   device: string | null;
+  mirror_id?: string | null;
   media: { id: string; file_url: string; file_type: string; file_name: string; file_size: number }[];
   replies?: { id: string; content: string; created_by?: string; createdBy?: string; created_at?: string; createdAt?: string }[];
 }
@@ -102,7 +103,7 @@ export default function SessionDetailPage() {
       (() => {
         let q = supabase
           .from("feedback_items")
-          .select("id, type, content, status, created_by, created_at, page_url, parent_id, device")
+          .select("id, type, content, status, created_by, created_at, page_url, parent_id, device, mirror_id")
           .eq("project_id", projectId)
           .is("parent_id", null)
           .order("created_at", { ascending: true });
@@ -138,6 +139,7 @@ export default function SessionDetailPage() {
           created_at: i.created_at,
           page_url: i.page_url || "",
           device: i.device || null,
+          mirror_id: i.mirror_id,
           media: mediaMap[i.id] || [],
         }))
       );
@@ -218,10 +220,11 @@ export default function SessionDetailPage() {
       // Notify WP if site creds available
       const site = (project as any)?.site;
       if (site?.url && site?.wp_api_key) {
+        const parentMirrorId = item.mirror_id || feedbackId;
         fetch(`${site.url.replace(/\/$/, '')}/wp-json/feedspace/v1/webhook`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
-          body: JSON.stringify({ action: "reply_added", data: { parentId: feedbackId, parentMirrorId: feedbackId, replyId: data.id, content: replyText.trim(), createdBy: profile?.full_name || "Anonymous", createdAt: data.created_at } }),
+          body: JSON.stringify({ action: "reply_added", data: { parentId: parentMirrorId, parentMirrorId, replyId: data.id, content: replyText.trim(), createdBy: profile?.full_name || "Anonymous", createdAt: data.created_at } }),
         }).catch(() => {});
       }
     } catch (err) {
