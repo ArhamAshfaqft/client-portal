@@ -190,7 +190,7 @@ export class AnnotationEngine {
           return;
         }
       this.feedbackList.open(this.annotations, {
-        onSelectAnnotation: (id) => this.focusAnnotation(id),
+        onSelectAnnotation: (id) => this.onAnnotationClick(id),
         onFilterChange: (filter) => {
           this.filterMode = filter;
           this.renderer.setFilter(filter);
@@ -804,6 +804,55 @@ export class AnnotationEngine {
 
     this.renderer.setSelected(id);
 
+    // Scroll & highlight the element if it has element DNA
+    if (annotation.elementDna) {
+      const el = findElement(annotation.elementDna);
+      if (el) {
+        // Auto-resize viewport to match original device
+        const device = annotation.device || 'desktop';
+        const widths: Record<string, string> = { desktop: '', tablet: '768px', mobile: '375px' };
+        document.body.style.maxWidth = widths[device] || '';
+        document.body.style.margin = device === 'desktop' ? '' : '0 auto';
+        document.body.style.boxShadow = device === 'desktop' ? '' : '0 0 60px rgba(0,0,0,0.3)';
+        document.body.style.minHeight = device === 'desktop' ? '' : '100vh';
+        document.documentElement.style.background = device !== 'desktop' ? '#e5e7eb' : '';
+        this.renderer.setDeviceFilter(device);
+        this.deviceMode = device as DeviceMode;
+
+        let revealEl: Element = el;
+        const semanticTags = ['H1','H2','H3','H4','H5','H6','P','A','BUTTON','INPUT','TEXTAREA','IMG','SPAN','LABEL'];
+        if (annotation.elementDna.tag && semanticTags.includes(annotation.elementDna.tag.toUpperCase())) {
+          const inner = el.querySelector(annotation.elementDna.tag.toLowerCase());
+          if (inner) revealEl = inner;
+        }
+
+        window.dispatchEvent(new Event('resize'));
+        revealEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const htmlEl = revealEl as HTMLElement;
+        const prev = {
+          outline: htmlEl.style.outline,
+          outlineOffset: htmlEl.style.outlineOffset,
+          transition: htmlEl.style.transition,
+        };
+        htmlEl.style.transition = 'outline 0.15s';
+        htmlEl.style.outline = '2px dashed #6366f1';
+        htmlEl.style.outlineOffset = '4px';
+
+        let count = 0;
+        const pulse = setInterval(() => {
+          count++;
+          htmlEl.style.outline = count % 2 === 0 ? '2px dashed #6366f1' : '2px dashed transparent';
+          if (count >= 6) {
+            clearInterval(pulse);
+            htmlEl.style.outline = prev.outline;
+            htmlEl.style.outlineOffset = prev.outlineOffset;
+            htmlEl.style.transition = prev.transition;
+          }
+        }, 300);
+      }
+    }
+
     // Compute popup anchor from pin position
     let px = window.innerWidth / 2, py = 100;
     if (annotation.elementDna) {
@@ -848,59 +897,6 @@ export class AnnotationEngine {
     }, () => {
       this.renderer.setSelected(null);
     });
-  }
-
-  private focusAnnotation(id: string): void {
-    this.renderer.setSelected(id);
-    const annotation = this.annotations.find((a) => a.id === id);
-    if (!annotation?.elementDna) return;
-    const el = findElement(annotation.elementDna);
-    if (!el) { this.showToast('Element not found on page'); return; }
-
-    // Auto-resize viewport to match original device
-    const device = annotation.device || 'desktop';
-    const widths: Record<string, string> = { desktop: '', tablet: '768px', mobile: '375px' };
-    document.body.style.maxWidth = widths[device] || '';
-    document.body.style.margin = device === 'desktop' ? '' : '0 auto';
-    document.body.style.boxShadow = device === 'desktop' ? '' : '0 0 60px rgba(0,0,0,0.3)';
-    document.body.style.minHeight = device === 'desktop' ? '' : '100vh';
-    document.documentElement.style.background = device !== 'desktop' ? '#e5e7eb' : '';
-    this.renderer.setDeviceFilter(device);
-    this.deviceMode = device as DeviceMode;
-
-    // Find the specific semantic element within the widget
-    let revealEl: Element = el;
-    const semanticTags = ['H1','H2','H3','H4','H5','H6','P','A','BUTTON','INPUT','TEXTAREA','IMG','SPAN','LABEL'];
-    if (annotation.elementDna.tag && semanticTags.includes(annotation.elementDna.tag.toUpperCase())) {
-      const inner = el.querySelector(annotation.elementDna.tag.toLowerCase());
-      if (inner) revealEl = inner;
-    }
-
-    window.dispatchEvent(new Event('resize'));
-    revealEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Flash dashed highlight on the specific element
-    const htmlEl = revealEl as HTMLElement;
-    const prev = {
-      outline: htmlEl.style.outline,
-      outlineOffset: htmlEl.style.outlineOffset,
-      transition: htmlEl.style.transition,
-    };
-    htmlEl.style.transition = 'outline 0.15s';
-    htmlEl.style.outline = '2px dashed #6366f1';
-    htmlEl.style.outlineOffset = '4px';
-
-    let count = 0;
-    const pulse = setInterval(() => {
-      count++;
-      htmlEl.style.outline = count % 2 === 0 ? '2px dashed #6366f1' : '2px dashed transparent';
-      if (count >= 6) {
-        clearInterval(pulse);
-        htmlEl.style.outline = prev.outline;
-        htmlEl.style.outlineOffset = prev.outlineOffset;
-        htmlEl.style.transition = prev.transition;
-      }
-    }, 300);
   }
 
   private updateBadge(): void {
