@@ -743,17 +743,30 @@ class FeedspaceConnector
         }
 
         if ($action === 'reply_added' && !empty($data['parentMirrorId'])) {
-            $existing = $wpdb->get_row($wpdb->prepare(
-                "SELECT content FROM $tableName WHERE annotation_id = %s", $data['parentMirrorId']
+            $replyExists = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM $tableName WHERE annotation_id = %s", $data['replyId'] ?? ''
             ));
-            if ($existing) {
-                $replyLine = "\n\n--- Reply from " . ($data['createdBy'] ?? 'Team') . " ---\n" . ($data['content'] ?? '');
-                $wpdb->update($tableName, array('content' => $existing->content . $replyLine), array('annotation_id' => $data['parentMirrorId']));
-                self::logDebug('webhook_reply_stored', array('annotation_id' => $data['parentMirrorId'], 'reply' => substr($data['content'] ?? '', 0, 100)));
-            }
-            // Also mark the reply's own WP row (if it exists) as a reply so it gets filtered out
-            if (!empty($data['replyId'])) {
-                $wpdb->update($tableName, array('parent_id' => $data['parentId'] ?? ''), array('annotation_id' => $data['replyId']));
+            if (!empty($data['replyId']) && !$replyExists) {
+                // Create the reply row so it appears in the widget's replies list
+                $parentRow = $wpdb->get_row($wpdb->prepare(
+                    "SELECT project_id, page_url, preview_token FROM $tableName WHERE annotation_id = %s", $data['parentMirrorId']
+                ));
+                $wpdb->insert($tableName, array(
+                    'annotation_id' => $data['replyId'],
+                    'parent_id'     => $data['parentId'] ?? $data['parentMirrorId'],
+                    'project_id'    => $parentRow->project_id ?? '',
+                    'type'          => 'comment',
+                    'content'       => sanitize_textarea_field($data['content'] ?? ''),
+                    'page_url'      => $parentRow->page_url ?? '',
+                    'device'        => $data['device'] ?? 'desktop',
+                    'preview_token' => $parentRow->preview_token ?? '',
+                    'status'        => 'open',
+                    'created_by'    => sanitize_text_field($data['createdBy'] ?? 'Team'),
+                    'created_at'    => $data['createdAt'] ?? current_time('mysql'),
+                ));
+                self::logDebug('webhook_reply_inserted', array('annotation_id' => $data['replyId'], 'parent_id' => $data['parentMirrorId']));
+            } elseif (!empty($data['replyId'])) {
+                $wpdb->update($tableName, array('parent_id' => $data['parentId'] ?? $data['parentMirrorId']), array('annotation_id' => $data['replyId']));
             }
             return new WP_REST_Response(array('ok' => true, 'updated' => 'reply'), 200);
         }
@@ -1325,6 +1338,31 @@ class FeedspaceConnector
             $projectNameMap = $cachedMap;
         }
 
+        // Fetch replies for all annotations in one query
+        $annotationIds = array();
+        foreach ($results as $row) {
+            $annotationIds[] = $row->annotation_id;
+        }
+        $repliesByParent = array();
+        if (!empty($annotationIds)) {
+            $placeholders = implode(',', array_fill(0, count($annotationIds), '%s'));
+            $replyRows = $wpdb->get_results($wpdb->prepare(
+                "SELECT parent_id, content, created_by, created_at FROM $tableName WHERE parent_id IN ($placeholders) ORDER BY created_at ASC",
+                $annotationIds
+            ));
+            if ($replyRows) {
+                foreach ($replyRows as $rr) {
+                    $pid = $rr->parent_id;
+                    if (!isset($repliesByParent[$pid])) $repliesByParent[$pid] = array();
+                    $repliesByParent[$pid][] = array(
+                        'content' => $rr->content,
+                        'createdBy' => $rr->created_by ?: 'Anonymous',
+                        'createdAt' => $rr->created_at,
+                    );
+                }
+            }
+        }
+
         $annotations = array();
         foreach ($results as $row) {
             $annMeta = $row->meta_data ? json_decode($row->meta_data, true) : null;
@@ -1365,7 +1403,7 @@ class FeedspaceConnector
                 'previewToken' => $row->preview_token,
                 'createdBy' => $row->created_by,
                 'createdAt' => $row->created_at,
-                'replies' => array(),
+                'replies' => $repliesByParent[$row->annotation_id] ?? array(),
                 'metaData' => $annMeta ?: new stdClass(),
                 'media' => $annAtts,
             );

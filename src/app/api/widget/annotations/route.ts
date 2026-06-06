@@ -71,21 +71,29 @@ export async function GET(request: Request) {
 
   const itemIds = (data || []).map(d => d.id);
   let mediaByItem: Record<string, any[]> = {};
+  let repliesByParent: Record<string, any[]> = {};
   if (itemIds.length > 0) {
-    const { data: mediaData } = await supabase
-      .from("feedback_media")
-      .select("*")
-      .in("feedback_item_id", itemIds);
+    const [{ data: mediaData }, { data: replyData }] = await Promise.all([
+      supabase.from("feedback_media").select("*").in("feedback_item_id", itemIds),
+      supabase.from("feedback_items").select("id, parent_id, content, created_by, created_at, type, device").in("parent_id", itemIds).order("created_at", { ascending: true }),
+    ]);
     if (mediaData) {
       for (const m of mediaData) {
         if (!mediaByItem[m.feedback_item_id]) mediaByItem[m.feedback_item_id] = [];
         mediaByItem[m.feedback_item_id].push(m);
       }
     }
+    if (replyData) {
+      for (const r of replyData) {
+        if (!r.parent_id) continue;
+        if (!repliesByParent[r.parent_id]) repliesByParent[r.parent_id] = [];
+        repliesByParent[r.parent_id].push({ id: r.id, content: r.content, createdBy: r.created_by || 'Anonymous', createdAt: r.created_at });
+      }
+    }
   }
 
   return NextResponse.json(
-    data.map(item => mapFeedbackItem(item, mediaByItem[item.id] || [], link.project_id, projectName)),
+    data.map(item => mapFeedbackItem(item, mediaByItem[item.id] || [], repliesByParent[item.id] || [], link.project_id, projectName)),
     { headers: corsHeaders() }
   );
 }
@@ -425,7 +433,7 @@ async function handleAutoRegister(body: any) {
   );
 }
 
-function mapFeedbackItem(item: any, mediaRecords: any[] = [], projectId?: string, projectName?: string) {
+function mapFeedbackItem(item: any, mediaRecords: any[] = [], replies: any[] = [], projectId?: string, projectName?: string) {
   return {
     id: item.id,
     parentId: item.parent_id || null,
@@ -449,7 +457,7 @@ function mapFeedbackItem(item: any, mediaRecords: any[] = [], projectId?: string
     device: item.device || "desktop",
     createdBy: item.created_by || "Anonymous",
     createdAt: item.created_at,
-    replies: [],
+    replies,
     media: mediaRecords.map(m => ({
       id: m.id,
       fileUrl: m.file_url,
