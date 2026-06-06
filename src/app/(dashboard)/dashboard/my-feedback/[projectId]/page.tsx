@@ -68,6 +68,7 @@ interface FeedbackWithMedia {
   page_url: string;
   device: string | null;
   media: { id: string; file_url: string; file_type: string; file_name: string; file_size: number }[];
+  replies?: { id: string; content: string; created_by?: string; createdBy?: string; created_at?: string; createdAt?: string }[];
 }
 
 export default function SessionDetailPage() {
@@ -85,6 +86,8 @@ export default function SessionDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLink, setPreviewLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
     if (!projectId || isDemo) { setLoading(false); return; }
@@ -149,7 +152,7 @@ export default function SessionDetailPage() {
   }, [feedback]);
 
   const filtered = useMemo(() => {
-    let result = feedback.map((f, i) => ({ ...f, stableNum: i + 1 }));
+    let result: (FeedbackWithMedia & { stableNum: number })[] = feedback.map((f, i) => ({ ...f, stableNum: i + 1 }));
     if (statusFilter !== "all") result = result.filter((f) => f.status === statusFilter);
     if (pageFilter !== "all") result = result.filter((f) => f.page_url === pageFilter);
     if (sortOrder === 'newest') {
@@ -174,11 +177,55 @@ export default function SessionDetailPage() {
       });
       if (!res.ok) {
         console.error("Status update failed:", res.status);
-        setRefreshKey((k) => k + 1); // re-fetch to show real state
+        setRefreshKey((k) => k + 1);
       }
     } catch (err) {
       console.error("Status update error:", err);
       setRefreshKey((k) => k + 1);
+    }
+  };
+
+  const handleReply = async (feedbackId: string) => {
+    if (!replyText.trim()) return;
+    const item = feedback.find((f) => f.id === feedbackId);
+    if (isDemo || !item) { setReplyText(""); setReplyOpenId(null); return; }
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("feedback_items")
+        .insert({
+          project_id: projectId,
+          parent_id: feedbackId,
+          type: "comment",
+          content: replyText.trim(),
+          page_url: item.page_url || "",
+          status: "open",
+          created_by: profile?.full_name || "Anonymous",
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const reply = { id: data.id, content: data.content, created_by: data.created_by, created_at: data.created_at };
+      setFeedback((prev) =>
+        prev.map((f) =>
+          f.id === feedbackId
+            ? { ...f, replies: [...(f.replies || []), reply] } as FeedbackWithMedia
+            : f
+        )
+      );
+      setReplyText("");
+      setReplyOpenId(null);
+      // Notify WP if site creds available
+      const site = (project as any)?.site;
+      if (site?.url && site?.wp_api_key) {
+        fetch(`${site.url.replace(/\/$/, '')}/wp-json/feedspace/v1/webhook`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
+          body: JSON.stringify({ action: "reply_added", data: { parentId: feedbackId, parentMirrorId: feedbackId, replyId: data.id, content: replyText.trim(), createdBy: profile?.full_name || "Anonymous", createdAt: data.created_at } }),
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.error("Failed to submit reply:", err);
     }
   };
 
@@ -381,6 +428,45 @@ export default function SessionDetailPage() {
                     </a>
                   )}
 
+                  {/* Replies */}
+                  {(item.replies?.length ?? 0) > 0 && (
+                    <div className="space-y-2 mb-4 pl-4 border-l-2 border-border">
+                      {item.replies?.map((r: any) => (
+                        <div key={r.id} className="text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-foreground">{r.created_by || r.createdBy || "Anonymous"}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(r.created_at || r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5">{r.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Reply input */}
+                  {replyOpenId === item.id && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleReply(item.id); }}
+                        placeholder="Write a reply..."
+                        className="flex-1 text-sm border border-border rounded-lg px-3 py-1.5 bg-background outline-none focus:border-primary transition-colors"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleReply(item.id)}
+                        disabled={!replyText.trim()}
+                        className="flex items-center gap-1 text-xs font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  )}
+
                   {/* Bottom meta: tags | action */}
                   <div className="flex items-center justify-between border-t border-border pt-4">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -398,6 +484,13 @@ export default function SessionDetailPage() {
                         <Calendar className="w-3 h-3" />
                         {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
+                      <button
+                        onClick={() => { setReplyOpenId(replyOpenId === item.id ? null : item.id); setReplyText(""); }}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors px-2.5 py-1"
+                      >
+                        <MessageSquareText className="w-3 h-3" />
+                        {replyOpenId === item.id ? "Cancel" : `Reply${(item.replies?.length ?? 0) > 0 ? ` (${item.replies?.length})` : ""}`}
+                      </button>
                     </div>
                     {action && (
                       <button
