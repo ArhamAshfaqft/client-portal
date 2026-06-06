@@ -192,22 +192,21 @@ export default function SessionDetailPage() {
     const item = feedback.find((f) => f.id === feedbackId);
     if (isDemo || !item) { setReplyText(""); setReplyOpenId(null); return; }
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("feedback_items")
-        .insert({
-          project_id: projectId,
-          parent_id: feedbackId,
+      const res = await fetch("/api/widget/annotations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          parentId: feedbackId,
           type: "comment",
           content: replyText.trim(),
-          page_url: item.page_url || "",
-          status: "open",
-          created_by: profile?.full_name || "Anonymous",
-        })
-        .select()
-        .single();
-      if (error) throw error;
-      const reply = { id: data.id, content: data.content, created_by: data.created_by, created_at: data.created_at };
+          pageUrl: item.page_url || "",
+          createdBy: profile?.full_name || "Anonymous",
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const reply = { id: data.id, content: data.content, created_by: data.createdBy || data.created_by, created_at: data.createdAt || data.created_at };
       setFeedback((prev) =>
         prev.map((f) =>
           f.id === feedbackId
@@ -217,16 +216,6 @@ export default function SessionDetailPage() {
       );
       setReplyText("");
       setReplyOpenId(null);
-      // Notify WP if site creds available
-      const site = (project as any)?.site;
-      if (site?.url && site?.wp_api_key) {
-        const parentMirrorId = item.mirror_id || feedbackId;
-        fetch(`${site.url.replace(/\/$/, '')}/wp-json/feedspace/v1/webhook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
-          body: JSON.stringify({ action: "reply_added", data: { parentId: parentMirrorId, parentMirrorId, replyId: data.id, content: replyText.trim(), createdBy: profile?.full_name || "Anonymous", createdAt: data.created_at } }),
-        }).catch(() => {});
-      }
     } catch (err) {
       console.error("Failed to submit reply:", err);
     }

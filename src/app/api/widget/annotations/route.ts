@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const { projectId, previewToken, type, content, pageUrl, selector, elementDna, endElementDna, createdBy } = body;
+    const { projectId, previewToken, type, content, pageUrl, selector, elementDna, endElementDna, createdBy, parentId } = body;
     const { coordinatesX, coordinatesY, coordinatesXEnd, coordinatesYEnd, width, height, drawData } = body;
     const { viewportWidth, viewportHeight, device, metaData } = body;
     const { media } = body;
@@ -216,6 +216,7 @@ export async function POST(request: Request) {
       .from("feedback_items")
       .insert({
         project_id: projectId,
+        parent_id: parentId || null,
         type: type || "pin",
         content: content || "",
         page_url: pageUrl || "",
@@ -365,6 +366,51 @@ export async function POST(request: Request) {
           file_type: r.file_type,
           file_name: r.file_name,
         }));
+      }
+    }
+
+    // If this is a reply (parentId set), fire WP webhook server-side (avoids browser CORS)
+    if (parentId) {
+      try {
+        const admin = adminClient();
+        let siteId = _siteResolved;
+        if (!siteId) {
+          const { data: proj } = await admin.from("projects").select("site_id").eq("id", projectId).maybeSingle();
+          siteId = (proj as any)?.site_id || null;
+        }
+        if (siteId) {
+          const { data: site } = await admin
+            .from("sites")
+            .select("url, wp_api_url, wp_api_key")
+            .eq("id", siteId)
+            .single();
+          if (site?.wp_api_key) {
+            const wpRestUrl = site.wp_api_url || site.url;
+            const { data: parentItem } = await admin
+              .from("feedback_items")
+              .select("mirror_id")
+              .eq("id", parentId)
+              .maybeSingle();
+            const parentMirrorId = parentItem?.mirror_id || parentId;
+            fetch(`${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
+              body: JSON.stringify({
+                action: "reply_added",
+                data: {
+                  parentId: parentMirrorId,
+                  parentMirrorId,
+                  replyId: feedbackItem.id,
+                  content: content || "",
+                  createdBy: createdBy || "Team",
+                  createdAt: feedbackItem.created_at,
+                },
+              }),
+            }).catch(() => {});
+          }
+        }
+      } catch {
+        // best-effort
       }
     }
 
