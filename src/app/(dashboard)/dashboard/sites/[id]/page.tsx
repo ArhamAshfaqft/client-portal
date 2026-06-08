@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Plus,
   Copy,
+  Check,
   MessageSquareText,
   Globe,
   Link2,
@@ -63,6 +64,7 @@ export default function SiteDetailPage() {
   const [linkTargetUrl, setLinkTargetUrl] = useState("");
   const [linkExpiryDays, setLinkExpiryDays] = useState("30");
   const [creatingLink, setCreatingLink] = useState(false);
+  const [copiedLinkToken, setCopiedLinkToken] = useState<string | null>(null);
 
   const updateProjectStatus = async (projectId: string, status: string) => {
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: status as ProjectStatus } : p)));
@@ -185,6 +187,8 @@ export default function SiteDetailPage() {
       ? `${linkedSite.url.replace(/\/+$/, '')}?feedspace_preview=${token}`
       : `${window.location.origin}/preview/${token}`;
     navigator.clipboard.writeText(url);
+    setCopiedLinkToken(token);
+    setTimeout(() => setCopiedLinkToken(null), 2000);
   };
 
   const createPreviewLink = async () => {
@@ -478,9 +482,9 @@ export default function SiteDetailPage() {
                                   <button
                                     onClick={() => copyPreviewLink(link.token, project.id)}
                                     className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-                                    title="Copy link"
+                                    title={copiedLinkToken === link.token ? "Copied" : "Copy link"}
                                   >
-                                    <Copy className="w-3.5 h-3.5" />
+                                    {copiedLinkToken === link.token ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                                   </button>
                                   <a
                                     href={`/preview/${link.token}`}
