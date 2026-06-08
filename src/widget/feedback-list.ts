@@ -6,7 +6,6 @@ export interface FeedbackListCallbacks {
   onDeleteAnnotation: (id: string) => void;
   onDeviceFilterChange: (device: string) => void;
   onStatusChange: (id: string, status: string) => void;
-  onProjectFilterChange?: (projectId: string) => void;
   onSaveToLibrary?: (fileUrl: string, fileName: string) => Promise<boolean>;
 }
 
@@ -135,39 +134,14 @@ export class FeedbackListPanel {
   private currentFilter: FilterMode = 'all';
   private currentDeviceFilter: string = 'desktop';
   private currentSort: 'newest' | 'oldest' = 'newest';
-  private currentProjectFilter: string = '';
   private onClose: (() => void) | null = null;
   private siteName: string = '';
 
-  private externalProjects: Array<{id: string; title: string}> | null = null;
-
-  setAllProjects(projects: Array<{id: string; title: string}>): void {
-    this.externalProjects = projects;
-  }
-
-  private get distinctProjects(): Array<{id: string; title: string}> {
-    if (this.externalProjects && this.externalProjects.length > 0) {
-      return this.externalProjects;
-    }
-    const seen = new Set<string>();
-    const out: Array<{id: string; title: string}> = [];
-    for (const a of this.annotations) {
-      const pid = a.projectId;
-      if (pid && !seen.has(pid)) {
-        seen.add(pid);
-        const name = a.projectName || 'Session #' + pid.slice(0, 8);
-        out.push({ id: pid, title: name });
-      }
-    }
-    return out;
-  }
-
-  open(annotations: Annotation[], callbacks: FeedbackListCallbacks, onClose: () => void, siteName?: string, defaultProjectId?: string): void {
+  open(annotations: Annotation[], callbacks: FeedbackListCallbacks, onClose: () => void, siteName?: string): void {
     this.annotations = annotations;
     this.callbacks = callbacks;
     this.onClose = onClose;
     if (siteName) this.siteName = siteName;
-    try { const v = localStorage.getItem('fs_project_filter'); if (v && this.distinctProjects.some(p => p.id === v)) { this.currentProjectFilter = v; } else if (defaultProjectId && this.distinctProjects.some(p => p.id === defaultProjectId)) { this.currentProjectFilter = defaultProjectId; } else { this.currentProjectFilter = ''; } this.callbacks?.onProjectFilterChange?.(this.currentProjectFilter); } catch(e) {}
     this.render();
   }
 
@@ -176,9 +150,6 @@ export class FeedbackListPanel {
   }
 
   close(): void {
-    const m = document.getElementById('fs-project-menu');
-    if (m) m.remove();
-    if (this._closeProjectMenu) this._closeProjectMenu();
     if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
     if (this.root && this.root.parentNode) this.root.parentNode.removeChild(this.root);
     document.querySelectorAll('.fs-lb').forEach(el => el.remove());
@@ -189,16 +160,6 @@ export class FeedbackListPanel {
   updateAnnotations(annotations: Annotation[]): void {
     this.annotations = annotations;
     if (this.root) {
-      const sessBtn = this.root.querySelector('#fs-session-btn') as HTMLElement;
-      if (sessBtn) {
-        if (this.distinctProjects.length > 0) {
-          sessBtn.style.display = 'flex';
-          const ap = this.distinctProjects.find(p => p.id === this.currentProjectFilter);
-          if (ap) sessBtn.title = ap.title;
-        } else {
-          sessBtn.style.display = 'none';
-        }
-      }
       this.renderList();
     }
   }
@@ -217,25 +178,14 @@ export class FeedbackListPanel {
     // Header
     const header = document.createElement('div');
     header.className = 'feedspace-panel-header';
-    const activeProject = this.distinctProjects.find(p => p.id === this.currentProjectFilter);
     header.innerHTML = `
       <span class="feedspace-panel-title">Feedback List</span>
-      <button class="fs-session-btn" id="fs-session-btn" title="Filter by session" style="display:none;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:transparent;color:#64748b;cursor:pointer;padding:0;margin-right:auto;margin-left:8px;flex-shrink:0;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      </button>
       <button class="feedspace-panel-close" id="feedback-list-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     `;
     this.root.appendChild(header);
     header.querySelector('#feedback-list-close')!.addEventListener('click', () => this.close());
-    // Session filter button
-    const sessBtn = header.querySelector('#fs-session-btn') as HTMLElement;
-    if (this.distinctProjects.length > 0) {
-      sessBtn.style.display = 'flex';
-      if (activeProject) sessBtn.title = activeProject.title;
-    }
-    sessBtn.addEventListener('click', (e) => { e.stopPropagation(); this.showProjectFilterMenu(sessBtn); });
 
     // Status filter tabs
     const filters = document.createElement('div');
@@ -323,61 +273,11 @@ export class FeedbackListPanel {
     this.renderList();
   }
 
-  private _closeProjectMenu: (() => void) | null = null;
-
-  private showProjectFilterMenu(btn: HTMLElement): void {
-    const existing = document.getElementById('fs-project-menu');
-    if (existing) { existing.remove(); if (this._closeProjectMenu) this._closeProjectMenu(); return; }
-    const menu = document.createElement('div');
-    menu.id = 'fs-project-menu';
-    const rect = btn.getBoundingClientRect();
-    menu.style.cssText = 'position:fixed;left:' + Math.max(10, rect.left - 160) + 'px;top:' + (rect.bottom + 4) + 'px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;z-index:2147483647;min-width:170px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.1);';
-    const addItem = (label: string, value: string) => {
-      const isActive = String(this.currentProjectFilter) === String(value);
-      const item = document.createElement('div');
-      item.dataset.value = value;
-      item.style.cssText = 'padding:7px 12px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;cursor:pointer;border-radius:5px;color:' + (isActive ? '#fff!important;background:#2563eb;' : '#334155!important;');
-      item.innerHTML = (isActive ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>' : '') + label;
-      item.addEventListener('mouseenter', () => { if (!isActive) item.style.background = '#f1f5f9'; });
-      item.addEventListener('mouseleave', () => { if (!isActive) item.style.background = 'transparent'; });
-      item.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menu.remove(); if (this._closeProjectMenu) this._closeProjectMenu();
-        this.currentProjectFilter = value;
-        btn.title = value ? label : 'Filter by session';
-        try { localStorage.setItem('fs_project_filter', this.currentProjectFilter); } catch(e) {}
-        this.renderList();
-        this.callbacks?.onProjectFilterChange?.(value);
-      });
-      menu.appendChild(item);
-    };
-    addItem('All sessions', '');
-    for (const p of this.distinctProjects) addItem(p.title, p.id);
-    document.body.appendChild(menu);
-    const handler = (e: MouseEvent) => {
-      if (!menu.contains(e.target as Node) && e.target !== btn) { menu.remove(); document.removeEventListener('click', handler); }
-    };
-    if (this._closeProjectMenu) this._closeProjectMenu();
-    this._closeProjectMenu = () => document.removeEventListener('click', handler);
-    setTimeout(() => document.addEventListener('click', handler), 10);
-  }
-
   private renderList(): void {
     const body = this.root?.querySelector('#feedback-list-body');
     if (!body) return;
 
     body.innerHTML = '';
-
-    // Reset project filter if selected project no longer in annotations
-    if (this.currentProjectFilter) {
-      const projects = this.distinctProjects;
-      if (!projects.find(p => p.id === this.currentProjectFilter)) {
-        this.currentProjectFilter = '';
-        try { localStorage.removeItem('fs_project_filter'); } catch(e) {}
-        const sessBtn = this.root?.querySelector('#fs-session-btn') as HTMLElement;
-        if (sessBtn) sessBtn.title = 'Filter by session';
-      }
-    }
 
     // Filter by status
     let filtered = this.currentFilter === 'all'
@@ -385,11 +285,6 @@ export class FeedbackListPanel {
       : this.currentFilter === 'pending'
         ? this.annotations.filter(a => a.status === 'open' || a.status === 'in_progress')
         : this.annotations.filter(a => a.status === this.currentFilter);
-
-    // Filter by project
-    if (this.currentProjectFilter) {
-      filtered = filtered.filter(a => String(a.projectId) === this.currentProjectFilter);
-    }
 
     // Filter by device
     filtered = filtered.filter(a => (a.device || 'desktop') === this.currentDeviceFilter);
@@ -399,9 +294,6 @@ export class FeedbackListPanel {
     let baseForCounts = this.currentFilter === 'all' ? this.annotations :
       this.currentFilter === 'pending' ? this.annotations.filter(a => a.status === 'open' || a.status === 'in_progress') :
       this.annotations.filter(a => a.status === this.currentFilter);
-    if (this.currentProjectFilter) {
-      baseForCounts = baseForCounts.filter(a => String(a.projectId) === this.currentProjectFilter);
-    }
     baseForCounts.forEach(a => { const d = a.device || 'desktop'; if (deviceCounts[d] !== undefined) deviceCounts[d]++; });
 
     // Update device filter counts

@@ -38,7 +38,7 @@ export class AnnotationEngine {
   private commentPanel: CommentPanel;
   private feedbackList: FeedbackListPanel;
   private annotations: Annotation[] = [];
-  private allProjects: Array<{id: string; title: string}> = [];
+
 
   private currentTool: ToolMode = 'select';
   private deviceMode: DeviceMode = 'desktop';
@@ -146,7 +146,6 @@ export class AnnotationEngine {
     this.buildToolbar();
     this.attachDrawingListeners();
     this.loadAnnotations();
-    this.fetchProjects();
     // Apply persisted browse mode after annotations load (creates SVG overlay)
     if (this.browseMode) {
       const overlay = document.getElementById('feedspace-overlay');
@@ -212,16 +211,13 @@ export class AnnotationEngine {
           this.filterMode = filter;
           this.renderer.setFilter(filter);
         },
-        onProjectFilterChange: (projectId) => {
-          this.renderer.setProjectFilter(projectId);
-        },
         onDeleteAnnotation: (id) => this.deleteAnnotation(id),
         onDeviceFilterChange: (device) => {
           this.renderer.setDeviceFilter(device);
         },
         onStatusChange: (id, status) => this.changeAnnotationStatus(id, status),
         onSaveToLibrary: (fileUrl, fileName) => this.saveToLibrary(fileUrl, fileName),
-      }, () => { }, this.config.siteName, this.config.projectId);
+      }, () => { }, this.config.siteName);
     });
 
     if (dev) {
@@ -774,19 +770,6 @@ export class AnnotationEngine {
     } catch (err) {
       console.error('Failed to load annotations', err);
       dbg('loadAnnotations: FAILED', String(err));
-    }
-  }
-
-  private async fetchProjects(): Promise<void> {
-    try {
-      const projects = await this.api.getProjects();
-      this.allProjects = projects.map(p => ({
-        id: p.id,
-        title: p.name || 'Session #' + p.id.slice(0, 8),
-      }));
-      this.feedbackList.setAllProjects(this.allProjects);
-    } catch {
-      // non-critical
     }
   }
 
