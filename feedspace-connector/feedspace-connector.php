@@ -517,6 +517,7 @@ class FeedspaceConnector
 
     public static function logDebug($event, $details = array())
     {
+        if (get_option('feedspace_debug_log_enabled') !== '1') return;
         $log = get_option('feedspace_debug_log', array());
         $log[] = array_merge(array(
             'time' => current_time('mysql'),
@@ -1700,39 +1701,45 @@ class FeedspaceConnector
             </div>
 
             <div class="feedspace-status-card" style="margin-top:16px;">
-                <h2 style="cursor:pointer;user-select:none;" onclick="toggleDebug()">
-                    Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 30 events)</span>
-                    <span id="feedspace-debug-toggle" style="font-size:12px;color:#2563eb;margin-left:8px;">[Show]</span>
+                <h2 style="display:flex;align-items:center;gap:12px;">
+                    Debug Log
+                    <label style="font-size:12px;font-weight:400;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="checkbox" id="feedspace-debug-toggle" onchange="toggleDebugLog()"
+                            <?php checked(get_option('feedspace_debug_log_enabled'), '1'); ?> />
+                        Enable
+                    </label>
                 </h2>
-                <div id="feedspace-debug-content" style="display:none;">
+                <?php if (get_option('feedspace_debug_log_enabled') === '1'): ?>
                     <div style="max-height:400px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
                         <?php
                         $debugLog = get_option('feedspace_debug_log', array());
-                        if (empty($debugLog)) {
+                        if (empty($debugLog)):
                             echo '<span style="color:#9ca3af;">No debug entries yet. Submit a pin or run a test to populate.</span>';
-                        } else {
-                            foreach (array_reverse($debugLog) as $entry) {
+                        else:
+                            foreach (array_reverse($debugLog) as $entry):
                                 $time = esc_html($entry['time'] ?? '');
                                 $event = esc_html($entry['event'] ?? '');
                                 $line = '[' . $time . '] ' . strtoupper($event);
                                 $extra = $entry;
                                 unset($extra['time'], $extra['event']);
                                 $parts = array();
-                                foreach ($extra as $k => $v) {
+                                foreach ($extra as $k => $v):
                                     if (is_array($v)) $v = json_encode($v);
                                     $parts[] = $k . '=' . esc_html($v);
-                                }
+                                endforeach;
                                 if (!empty($parts)) $line .= '  ' . implode('  ', $parts);
                                 echo '<div style="margin-bottom:3px;padding:2px 0;">' . $line . '</div>';
-                            }
-                        }
+                            endforeach;
+                        endif;
                         ?>
                     </div>
                     <form method="post" style="margin-top:8px;">
                         <input type="hidden" name="feedspace_clear_debug" value="1" />
                         <?php submit_button('Clear Debug Log', 'delete', '', false, array('onclick' => "return confirm('Clear all debug entries?');")); ?>
                     </form>
-                </div>
+                <?php else: ?>
+                    <p style="color:#94a3b8;">Debug logging is disabled. Check "Enable" above to start collecting logs.</p>
+                <?php endif; ?>
             </div>
 
             <div class="feedspace-cleanup-card">
@@ -1785,16 +1792,13 @@ class FeedspaceConnector
                 return Promise.resolve();
             }
 
-            function toggleDebug() {
-                var content = document.getElementById('feedspace-debug-content');
-                var toggle = document.getElementById('feedspace-debug-toggle');
-                if (content.style.display === 'none') {
-                    content.style.display = 'block';
-                    toggle.textContent = '[Hide]';
-                } else {
-                    content.style.display = 'none';
-                    toggle.textContent = '[Show]';
-                }
+            function toggleDebugLog() {
+                var enabled = document.getElementById('feedspace-debug-toggle').checked ? '1' : '0';
+                fetch(ajaxurl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'action=feedspace_toggle_debug_log&enabled=' + enabled
+                }).then(function() { location.reload(); });
             }
 
             function copyApiKey() {
@@ -2124,6 +2128,15 @@ add_action('wp_ajax_feedspace_regenerate_key', function () {
     wp_send_json_success(array('key' => $newKey));
 });
 
+add_action('wp_ajax_feedspace_toggle_debug_log', function () {
+    if (!current_user_can('manage_options')) {
+        wp_die('Unauthorized');
+    }
+    $enabled = sanitize_text_field($_POST['enabled'] ?? '0');
+    update_option('feedspace_debug_log_enabled', $enabled === '1' ? '1' : '0');
+    wp_send_json_success();
+});
+
 add_action('wp_ajax_feedspace_connect_site', function () {
     if (!current_user_can('manage_options')) {
         wp_die('Unauthorized');
@@ -2355,6 +2368,7 @@ add_action('wp_ajax_feedspace_repush_annotations', function () {
 add_action('admin_init', function () {
     if (isset($_POST['feedspace_clear_debug'])) {
         delete_option('feedspace_debug_log');
+        delete_option('feedspace_debug_log_enabled');
         wp_redirect(admin_url('admin.php?page=feedspace'));
         exit;
     }
