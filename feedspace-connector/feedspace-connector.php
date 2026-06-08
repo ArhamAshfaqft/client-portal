@@ -1650,65 +1650,6 @@ class FeedspaceConnector
                 </p>
             </div>
 
-            <div class="feedspace-status-card" style="margin-top:16px;">
-                <h2>Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 30 events)</span></h2>
-                <div style="max-height:400px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
-                    <?php
-                    $debugLog = get_option('feedspace_debug_log', array());
-                    if (empty($debugLog)) {
-                        echo '<span style="color:#9ca3af;">No debug entries yet. Submit a pin or run a test to populate.</span>';
-                    } else {
-                        foreach (array_reverse($debugLog) as $entry) {
-                            $time = esc_html($entry['time'] ?? '');
-                            $event = esc_html($entry['event'] ?? '');
-                            $line = '[' . $time . '] ' . strtoupper($event);
-                            // Show all extra fields except time/event
-                            $extra = $entry;
-                            unset($extra['time'], $extra['event']);
-                            $parts = array();
-                            foreach ($extra as $k => $v) {
-                                if (is_array($v)) $v = json_encode($v);
-                                $parts[] = $k . '=' . esc_html($v);
-                            }
-                            if (!empty($parts)) $line .= '  ' . implode('  ', $parts);
-                            echo '<div style="margin-bottom:3px;padding:2px 0;">' . $line . '</div>';
-                        }
-                    }
-                    ?>
-                </div>
-                <form method="post" style="margin-top:8px;">
-                    <input type="hidden" name="feedspace_clear_debug" value="1" />
-                    <?php submit_button('Clear Debug Log', 'delete', '', false, array('onclick' => "return confirm('Clear all debug entries?');")); ?>
-                </form>
-            </div>
-
-            <div class="feedspace-config-card">
-                <h2>1-Click Connect</h2>
-                <p>Click the button below to copy all connection details, then paste into the Feedspace dashboard when adding a site.</p>
-                <button type="button" class="button button-primary button-large" onclick="copyFullConfig()" style="margin:10px 0;">
-                    Copy Connection Config
-                </button>
-                <p style="margin-top:8px;color:#059669;display:none;" id="copy-confirm">&#10003; Copied! Now paste into Feedspace dashboard.</p>
-                <hr style="margin:16px 0;">
-                <details style="cursor:pointer;">
-                    <summary style="font-weight:600;margin-bottom:8px;">Manual configuration</summary>
-                    <table class="form-table">
-                        <tr>
-                            <th>REST API URL</th>
-                            <td><code><?php echo esc_url($restUrl); ?></code></td>
-                        </tr>
-                        <tr>
-                            <th>API Key</th>
-                            <td>
-                                <code id="feedspace-api-key"><?php echo esc_html($apiKey); ?></code>
-                                <button type="button" class="button button-small" onclick="copyApiKey()">Copy</button>
-                                <button type="button" class="button button-small" onclick="regenerateKey()">Regenerate</button>
-                            </td>
-                        </tr>
-                    </table>
-                </details>
-            </div>
-
             <div class="feedspace-settings-card">
                 <h2>Settings</h2>
                 <form method="post" action="options.php">
@@ -1743,7 +1684,7 @@ class FeedspaceConnector
                             </td>
                         </tr>
                         <tr>
-                            <th>Debug Mode</th>
+                            <th>Debug Overlay</th>
                             <td>
                                 <label>
                                     <input type="checkbox" name="feedspace_debug_enabled" value="1"
@@ -1758,6 +1699,42 @@ class FeedspaceConnector
                 </form>
             </div>
 
+            <div class="feedspace-status-card" style="margin-top:16px;">
+                <h2 style="cursor:pointer;user-select:none;" onclick="toggleDebug()">
+                    Debug Log <span style="font-size:11px;font-weight:400;color:#6b7280;">(last 30 events)</span>
+                    <span id="feedspace-debug-toggle" style="font-size:12px;color:#2563eb;margin-left:8px;">[Show]</span>
+                </h2>
+                <div id="feedspace-debug-content" style="display:none;">
+                    <div style="max-height:400px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
+                        <?php
+                        $debugLog = get_option('feedspace_debug_log', array());
+                        if (empty($debugLog)) {
+                            echo '<span style="color:#9ca3af;">No debug entries yet. Submit a pin or run a test to populate.</span>';
+                        } else {
+                            foreach (array_reverse($debugLog) as $entry) {
+                                $time = esc_html($entry['time'] ?? '');
+                                $event = esc_html($entry['event'] ?? '');
+                                $line = '[' . $time . '] ' . strtoupper($event);
+                                $extra = $entry;
+                                unset($extra['time'], $extra['event']);
+                                $parts = array();
+                                foreach ($extra as $k => $v) {
+                                    if (is_array($v)) $v = json_encode($v);
+                                    $parts[] = $k . '=' . esc_html($v);
+                                }
+                                if (!empty($parts)) $line .= '  ' . implode('  ', $parts);
+                                echo '<div style="margin-bottom:3px;padding:2px 0;">' . $line . '</div>';
+                            }
+                        }
+                        ?>
+                    </div>
+                    <form method="post" style="margin-top:8px;">
+                        <input type="hidden" name="feedspace_clear_debug" value="1" />
+                        <?php submit_button('Clear Debug Log', 'delete', '', false, array('onclick' => "return confirm('Clear all debug entries?');")); ?>
+                    </form>
+                </div>
+            </div>
+
             <div class="feedspace-cleanup-card">
                 <h2>Storage Cleanup</h2>
                 <p>Automatically remove feedback media older than 30 days.</p>
@@ -1768,7 +1745,6 @@ class FeedspaceConnector
 
         <style>
             .feedspace-status-card,
-            .feedspace-config-card,
             .feedspace-settings-card,
             .feedspace-cleanup-card {
                 background: #fff;
@@ -1779,7 +1755,6 @@ class FeedspaceConnector
                 max-width: 800px;
             }
             .feedspace-status-card h2,
-            .feedspace-config-card h2,
             .feedspace-settings-card h2,
             .feedspace-cleanup-card h2 {
                 margin-top: 0;
@@ -1810,19 +1785,16 @@ class FeedspaceConnector
                 return Promise.resolve();
             }
 
-            function copyFullConfig() {
-                var config = {
-                    name: <?php echo json_encode(get_bloginfo('name')); ?>,
-                    url: <?php echo json_encode($siteUrl); ?>,
-                    wp_api_url: <?php echo json_encode($siteUrl); ?>,
-                    wp_api_key: <?php echo json_encode($apiKey); ?>,
-                    wp_application_password: null
-                };
-                copyToClipboard(JSON.stringify(config, null, 2)).then(function() {
-                    var el = document.getElementById('copy-confirm');
-                    el.style.display = 'block';
-                    setTimeout(function() { el.style.display = 'none'; }, 3000);
-                });
+            function toggleDebug() {
+                var content = document.getElementById('feedspace-debug-content');
+                var toggle = document.getElementById('feedspace-debug-toggle');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    toggle.textContent = '[Hide]';
+                } else {
+                    content.style.display = 'none';
+                    toggle.textContent = '[Show]';
+                }
             }
 
             function copyApiKey() {
