@@ -1583,74 +1583,6 @@ class FeedspaceConnector
                 <p><strong>Upload Max Size:</strong> <?php echo esc_html(size_format(wp_max_upload_size())); ?></p>
             </div>
 
-            <div class="feedspace-status-card">
-                <h2>Mirroring Status (Vercel Sync)</h2>
-                <p>
-                    <strong>Vercel API URL:</strong>
-                    <code><?php echo $apiUrl ? esc_url($apiUrl) : '<span style="color:#dc2626;">NOT SET</span>'; ?></code>
-                </p>
-                <p>
-                    <strong>Annotation Count (local):</strong>
-                    <span id="feedspace-local-count">...</span>
-                </p>
-                <p>
-                    <strong>Last Mirror Attempt:</strong>
-                    <span id="feedspace-last-mirror" style="color:#9ca3af;">
-                        <?php
-                        $lastId = get_option('feedspace_last_mirror_id', '');
-                        $lastTime = get_option('feedspace_last_mirror_time', '');
-                        $lastSuccess = get_option('feedspace_last_mirror_success', null);
-                        $lastCode = get_option('feedspace_last_mirror_code', null);
-                        $lastBody = get_option('feedspace_last_mirror_body', '');
-                        if ($lastTime) {
-                            $color = $lastSuccess ? '#059669' : '#dc2626';
-                            $status = $lastSuccess ? 'SUCCESS' : 'FAILED';
-                            $codeStr = ($lastCode && $lastCode > 0) ? "HTTP $lastCode" : ($lastCode === -1 ? 'URL not configured' : 'Connection error');
-                            echo '<span style="color:' . esc_attr($color) . ';">' . esc_html($status) . ' – ' . esc_html($codeStr) . '</span>';
-                            echo ' <span style="font-size:11px;color:#6b7280;">' . esc_html($lastTime) . '</span>';
-                            if ($lastBody) {
-                                echo '<br><span style="font-size:11px;color:#6b7280;">Response: ' . esc_html(substr($lastBody, 0, 200)) . '</span>';
-                            }
-                            $lastDebug = get_option('feedspace_last_mirror_debug', '');
-                            if ($lastDebug) {
-                                echo '<br><span style="font-size:11px;color:#6366f1;">Debug: ' . esc_html($lastDebug) . '</span>';
-                            }
-                        } else {
-                            echo 'No mirror attempts yet. Submit a pin on a preview page to trigger one.';
-                        }
-                        ?>
-                    </span>
-                </p>
-                <p>
-                    <strong>Last Mirror Test:</strong>
-                    <span id="feedspace-mirror-result" style="color:#9ca3af;">Not tested yet</span>
-                </p>
-                <button type="button" class="button button-primary" id="feedspace-test-mirror" onclick="testMirroring()">
-                    Test Vercel Mirroring
-                </button>
-                <button type="button" class="button button-secondary" id="feedspace-repush" onclick="repushAnnotations()" style="margin-left:6px;">
-                    Re-push All Local Annotations
-                </button>
-                <span id="feedspace-test-spinner" style="display:none;margin-left:8px;">
-                    <span class="spinner is-active" style="float:none;margin:0;vertical-align:middle;"></span>
-                    Working...
-                </span>
-                <p id="feedspace-repush-result" style="margin-top:10px;font-size:12px;color:#6b7280;display:none;"></p>
-                <p id="feedspace-queue-stats" style="margin-top:6px;font-size:12px;">
-                    <?php
-                    $qStats = FeedspaceConnector::getSyncQueueStats();
-                    $totalPending = $qStats['pending'] + $qStats['retrying'];
-                    if ($qStats['failed'] > 0) {
-                        echo '<span style="color:#dc2626;">⚠ ' . esc_html($qStats['failed']) . ' syncs failed — <a href="#" onclick="repushAnnotations();return false;">re-push now</a></span>';
-                    } elseif ($totalPending > 0) {
-                        echo '<span style="color:#d97706;">⏳ ' . esc_html($totalPending) . ' syncs pending (retrying every ' . esc_html($totalPending > 5 ? '5' : '1') . ' min)</span>';
-                    } else {
-                        echo '<span style="color:#059669;">✓ All synced</span> <span style="color:#6b7280;">(' . esc_html($qStats['done']) . ' total)</span>';
-                    }
-                    ?>
-                </p>
-            </div>
-
             <div class="feedspace-settings-card">
                 <h2>Settings</h2>
                 <form method="post" action="options.php">
@@ -1702,7 +1634,7 @@ class FeedspaceConnector
 
             <div class="feedspace-status-card" style="margin-top:16px;">
                 <h2 style="display:flex;align-items:center;gap:12px;">
-                    Debug Log
+                    Debug
                     <label style="font-size:12px;font-weight:400;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;">
                         <input type="checkbox" id="feedspace-debug-toggle" onchange="toggleDebugLog()"
                             <?php checked(get_option('feedspace_debug_log_enabled'), '1'); ?> />
@@ -1740,6 +1672,59 @@ class FeedspaceConnector
                 <?php else: ?>
                     <p style="color:#94a3b8;">Debug logging is disabled. Check "Enable" above to start collecting logs.</p>
                 <?php endif; ?>
+
+                <hr style="margin:16px 0;">
+                <h3 style="font-size:14px;margin:0 0 8px;">Mirroring Status (Vercel Sync)</h3>
+                <p><strong>Vercel API URL:</strong> <code><?php echo $apiUrl ? esc_url($apiUrl) : '<span style="color:#dc2626;">NOT SET</span>'; ?></code></p>
+                <p><strong>Annotation Count (local):</strong> <span id="feedspace-local-count">...</span></p>
+                <p>
+                    <strong>Last Mirror Attempt:</strong>
+                    <span id="feedspace-last-mirror" style="color:#9ca3af;">
+                        <?php
+                        $lastId = get_option('feedspace_last_mirror_id', '');
+                        $lastTime = get_option('feedspace_last_mirror_time', '');
+                        $lastSuccess = get_option('feedspace_last_mirror_success', null);
+                        $lastCode = get_option('feedspace_last_mirror_code', null);
+                        $lastBody = get_option('feedspace_last_mirror_body', '');
+                        if ($lastTime) {
+                            $color = $lastSuccess ? '#059669' : '#dc2626';
+                            $status = $lastSuccess ? 'SUCCESS' : 'FAILED';
+                            $codeStr = ($lastCode && $lastCode > 0) ? "HTTP $lastCode" : ($lastCode === -1 ? 'URL not configured' : 'Connection error');
+                            echo '<span style="color:' . esc_attr($color) . ';">' . esc_html($status) . ' – ' . esc_html($codeStr) . '</span>';
+                            echo ' <span style="font-size:11px;color:#6b7280;">' . esc_html($lastTime) . '</span>';
+                            if ($lastBody) {
+                                echo '<br><span style="font-size:11px;color:#6b7280;">Response: ' . esc_html(substr($lastBody, 0, 200)) . '</span>';
+                            }
+                            $lastDebug = get_option('feedspace_last_mirror_debug', '');
+                            if ($lastDebug) {
+                                echo '<br><span style="font-size:11px;color:#6366f1;">Debug: ' . esc_html($lastDebug) . '</span>';
+                            }
+                        } else {
+                            echo 'No mirror attempts yet. Submit a pin on a preview page to trigger one.';
+                        }
+                        ?>
+                    </span>
+                </p>
+                <p><strong>Last Mirror Test:</strong> <span id="feedspace-mirror-result" style="color:#9ca3af;">Not tested yet</span></p>
+                <p>
+                    <button type="button" class="button button-primary" id="feedspace-test-mirror" onclick="testMirroring()">Test Vercel Mirroring</button>
+                    <button type="button" class="button button-secondary" id="feedspace-repush" onclick="repushAnnotations()" style="margin-left:6px;">Re-push All Local Annotations</button>
+                    <span id="feedspace-test-spinner" style="display:none;margin-left:8px;"><span class="spinner is-active" style="float:none;margin:0;vertical-align:middle;"></span> Working...</span>
+                </p>
+                <p id="feedspace-repush-result" style="margin-top:10px;font-size:12px;color:#6b7280;display:none;"></p>
+                <p id="feedspace-queue-stats" style="margin-top:6px;font-size:12px;">
+                    <?php
+                    $qStats = FeedspaceConnector::getSyncQueueStats();
+                    $totalPending = $qStats['pending'] + $qStats['retrying'];
+                    if ($qStats['failed'] > 0) {
+                        echo '<span style="color:#dc2626;">⚠ ' . esc_html($qStats['failed']) . ' syncs failed — <a href="#" onclick="repushAnnotations();return false;">re-push now</a></span>';
+                    } elseif ($totalPending > 0) {
+                        echo '<span style="color:#d97706;">⏳ ' . esc_html($totalPending) . ' syncs pending (retrying every ' . esc_html($totalPending > 5 ? '5' : '1') . ' min)</span>';
+                    } else {
+                        echo '<span style="color:#059669;">✓ All synced</span> <span style="color:#6b7280;">(' . esc_html($qStats['done']) . ' total)</span>';
+                    }
+                    ?>
+                </p>
             </div>
 
             <div class="feedspace-cleanup-card">
