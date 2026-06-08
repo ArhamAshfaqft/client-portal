@@ -111,6 +111,13 @@ const STYLES = `
   border: 2px solid #fff;
 }
 
+#feedspace-widget-root .feedspace-browse-btn.browsing {
+  opacity: 0.5;
+}
+#feedspace-widget-root .feedspace-browse-btn.browsing:hover {
+  opacity: 1;
+}
+
 #feedspace-widget-root .feedspace-device-btn {
   display: inline-flex;
   align-items: center;

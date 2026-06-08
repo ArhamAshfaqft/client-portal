@@ -27,6 +27,8 @@ const SVG_ICONS = {
   mic: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>',
   paperclip: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>',
   file: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  eye: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
 };
 
 export class AnnotationEngine {
@@ -41,6 +43,7 @@ export class AnnotationEngine {
   private deviceMode: DeviceMode = 'desktop';
   private filterMode: FilterMode = 'all';
   private clientName: string = '';
+  private browseMode = sessionStorage.getItem('feedspace_browse') === '1';
 
   private isDrawing = false;
   private drawStart: { x: number; y: number; el: Element | null; dna: ElementDNA | null } | null = null;
@@ -142,6 +145,11 @@ export class AnnotationEngine {
     this.buildToolbar();
     this.attachDrawingListeners();
     this.loadAnnotations();
+    // Apply persisted browse mode after annotations load (creates SVG overlay)
+    if (this.browseMode) {
+      const overlay = document.getElementById('feedspace-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
     dbg('boot() complete');
   }
 
@@ -160,6 +168,9 @@ export class AnnotationEngine {
         <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
         <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
         <div class="feedspace-toolbar-divider"></div>`}
+        <button class="feedspace-tool-btn feedspace-browse-btn ${this.browseMode ? 'browsing' : ''}" data-action="browse" title="${this.browseMode ? 'Switch to Comment Mode' : 'Switch to Browse Mode'}">
+          ${this.browseMode ? SVG_ICONS.eyeOff : SVG_ICONS.eye}
+        </button>
         <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
           ${SVG_ICONS.list}
           <span class="badge" id="feedspace-list-count" style="display:none">0</span>
@@ -182,6 +193,10 @@ export class AnnotationEngine {
         btn.addEventListener('click', () => this.setDevice(btn.getAttribute('data-device') as DeviceMode));
       });
     }
+
+    this.toolbarRoot.querySelector('[data-action="browse"]')?.addEventListener('click', () => {
+      this.toggleBrowse();
+    });
 
     this.toolbarRoot.querySelector('[data-action="list"]')?.addEventListener('click', () => {
       if (this.feedbackList.isOpen()) {
@@ -266,6 +281,27 @@ export class AnnotationEngine {
     document.documentElement.style.background = device !== 'desktop' ? '#e5e7eb' : '';
 
     this.renderer.setDeviceFilter(device);
+  }
+
+  private toggleBrowse(): void {
+    this.browseMode = !this.browseMode;
+    sessionStorage.setItem('feedspace_browse', this.browseMode ? '1' : '0');
+
+    const overlay = document.getElementById('feedspace-overlay');
+    if (overlay) {
+      overlay.style.display = this.browseMode ? 'none' : '';
+    }
+
+    const btn = this.toolbarRoot?.querySelector('[data-action="browse"]') as HTMLElement | null;
+    if (btn) {
+      btn.classList.toggle('browsing', this.browseMode);
+      btn.title = this.browseMode ? 'Switch to Comment Mode' : 'Switch to Browse Mode';
+      btn.innerHTML = this.browseMode ? SVG_ICONS.eyeOff : SVG_ICONS.eye;
+    }
+
+    if (this.browseMode) {
+      this.setTool('select');
+    }
   }
 
   private attachDrawingListeners(): void {
