@@ -426,7 +426,7 @@ export default function SiteDetailPage() {
                 <div className="border-t border-border px-4 py-3 space-y-3">
                   <div className="flex items-center justify-between">
                     <h5 className="text-sm font-medium text-foreground">Preview Links</h5>
-                    <Button size="sm" onClick={() => { setShowNewLink(true); setLinkTargetUrl(project.name ? `${site?.url || ""}/${project.name.toLowerCase().replace(/\s+/g, "-")}` : site?.url || ""); }}>
+                    <Button size="sm" onClick={() => { setShowNewLink(true); setLinkTargetUrl(site?.url || ""); }}>
                       <Plus className="w-3.5 h-3.5 mr-1.5" />
                       New Link
                     </Button>
