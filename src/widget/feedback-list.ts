@@ -139,7 +139,16 @@ export class FeedbackListPanel {
   private onClose: (() => void) | null = null;
   private siteName: string = '';
 
+  private externalProjects: Array<{id: string; title: string}> | null = null;
+
+  setAllProjects(projects: Array<{id: string; title: string}>): void {
+    this.externalProjects = projects;
+  }
+
   private get distinctProjects(): Array<{id: string; title: string}> {
+    if (this.externalProjects && this.externalProjects.length > 0) {
+      return this.externalProjects;
+    }
     const seen = new Set<string>();
     const out: Array<{id: string; title: string}> = [];
     for (const a of this.annotations) {

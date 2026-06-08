@@ -7,6 +7,11 @@ export interface VerifyResult {
   siteName?: string;
 }
 
+export interface ProjectInfo {
+  id: string;
+  name: string | null;
+}
+
 export function createApiClient(baseUrl: string, token: string, projectId: string, wpApiUrl?: string, wpApiKey?: string) {
   async function vercelRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
     const url = `${baseUrl.replace(/\/+$/, '')}/api${path}`;
@@ -47,6 +52,14 @@ export function createApiClient(baseUrl: string, token: string, projectId: strin
         method: 'POST',
         body: JSON.stringify({ token }),
       }),
+
+    getProjects: (): Promise<ProjectInfo[]> => {
+      if (useWp) {
+        return wpRequest<ProjectInfo[]>('GET', '/projects');
+      }
+      return vercelRequest<{ projects: ProjectInfo[] }>(`/widget/projects?token=${encodeURIComponent(token)}`)
+        .then(r => r.projects);
+    },
 
     getAnnotations: (pageUrl: string, projectId: string): Promise<Annotation[]> => {
       if (useWp) {

@@ -992,6 +992,12 @@
         method: "POST",
         body: JSON.stringify({ token })
       }),
+      getProjects: () => {
+        if (useWp) {
+          return wpRequest("GET", "/projects");
+        }
+        return vercelRequest(`/widget/projects?token=${encodeURIComponent(token)}`).then((r) => r.projects);
+      },
       getAnnotations: (pageUrl, projectId2) => {
         if (useWp) {
           return wpRequest("GET", `/annotations?pageUrl=${encodeURIComponent(pageUrl)}&projectId=${encodeURIComponent(projectId2)}`);
@@ -1736,9 +1742,16 @@
       this.currentProjectFilter = "";
       this.onClose = null;
       this.siteName = "";
+      this.externalProjects = null;
       this._closeProjectMenu = null;
     }
+    setAllProjects(projects) {
+      this.externalProjects = projects;
+    }
     get distinctProjects() {
+      if (this.externalProjects && this.externalProjects.length > 0) {
+        return this.externalProjects;
+      }
       const seen = /* @__PURE__ */ new Set();
       const out = [];
       for (const a of this.annotations) {
@@ -2242,6 +2255,7 @@
   var AnnotationEngine = class {
     constructor(config, api) {
       this.annotations = [];
+      this.allProjects = [];
       this.currentTool = "select";
       this.deviceMode = "desktop";
       this.filterMode = "all";
@@ -2338,6 +2352,7 @@
       this.buildToolbar();
       this.attachDrawingListeners();
       this.loadAnnotations();
+      this.fetchProjects();
       if (this.browseMode) {
         const overlay = document.getElementById("feedspace-overlay");
         if (overlay) overlay.style.display = "none";
@@ -2868,6 +2883,17 @@
       } catch (err) {
         console.error("Failed to load annotations", err);
         dbg("loadAnnotations: FAILED", String(err));
+      }
+    }
+    async fetchProjects() {
+      try {
+        const projects = await this.api.getProjects();
+        this.allProjects = projects.map((p) => ({
+          id: p.id,
+          title: p.name || "Session #" + p.id.slice(0, 8)
+        }));
+        this.feedbackList.setAllProjects(this.allProjects);
+      } catch {
       }
     }
     async backfillProjectNames() {

@@ -703,6 +703,12 @@ class FeedspaceConnector
             'permission_callback' => array($this, 'checkApiAuth'),
         ));
 
+        register_rest_route('feedspace/v1', '/projects', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'getProjects'),
+            'permission_callback' => array($this, 'checkApiAuth'),
+        ));
+
         // Webhook: Vercel pushes status/reply changes back to WP
         register_rest_route('feedspace/v1', '/webhook', array(
             'methods' => 'POST',
@@ -1417,6 +1423,31 @@ class FeedspaceConnector
         }
 
         return new WP_REST_Response($annotations, 200);
+    }
+
+    public function getProjects()
+    {
+        global $wpdb;
+        $tableName = $wpdb->prefix . 'feedspace_annotations';
+        $rows = $wpdb->get_results("SELECT DISTINCT project_id FROM $tableName WHERE project_id IS NOT NULL AND project_id != '' ORDER BY project_id ASC");
+        $projects = array();
+        foreach ($rows as $row) {
+            $pid = $row->project_id;
+            // Try to get project name from the most recent annotation's meta_data
+            $nameRow = $wpdb->get_var($wpdb->prepare(
+                "SELECT meta_data FROM $tableName WHERE project_id = %s AND meta_data IS NOT NULL AND meta_data != '' ORDER BY created_at DESC LIMIT 1",
+                $pid
+            ));
+            $name = null;
+            if ($nameRow) {
+                $meta = json_decode($nameRow, true);
+                if (is_array($meta) && !empty($meta['projectName'])) {
+                    $name = $meta['projectName'];
+                }
+            }
+            $projects[] = array('id' => $pid, 'name' => $name);
+        }
+        return new WP_REST_Response($projects, 200);
     }
 
     public function updateAnnotation($request)
