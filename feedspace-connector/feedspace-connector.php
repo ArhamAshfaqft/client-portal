@@ -1021,6 +1021,12 @@ class FeedspaceConnector
 
     private function handleUpload($file, $projectId = '')
     {
+        // Enforce custom max upload size
+        $customMax = absint(get_option('feedspace_max_upload_size', 0));
+        if ($customMax > 0 && $file['size'] > $customMax * 1024 * 1024) {
+            return new WP_Error('upload_too_large', sprintf('File size exceeds %d MB limit.', $customMax), array('status' => 413));
+        }
+
         // Previu pattern: direct file read/write — avoids wp_handle_upload/wp_insert_attachment crashes
         $uploadDir = wp_upload_dir();
         $mediaDir = $uploadDir['basedir'] . '/feedspace-media/';
@@ -1528,6 +1534,9 @@ class FeedspaceConnector
             'sanitize_callback' => 'sanitize_text_field',
         ));
         register_setting('feedspace_settings', 'feedspace_debug_enabled');
+        register_setting('feedspace_settings', 'feedspace_max_upload_size', array(
+            'sanitize_callback' => 'absint',
+        ));
     }
 
     public function addAdminMenu()
@@ -1580,7 +1589,14 @@ class FeedspaceConnector
                 <p><strong>WordPress Version:</strong> <?php echo esc_html(get_bloginfo('version')); ?></p>
                 <p><strong>Site URL:</strong> <?php echo esc_html($siteUrl); ?></p>
                 <p><strong>REST API URL:</strong> <code><?php echo esc_url($restUrl); ?></code></p>
-                <p><strong>Upload Max Size:</strong> <?php echo esc_html(size_format(wp_max_upload_size())); ?></p>
+                <p><strong>Upload Max Size:</strong> <?php
+                    $customLimit = absint(get_option('feedspace_max_upload_size', 0));
+                    if ($customLimit > 0) {
+                        echo esc_html($customLimit . ' MB');
+                    } else {
+                        echo esc_html(size_format(wp_max_upload_size()));
+                    }
+                ?></p>
             </div>
 
             <div class="feedspace-settings-card">
@@ -1625,6 +1641,16 @@ class FeedspaceConnector
                                     Show debug overlay on preview pages
                                 </label>
                                 <p class="description">Adds a floating debug panel to help diagnose widget issues.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Max Upload Size</th>
+                            <td>
+                                <input type="number" name="feedspace_max_upload_size"
+                                    value="<?php echo esc_attr(get_option('feedspace_max_upload_size', '0')); ?>"
+                                class="small-text" min="0" step="1" placeholder="0" />
+                                <span style="font-size:13px;color:#6b7280;">MB (0 = use server default of <?php echo esc_html(size_format(wp_max_upload_size())); ?>)</span>
+                                <p class="description">Set a custom limit for feedback media uploads. Cannot exceed the server maximum.</p>
                             </td>
                         </tr>
                     </table>
