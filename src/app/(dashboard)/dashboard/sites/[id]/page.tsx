@@ -179,8 +179,15 @@ export default function SiteDetailPage() {
     setSubmitting(false);
   };
 
+  const getPreviewUrl = (link: PreviewLink) => {
+    const linkedSite = site;
+    const isWPConnected = linkedSite?.wp_connected && linkedSite?.url;
+    return isWPConnected
+      ? `${linkedSite.url.replace(/\/+$/, '')}?feedspace_preview=${link.token}`
+      : `${window.location.origin}/preview/${link.token}`;
+  };
+
   const copyPreviewLink = (token: string, projectId: string) => {
-    const project = projects.find((p) => p.id === projectId);
     const linkedSite = site;
     const isWPConnected = linkedSite?.wp_connected && linkedSite?.url;
     const url = isWPConnected
@@ -457,7 +464,7 @@ export default function SiteDetailPage() {
                                   <Clock className="w-3.5 h-3.5 text-amber-500" />
                                 )}
                                 <span className="text-sm truncate text-foreground">
-                                  {link.target_url}
+                                  {getPreviewUrl(link)}
                                 </span>
                               </div>
                               <div className="flex items-center gap-3 mt-1">
