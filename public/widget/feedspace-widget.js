@@ -2713,8 +2713,7 @@
           metaData: {
             device: this.deviceMode,
             elementTag: "",
-            elementText: "",
-            projectName: this.config.siteName || ""
+            elementText: ""
           }
         };
         await this._doSaveAnnotation(payload2, files);
@@ -2727,8 +2726,7 @@
       const metaData = {
         device: this.deviceMode,
         elementTag: startDna.tag,
-        elementText: startDna.text,
-        projectName: this.config.siteName || ""
+        elementText: startDna.text
       };
       const payload = {
         projectId: this.config.projectId,
@@ -2900,13 +2898,14 @@
       const seen = /* @__PURE__ */ new Set();
       const missing = [];
       for (const a of this.annotations) {
-        if (a.projectId && !a.projectName && !seen.has(a.projectId)) {
-          seen.add(a.projectId);
-          if (this.projectNameCache[a.projectId]) {
-            a.projectName = this.projectNameCache[a.projectId];
-          } else {
-            missing.push({ pid: a.projectId, token: a.previewToken || "" });
-          }
+        if (!a.projectId || seen.has(a.projectId)) continue;
+        const hasPlaceholder = !a.projectName || a.projectName === this.config.siteName;
+        if (!hasPlaceholder) continue;
+        seen.add(a.projectId);
+        if (this.projectNameCache[a.projectId]) {
+          a.projectName = this.projectNameCache[a.projectId];
+        } else {
+          missing.push({ pid: a.projectId, token: a.previewToken || "" });
         }
       }
       if (missing.length === 0) return;

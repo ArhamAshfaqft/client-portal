@@ -590,7 +590,6 @@ export class AnnotationEngine {
           device: this.deviceMode,
           elementTag: '',
           elementText: '',
-          projectName: this.config.siteName || '',
         },
       };
 
@@ -608,7 +607,6 @@ export class AnnotationEngine {
       device: this.deviceMode,
       elementTag: startDna.tag,
       elementText: startDna.text,
-      projectName: this.config.siteName || '',
     };
 
     const payload: CreateAnnotationPayload = {
@@ -798,13 +796,14 @@ export class AnnotationEngine {
     const seen = new Set<string>();
     const missing: { pid: string; token: string }[] = [];
     for (const a of this.annotations) {
-      if (a.projectId && !a.projectName && !seen.has(a.projectId)) {
-        seen.add(a.projectId);
-        if (this.projectNameCache[a.projectId]) {
-          a.projectName = this.projectNameCache[a.projectId];
-        } else {
-          missing.push({ pid: a.projectId, token: a.previewToken || '' });
-        }
+      if (!a.projectId || seen.has(a.projectId)) continue;
+      const hasPlaceholder = !a.projectName || a.projectName === this.config.siteName;
+      if (!hasPlaceholder) continue;
+      seen.add(a.projectId);
+      if (this.projectNameCache[a.projectId]) {
+        a.projectName = this.projectNameCache[a.projectId];
+      } else {
+        missing.push({ pid: a.projectId, token: a.previewToken || '' });
       }
     }
     if (missing.length === 0) return;

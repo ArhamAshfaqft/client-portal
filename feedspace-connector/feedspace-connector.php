@@ -1431,68 +1431,58 @@ class FeedspaceConnector
         $tableName = $wpdb->prefix . 'feedspace_annotations';
         $rows = $wpdb->get_results("SELECT DISTINCT project_id FROM $tableName WHERE project_id IS NOT NULL AND project_id != '' ORDER BY project_id ASC");
 
-        // Pre-warm a cache of project names from Vercel for missing names
-        $apiUrl = get_option('feedspace_dashboard_url', '');
-        $siteToken = get_option('feedspace_site_token', '');
-        $wpApiKey = get_option('feedspace_api_key', '');
-        $nameMap = get_transient('feedspace_project_names');
-        if (!is_array($nameMap)) $nameMap = array();
+        $pids = array_map(function($r) { return $r->project_id; }, $rows);
+        if (empty($pids)) {
+            return new WP_REST_Response(array(), 200);
+        }
 
+        // Build a cache key from sorted project IDs so new projects trigger fresh fetch
+        $cacheKey = 'fs_pnames_' . md5(implode(',', $pids));
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return new WP_REST_Response($cached, 200);
+        }
+
+        // Fetch names from Vercel — meta_data.projectName is unreliable (stale site name)
+        $apiUrl = get_option('feedspace_dashboard_url', '');
         $projects = array();
-        $needFetch = array();
         foreach ($rows as $row) {
             $pid = $row->project_id;
             $name = null;
 
-            // Try local meta_data first
-            $nameRow = $wpdb->get_var($wpdb->prepare(
-                "SELECT meta_data FROM $tableName WHERE project_id = %s AND meta_data IS NOT NULL AND meta_data != '' ORDER BY created_at DESC LIMIT 1",
-                $pid
-            ));
-            if ($nameRow) {
-                $meta = json_decode($nameRow, true);
-                if (is_array($meta) && !empty($meta['projectName'])) {
-                    $name = $meta['projectName'];
-                }
-            }
-
-            // Fall back to cache, or queue for Vercel fetch
-            if (!$name && isset($nameMap[$pid])) {
-                $name = $nameMap[$pid];
-            }
-            if (!$name) {
-                $needFetch[] = $pid;
-            }
-            $projects[] = array('id' => $pid, 'name' => $name);
-        }
-
-        // Batch-fetch missing names from Vercel
-        if (!empty($needFetch) && !empty($apiUrl)) {
-            foreach ($needFetch as $fetchPid) {
+            if (!empty($apiUrl)) {
                 $lookupUrl = rtrim($apiUrl, '/') . '/api/widget/verify-token';
                 $resp = wp_remote_post($lookupUrl, array(
                     'headers' => array('Content-Type' => 'application/json'),
-                    'body' => json_encode(array('projectId' => $fetchPid)),
+                    'body' => json_encode(array('projectId' => $pid)),
                     'timeout' => 5,
                 ));
                 if (!is_wp_error($resp)) {
                     $body = json_decode(wp_remote_retrieve_body($resp), true);
                     if ($body && !empty($body['name'])) {
-                        $nameMap[$fetchPid] = $body['name'];
-                        // Update projects list with the fetched name
-                        foreach ($projects as &$p) {
-                            if ($p['id'] === $fetchPid) {
-                                $p['name'] = $body['name'];
-                                break;
-                            }
-                        }
-                        unset($p);
+                        $name = $body['name'];
                     }
                 }
             }
-            set_transient('feedspace_project_names', $nameMap, DAY_IN_SECONDS);
+
+            // Fallback: try meta_data (may contain stale site name but better than nothing)
+            if (!$name) {
+                $nameRow = $wpdb->get_var($wpdb->prepare(
+                    "SELECT meta_data FROM $tableName WHERE project_id = %s AND meta_data IS NOT NULL AND meta_data != '' ORDER BY created_at DESC LIMIT 1",
+                    $pid
+                ));
+                if ($nameRow) {
+                    $meta = json_decode($nameRow, true);
+                    if (is_array($meta) && !empty($meta['projectName'])) {
+                        $name = $meta['projectName'];
+                    }
+                }
+            }
+
+            $projects[] = array('id' => $pid, 'name' => $name);
         }
 
+        set_transient($cacheKey, $projects, HOUR_IN_SECONDS);
         return new WP_REST_Response($projects, 200);
     }
 
