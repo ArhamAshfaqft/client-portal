@@ -1700,17 +1700,6 @@ class FeedspaceConnector
                             </td>
                         </tr>
                         <tr>
-                            <th>Debug Overlay</th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="feedspace_debug_enabled" value="1"
-                                        <?php checked(get_option('feedspace_debug_enabled'), '1'); ?> />
-                                    Show debug overlay on preview pages
-                                </label>
-                                <p class="description">Adds a floating debug panel to help diagnose widget issues.</p>
-                            </td>
-                        </tr>
-                        <tr>
                             <th>Max Upload Size</th>
                             <td>
                                 <input type="number" name="feedspace_max_upload_size"
@@ -1734,6 +1723,14 @@ class FeedspaceConnector
                         Enable
                     </label>
                 </h2>
+                <p style="margin:4px 0 12px;">
+                    <label>
+                        <input type="checkbox" name="feedspace_debug_enabled" value="1"
+                            <?php checked(get_option('feedspace_debug_enabled'), '1'); ?> />
+                        Show debug overlay on preview pages
+                    </label>
+                    <br><span style="font-size:12px;color:#6b7280;">Adds a floating debug panel to help diagnose widget issues.</span>
+                </p>
                 <?php if (get_option('feedspace_debug_log_enabled') === '1'): ?>
                     <div style="max-height:400px;overflow-y:auto;font-size:11px;background:#f9fafb;padding:8px;border-radius:4px;font-family:monospace;white-space:pre-wrap;">
                         <?php
