@@ -107,9 +107,9 @@ export async function POST(request: Request) {
     if (!site?.wp_api_key) return;
     const restUrl = (site.wp_api_url || site.url || "").replace(/\/+$/, "");
     if (!restUrl) return;
-    await fetch(`${restUrl}/wp-json/feedspace/v1/webhook`, {
+    await fetch(`${restUrl}/wp-json/feeddash/v1/webhook`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
+      headers: { "Content-Type": "application/json", "X-FeedDash-Key": site.wp_api_key },
       body: JSON.stringify({ action: "feedback_created", data: { id: feedbackItem.id, projectId, status: feedbackItem.status } }),
     });
   });

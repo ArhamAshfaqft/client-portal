@@ -7,11 +7,11 @@ import { getElementDNA, closestTargetable, toRelative, findElement } from './ele
 import { uploadToWordPress } from './uploader';
 
 function dbg(msg: string, data?: unknown): void {
-  const arr = (window as any).__feedspaceDebug;
+  const arr = (window as any).__feeddashDebug;
   if (arr && Array.isArray(arr)) {
     arr.push({ msg, data, time: Date.now() });
   }
-  console.log('[Feedspace]', msg, data || '');
+  console.log('[FeedDash]', msg, data || '');
 }
 
 const SVG_ICONS = {
@@ -44,7 +44,7 @@ export class AnnotationEngine {
   private deviceMode: DeviceMode = 'desktop';
   private filterMode: FilterMode = 'all';
   private clientName: string = '';
-  private browseMode = sessionStorage.getItem('feedspace_browse') === '1';
+  private browseMode = sessionStorage.getItem('feeddash_browse') === '1';
 
   private isDrawing = false;
   private drawStart: { x: number; y: number; el: Element | null; dna: ElementDNA | null } | null = null;
@@ -73,7 +73,7 @@ export class AnnotationEngine {
 
   async init(): Promise<void> {
     dbg('AnnotationEngine.init() called');
-    this.clientName = localStorage.getItem('feedspace_client_name') || '';
+    this.clientName = localStorage.getItem('feeddash_client_name') || '';
     dbg('clientName from localStorage:', this.clientName || '(empty)');
     if (!this.clientName) {
       dbg('No client name — showing name modal');
@@ -91,15 +91,15 @@ export class AnnotationEngine {
       return;
     }
     const modal = document.createElement('div');
-    modal.className = 'feedspace-name-modal';
+    modal.className = 'feeddash-name-modal';
     modal.innerHTML = `
-      <div class="feedspace-name-modal-card">
+      <div class="feeddash-name-modal-card">
         <h3>What is your name?</h3>
         <p>This will be shown with your feedback.</p>
-        <input type="text" id="feedspace-name-input" placeholder="Your name..." maxlength="50" autocomplete="off">
+        <input type="text" id="feeddash-name-input" placeholder="Your name..." maxlength="50" autocomplete="off">
         <div class="actions">
-          <button class="cancel" id="feedspace-name-skip">Skip</button>
-          <button class="confirm" id="feedspace-name-continue">Continue</button>
+          <button class="cancel" id="feeddash-name-skip">Skip</button>
+          <button class="confirm" id="feeddash-name-continue">Continue</button>
         </div>
       </div>
     `;
@@ -107,26 +107,26 @@ export class AnnotationEngine {
     this.nameModal = modal;
     dbg('Name modal appended to body');
 
-    const input = modal.querySelector('#feedspace-name-input') as HTMLInputElement;
+    const input = modal.querySelector('#feeddash-name-input') as HTMLInputElement;
     input.focus();
 
-    modal.querySelector('#feedspace-name-skip')!.addEventListener('click', () => {
+    modal.querySelector('#feeddash-name-skip')!.addEventListener('click', () => {
       this.clientName = 'Anonymous';
-      localStorage.setItem('feedspace_client_name', this.clientName);
+      localStorage.setItem('feeddash_client_name', this.clientName);
       this.destroyNameModal();
       this.boot();
     });
 
-    modal.querySelector('#feedspace-name-continue')!.addEventListener('click', () => {
+    modal.querySelector('#feeddash-name-continue')!.addEventListener('click', () => {
       this.clientName = input.value.trim() || 'Anonymous';
-      localStorage.setItem('feedspace_client_name', this.clientName);
+      localStorage.setItem('feeddash_client_name', this.clientName);
       this.destroyNameModal();
       this.boot();
     });
 
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        (modal.querySelector('#feedspace-name-continue') as HTMLButtonElement)?.click();
+        (modal.querySelector('#feeddash-name-continue') as HTMLButtonElement)?.click();
       }
     });
   }
@@ -148,7 +148,7 @@ export class AnnotationEngine {
     this.loadAnnotations();
     // Apply persisted browse mode after annotations load (creates SVG overlay)
     if (this.browseMode) {
-      const overlay = document.getElementById('feedspace-overlay');
+      const overlay = document.getElementById('feeddash-overlay');
       if (overlay) overlay.style.display = 'none';
     }
     dbg('boot() complete');
@@ -157,27 +157,27 @@ export class AnnotationEngine {
   private buildToolbar(): void {
     const dev = !!this.config.devMode;
     this.toolbarRoot = document.createElement('div');
-    this.toolbarRoot.id = 'feedspace-widget-root';
+    this.toolbarRoot.id = 'feeddash-widget-root';
     this.toolbarRoot.innerHTML = `
-      <div class="feedspace-toolbar">
-        ${dev ? '' : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
-        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
-        <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
-        <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
-        <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
-        <div class="feedspace-toolbar-divider"></div>`}
-        <button class="feedspace-tool-btn feedspace-browse-btn ${this.browseMode ? 'browsing' : ''}" data-action="browse" title="${this.browseMode ? 'Switch to Comment Mode' : 'Switch to Browse Mode'}">
+      <div class="feeddash-toolbar">
+        ${dev ? '' : `<button class="feeddash-tool-btn active" data-tool="select" title="Select">${SVG_ICONS.select}</button>
+        <button class="feeddash-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS.pin}</button>
+        <button class="feeddash-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS.arrow}</button>
+        <button class="feeddash-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS.rect}</button>
+        <div class="feeddash-toolbar-divider"></div>
+        <button class="feeddash-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS.desktop}</button>
+        <button class="feeddash-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS.tablet}</button>
+        <button class="feeddash-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS.mobile}</button>
+        <div class="feeddash-toolbar-divider"></div>`}
+        <button class="feeddash-tool-btn feeddash-browse-btn ${this.browseMode ? 'browsing' : ''}" data-action="browse" title="${this.browseMode ? 'Switch to Comment Mode' : 'Switch to Browse Mode'}">
           ${this.browseMode ? SVG_ICONS.eyeOff : SVG_ICONS.eye}
         </button>
-        <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
+        <button class="feeddash-tool-btn" data-action="list" title="Feedback List" id="feeddash-list-btn">
           ${SVG_ICONS.list}
-          <span class="badge" id="feedspace-list-count" style="display:none">0</span>
+          <span class="badge" id="feeddash-list-count" style="display:none">0</span>
         </button>
-        ${dev ? '' : `<div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
+        ${dev ? '' : `<div class="feeddash-toolbar-divider"></div>
+        <button class="feeddash-submit-btn" data-action="submit" title="Finish reviewing">
           ${SVG_ICONS.submit}
           Finish Review
         </button>`}
@@ -238,12 +238,12 @@ export class AnnotationEngine {
       btn.classList.toggle('active', btn.getAttribute('data-tool') === this.currentTool);
     });
 
-    document.body.setAttribute('data-feedspace-tool', this.currentTool);
+    document.body.setAttribute('data-feeddash-tool', this.currentTool);
     if (this.currentTool === 'select') this.clearHoverHighlight();
 
-    const overlay = document.getElementById('feedspace-overlay');
+    const overlay = document.getElementById('feeddash-overlay');
     if (overlay) {
-      overlay.classList.toggle('feedspace-active', this.currentTool === 'select');
+      overlay.classList.toggle('feeddash-active', this.currentTool === 'select');
     }
 
     this.cleanupDrawState();
@@ -258,7 +258,7 @@ export class AnnotationEngine {
 
     const body = document.body;
 
-    let wrapper = document.getElementById('feedspace-viewport-wrapper');
+    let wrapper = document.getElementById('feeddash-viewport-wrapper');
     if (wrapper) {
       wrapper.parentNode?.removeChild(wrapper);
     }
@@ -283,9 +283,9 @@ export class AnnotationEngine {
 
   private toggleBrowse(): void {
     this.browseMode = !this.browseMode;
-    sessionStorage.setItem('feedspace_browse', this.browseMode ? '1' : '0');
+    sessionStorage.setItem('feeddash_browse', this.browseMode ? '1' : '0');
 
-    const overlay = document.getElementById('feedspace-overlay');
+    const overlay = document.getElementById('feeddash-overlay');
     if (overlay) {
       overlay.style.display = this.browseMode ? 'none' : '';
     }
@@ -323,10 +323,10 @@ export class AnnotationEngine {
       return;
     }
     if (this.currentTool === 'rect') {
-      target.classList.add('feedspace-hover-dashed');
+      target.classList.add('feeddash-hover-dashed');
       this.hoverHighlightEl = target;
     } else {
-      target.classList.add('feedspace-hover-highlight');
+      target.classList.add('feeddash-hover-highlight');
       this.hoverHighlightEl = target;
     }
   }
@@ -337,8 +337,8 @@ export class AnnotationEngine {
       this.arrowPreviewEl = null;
     }
     if (this.hoverHighlightEl) {
-      this.hoverHighlightEl.classList.remove('feedspace-hover-highlight');
-      this.hoverHighlightEl.classList.remove('feedspace-hover-dashed');
+      this.hoverHighlightEl.classList.remove('feeddash-hover-highlight');
+      this.hoverHighlightEl.classList.remove('feeddash-hover-dashed');
       this.hoverHighlightEl = null;
     }
   }
@@ -346,7 +346,7 @@ export class AnnotationEngine {
   private onMouseDown(e: MouseEvent): void {
     if (this.currentTool === 'select') return;
     if (e.button !== 0) return;
-    if ((e.target as HTMLElement)?.closest('#feedspace-widget-root, #feedspace-overlay, .feedspace-panel, .feedspace-panel-overlay, .feedspace-name-modal')) return;
+    if ((e.target as HTMLElement)?.closest('#feeddash-widget-root, #feeddash-overlay, .feeddash-panel, .feeddash-panel-overlay, .feeddash-name-modal')) return;
 
     e.preventDefault();
     this.isDrawing = true;
@@ -377,7 +377,7 @@ export class AnnotationEngine {
 
     // Draw preview line during arrow drag
     if (this.currentTool === 'arrow') {
-      const overlay = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+      const overlay = document.getElementById('feeddash-overlay') as unknown as SVGSVGElement;
       if (!overlay) return;
       if (this.dragLineEl && this.dragLineEl.parentNode) {
         this.dragLineEl.parentNode.removeChild(this.dragLineEl);
@@ -461,7 +461,7 @@ export class AnnotationEngine {
   }
 
   private showPendingAnnotation(el: Element, dna: ElementDNA): void {
-    const svg = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+    const svg = document.getElementById('feeddash-overlay') as unknown as SVGSVGElement;
     if (!svg) return;
     this.removePendingAnnotation();
 
@@ -486,7 +486,7 @@ export class AnnotationEngine {
   }
 
   private showPendingArrow(startX: number, startY: number, endX: number, endY: number): void {
-    const svg = document.getElementById('feedspace-overlay') as unknown as SVGSVGElement;
+    const svg = document.getElementById('feeddash-overlay') as unknown as SVGSVGElement;
     if (!svg) return;
     this.removePendingAnnotation();
 
@@ -503,7 +503,7 @@ export class AnnotationEngine {
     line.setAttribute('y2', String(y2));
     line.setAttribute('stroke', '#6366f1');
     line.setAttribute('stroke-width', '2.5');
-    line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+    line.setAttribute('marker-end', 'url(#feeddash-arrowhead)');
     g.appendChild(line);
     svg.appendChild(g);
     this.pendingAnnotationEl = g;
@@ -671,9 +671,9 @@ export class AnnotationEngine {
 
   private async changeAnnotationStatus(id: string, status: string): Promise<void> {
     try {
-      console.log('[Feedspace] changeAnnotationStatus:', { id, status });
+      console.log('[FeedDash] changeAnnotationStatus:', { id, status });
       const updated = await this.api.updateAnnotation(id, { status: status as any });
-      console.log('[Feedspace] changeAnnotationStatus response:', updated);
+      console.log('[FeedDash] changeAnnotationStatus response:', updated);
       const idx = this.annotations.findIndex(a => a.id === id);
       if (idx >= 0) {
         this.annotations[idx] = { ...this.annotations[idx], ...updated, status: status as any };
@@ -691,11 +691,11 @@ export class AnnotationEngine {
   private async saveToLibrary(fileUrl: string, fileName: string): Promise<boolean> {
     try {
       const wpUrl = this.config.wpApiUrl.replace(/\/+$/, '');
-      const res = await fetch(`${wpUrl}/wp-json/feedspace/v1/media/save-to-library`, {
+      const res = await fetch(`${wpUrl}/wp-json/feeddash/v1/media/save-to-library`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Feedspace-Key': this.config.wpApiKey,
+          'X-FeedDash-Key': this.config.wpApiKey,
         },
         body: JSON.stringify({ url: fileUrl }),
       });
@@ -760,7 +760,7 @@ export class AnnotationEngine {
           if (changed.length > 0) this.renderer.setAnnotations(this.annotations);
         }
       } catch (err) {
-        console.warn('[Feedspace] statusSync failed:', err);
+        console.warn('[FeedDash] statusSync failed:', err);
         dbg('statusSync: FAILED', typeof err === 'object' ? String((err as any)?.message || err) : String(err));
       }
       dbg('loadAnnotations: fetched ' + this.annotations.length + ' annotations');
@@ -799,7 +799,7 @@ export class AnnotationEngine {
           body: JSON.stringify({ projectId: pid }),
         });
         const data = await res.json();
-        console.log('[Feedspace] Project name lookup:', { projectId: pid, status: res.status, response: data });
+        console.log('[FeedDash] Project name lookup:', { projectId: pid, status: res.status, response: data });
         if (res.ok && data.name) {
           this.projectNameCache[pid] = data.name;
           for (const a of this.annotations) {
@@ -809,24 +809,24 @@ export class AnnotationEngine {
         }
         // Fallback: try token-based lookup if projectId returned no name
         if (token) {
-          console.log('[Feedspace] Falling back to token lookup for', pid);
+          console.log('[FeedDash] Falling back to token lookup for', pid);
           const tres = await fetch(`${apiUrl}/api/widget/verify-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token }),
           });
           const tdata = await tres.json();
-          console.log('[Feedspace] Token lookup result:', { token, status: tres.status, response: tdata });
+          console.log('[FeedDash] Token lookup result:', { token, status: tres.status, response: tdata });
           if (tres.ok && tdata.valid && tdata.siteName) {
             this.projectNameCache[pid] = tdata.siteName;
             for (const a of this.annotations) {
               if (a.projectId === pid && !a.projectName) a.projectName = tdata.siteName;
             }
-            console.log('[Feedspace] Set projectName from token fallback:', pid, '->', tdata.siteName);
+            console.log('[FeedDash] Set projectName from token fallback:', pid, '->', tdata.siteName);
             continue;
           }
         }
-        console.log('[Feedspace] No name found for project', pid, '- using fallback');
+        console.log('[FeedDash] No name found for project', pid, '- using fallback');
       } catch (e) { /* ignore fetch errors */ }
     }
   }
@@ -933,7 +933,7 @@ export class AnnotationEngine {
   }
 
   private updateBadge(): void {
-    const badge = document.getElementById('feedspace-list-count');
+    const badge = document.getElementById('feeddash-list-count');
     if (!badge) return;
     const count = this.annotations.length;
     badge.textContent = String(count);
@@ -1022,16 +1022,16 @@ export class AnnotationEngine {
   }
 
   private showToast(message: string): void {
-    const existing = document.getElementById('feedspace-toast');
+    const existing = document.getElementById('feeddash-toast');
     if (existing) existing.remove();
 
     const toast = document.createElement('div');
-    toast.id = 'feedspace-toast';
+    toast.id = 'feeddash-toast';
     toast.style.cssText = `
       position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
       background:#1f2937;color:#fff;padding:10px 20px;border-radius:8px;
       font-size:13px;font-family:'Poppins',sans-serif;z-index:100001;
-      box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:feedspace-fade-in 0.15s;
+      box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:feeddash-fade-in 0.15s;
     `;
     toast.textContent = message;
     document.body.appendChild(toast);
@@ -1051,8 +1051,8 @@ export class AnnotationEngine {
       this.toolbarRoot.parentNode.removeChild(this.toolbarRoot);
     }
     if (this.recordingTimer) clearInterval(this.recordingTimer);
-    document.body.removeAttribute('data-feedspace-tool');
-    const wrapper = document.getElementById('feedspace-viewport-wrapper');
+    document.body.removeAttribute('data-feeddash-tool');
+    const wrapper = document.getElementById('feeddash-viewport-wrapper');
     if (wrapper) wrapper.parentNode?.removeChild(wrapper);
     document.body.style.maxWidth = '';
     document.body.style.margin = '';

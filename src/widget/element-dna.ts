@@ -1,8 +1,8 @@
 import type { ElementDNA } from './types';
 
 export function getDataId(el: Element): string | null {
-  const widget = el.closest('[data-feedspace-widget-id]');
-  if (widget) return widget.getAttribute('data-feedspace-widget-id');
+  const widget = el.closest('[data-feeddash-widget-id]');
+  if (widget) return widget.getAttribute('data-feeddash-widget-id');
   const elWidget = el.closest('[data-id]');
   if (elWidget) return elWidget.getAttribute('data-id');
   return null;
@@ -54,7 +54,7 @@ export function getFingerprint(el: Element): string {
 
 export function getElementDNA(el: Element): ElementDNA {
   let target: Element = el;
-  const widget = el.closest('[data-feedspace-widget-id],[data-id]');
+  const widget = el.closest('[data-feeddash-widget-id],[data-id]');
   if (widget) target = widget;
   return {
     selector: getSelector(target),
@@ -93,7 +93,7 @@ export function findElement(dna: ElementDNA): Element | null {
 }
 
 export function closestTargetable(el: Element): Element {
-  const widget = el.closest('[data-feedspace-widget-id],[data-id]');
+  const widget = el.closest('[data-feeddash-widget-id],[data-id]');
   if (widget) return widget;
   const semantic = el.closest('h1,h2,h3,h4,h5,h6,p,a,button,img,section,article,figure');
   if (semantic) return semantic;

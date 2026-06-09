@@ -41,7 +41,7 @@ const DEMO_REPORTS = [
     id: "4",
     date: "2026-05-28",
     project: "Greenleaf Organics",
-    summary: "Installed Feedspace connector plugin. Configured WordPress REST API credentials. Tested media upload flow.",
+    summary: "Installed FeedDash connector plugin. Configured WordPress REST API credentials. Tested media upload flow.",
     hours: 2,
   },
 ];

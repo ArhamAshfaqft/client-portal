@@ -168,19 +168,19 @@ export class FeedbackListPanel {
     this.close();
 
     this.overlay = document.createElement('div');
-    this.overlay.className = 'feedspace-panel-overlay';
+    this.overlay.className = 'feeddash-panel-overlay';
     this.overlay.addEventListener('click', () => this.close());
     document.body.appendChild(this.overlay);
 
     this.root = document.createElement('div');
-    this.root.className = 'feedspace-panel';
+    this.root.className = 'feeddash-panel';
 
     // Header
     const header = document.createElement('div');
-    header.className = 'feedspace-panel-header';
+    header.className = 'feeddash-panel-header';
     header.innerHTML = `
-      <span class="feedspace-panel-title">Feedback List</span>
-      <button class="feedspace-panel-close" id="feedback-list-close">
+      <span class="feeddash-panel-title">Feedback List</span>
+      <button class="feeddash-panel-close" id="feedback-list-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     `;
@@ -189,7 +189,7 @@ export class FeedbackListPanel {
 
     // Status filter tabs
     const filters = document.createElement('div');
-    filters.className = 'feedspace-filter-tabs';
+    filters.className = 'feeddash-filter-tabs';
     const filterOptions: Array<{ value: FilterMode; label: string }> = [
       { value: 'all', label: 'All' },
       { value: 'pending', label: 'Pending' },
@@ -198,12 +198,12 @@ export class FeedbackListPanel {
     const filtersRoot = filters;
     for (const opt of filterOptions) {
       const btn = document.createElement('button');
-      btn.className = `feedspace-filter-tab${this.currentFilter === opt.value ? ' active' : ''}`;
+      btn.className = `feeddash-filter-tab${this.currentFilter === opt.value ? ' active' : ''}`;
       btn.textContent = opt.label;
       btn.dataset.filter = opt.value;
       btn.addEventListener('click', () => {
         this.currentFilter = opt.value;
-        filtersRoot.querySelectorAll('.feedspace-filter-tab').forEach(b => b.classList.remove('active'));
+        filtersRoot.querySelectorAll('.feeddash-filter-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.callbacks?.onFilterChange(opt.value);
         this.renderList();
@@ -214,7 +214,7 @@ export class FeedbackListPanel {
 
     // Device filter + sort
     const deviceRow = document.createElement('div');
-    deviceRow.className = 'feedspace-device-filter';
+    deviceRow.className = 'feeddash-device-filter';
     const deviceIcons: Record<string, string> = { desktop: SVG_ICONS.desktop, tablet: SVG_ICONS.tablet, mobile: SVG_ICONS.mobile };
     const deviceBtnHtml = (dv: string, label: string) => {
       const active = dv === this.currentDeviceFilter;
@@ -222,7 +222,7 @@ export class FeedbackListPanel {
       return `<button class="fs-df-btn${active?' active':''}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active?'#2563eb':'transparent'};color:${active?'#fff':'#64748b'};">${icon}${label} <span class="fs-df-count" style="background:${active?'rgba(255,255,255,0.2)':'#f1f5f9'};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
     };
     deviceRow.innerHTML =
-      `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feedspace-total-count">0</span></span>` +
+      `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feeddash-total-count">0</span></span>` +
       deviceBtnHtml('desktop', 'Desktop') +
       deviceBtnHtml('tablet', 'Tablet') +
       deviceBtnHtml('mobile', 'Mobile') +
@@ -233,7 +233,7 @@ export class FeedbackListPanel {
 
     // Body
     const body = document.createElement('div');
-    body.className = 'feedspace-panel-body';
+    body.className = 'feeddash-panel-body';
     body.id = 'feedback-list-body';
     this.root.appendChild(body);
 
@@ -297,7 +297,7 @@ export class FeedbackListPanel {
     baseForCounts.forEach(a => { const d = a.device || 'desktop'; if (deviceCounts[d] !== undefined) deviceCounts[d]++; });
 
     // Update device filter counts
-    const deviceRow = this.root?.querySelector('.feedspace-device-filter');
+    const deviceRow = this.root?.querySelector('.feeddash-device-filter');
     if (deviceRow) {
       deviceRow.querySelectorAll('.fs-df-btn').forEach(btn => {
         const dv = (btn as HTMLElement).dataset.device || 'desktop';
@@ -305,7 +305,7 @@ export class FeedbackListPanel {
         if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
       });
       // Update total count indicator
-      const totalEl = deviceRow.querySelector('#feedspace-total-count');
+      const totalEl = deviceRow.querySelector('#feeddash-total-count');
       if (totalEl) {
         const total = Object.values(deviceCounts).reduce((s, v) => s + v, 0);
         totalEl.textContent = String(total);
@@ -320,7 +320,7 @@ export class FeedbackListPanel {
     });
 
     if (filtered.length === 0) {
-      body.innerHTML = `<div class="feedspace-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
+      body.innerHTML = `<div class="feeddash-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
       return;
     }
 
@@ -387,7 +387,7 @@ export class FeedbackListPanel {
         ? `<span class="fs-type-tag"><span style="width:10px;height:10px;display:inline-flex;align-items:center;">${typeIcons[a.type] || ''}</span>${typeLabels[a.type]}</span>`
         : '';
 
-      return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
+      return `<div class="feeddash-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
             <span class="fs-number-badge">${a._num || idx + 1}</span>
@@ -400,14 +400,14 @@ export class FeedbackListPanel {
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-          <div class="feedspace-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
+          <div class="feeddash-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
           <div style="min-width:0;flex:1;">
-            <div class="feedspace-feedback-author" style="font-size:13px;">${escHtml(a.createdBy)}</div>
+            <div class="feeddash-feedback-author" style="font-size:13px;">${escHtml(a.createdBy)}</div>
             <div style="font-size:10px;color:#94a3b8;">${timeStr}</div>
           </div>
-          <span class="feedspace-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
+          <span class="feeddash-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
         </div>
-        <div class="feedspace-feedback-content" style="margin-top:8px;font-size:13px;">
+        <div class="feeddash-feedback-content" style="margin-top:8px;font-size:13px;">
           <span class="fs-comment-text">${escHtml(needsReadMore ? shortComment : comment)}</span>
           ${needsReadMore ? `<button class="fs-read-more" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:12px;font-weight:600;padding:0;margin-left:4px;">Read More</button>` : ''}
         </div>
@@ -422,11 +422,11 @@ export class FeedbackListPanel {
     body.innerHTML = html;
 
     // Click card — select annotation + scroll to element
-    body.querySelectorAll('.feedspace-feedback-item').forEach(item => {
+    body.querySelectorAll('.feeddash-feedback-item').forEach(item => {
       item.addEventListener('click', e => {
         if ((e.target as HTMLElement).closest('.fs-dots-trigger, .fs-dot-menu, .fs-reveal-btn, .fs-read-more, .fs-att-thumb')) return;
         const id = (item as HTMLElement).dataset.id;
-        body.querySelectorAll('.feedspace-feedback-item').forEach(el => el.classList.remove('highlight'));
+        body.querySelectorAll('.feeddash-feedback-item').forEach(el => el.classList.remove('highlight'));
         item.classList.add('highlight');
         if (id) this.callbacks?.onSelectAnnotation(id);
       });
@@ -436,7 +436,7 @@ export class FeedbackListPanel {
     body.querySelectorAll('.fs-read-more').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        const parent = (e.target as HTMLElement).closest('.feedspace-feedback-content');
+        const parent = (e.target as HTMLElement).closest('.feeddash-feedback-content');
         if (!parent) return;
         const textEl = parent.querySelector('.fs-comment-text') as HTMLElement;
         if (!textEl) return;
@@ -467,7 +467,7 @@ export class FeedbackListPanel {
         e.stopPropagation();
         document.querySelectorAll('.fs-dot-menu').forEach(m => m.remove());
 
-        const item = (e.target as HTMLElement).closest('.feedspace-feedback-item') as HTMLElement;
+        const item = (e.target as HTMLElement).closest('.feeddash-feedback-item') as HTMLElement;
         const id = item?.dataset.id;
 
         const menu = document.createElement('div');
@@ -511,7 +511,7 @@ export class FeedbackListPanel {
     body.querySelectorAll('.fs-att-thumb').forEach(thumb => {
       thumb.addEventListener('click', e => {
         e.stopPropagation();
-        const item = (e.target as HTMLElement).closest('.feedspace-feedback-item') as HTMLElement;
+        const item = (e.target as HTMLElement).closest('.feeddash-feedback-item') as HTMLElement;
         const id = item?.dataset.id;
         if (!id) return;
         const a = this.annotations.find(ann => ann.id === id);

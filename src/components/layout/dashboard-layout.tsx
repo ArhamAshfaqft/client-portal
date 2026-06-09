@@ -13,7 +13,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   useEffect(() => {
-    if (!isDemo && sessionStorage.getItem("feedspace_invite_flow") === "true") {
+    if (!isDemo && sessionStorage.getItem("feeddash_invite_flow") === "true") {
       setShowPasswordDialog(true);
     }
   }, [isDemo]);

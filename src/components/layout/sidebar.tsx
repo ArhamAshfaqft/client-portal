@@ -46,7 +46,7 @@ export function Sidebar() {
         {!collapsed && (
           <div>
             <span className="text-lg font-bold text-foreground tracking-tight">
-              Feedspace
+              FeedDash
             </span>
             <p className="text-[10px] text-muted-foreground leading-tight">
               {profile?.position ? `${profile.position} workspace` : profile?.role === "owner" ? "owner workspace" : "workspace"}
@@ -99,7 +99,7 @@ export function Sidebar() {
       <div className="px-3 py-4 border-t border-border">
         {!collapsed && (
           <div className="flex items-center gap-2 px-3">
-            <span className="text-xs text-sidebar-muted">Feedspace</span>
+            <span className="text-xs text-sidebar-muted">FeedDash</span>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary leading-none">Beta</span>
           </div>
         )}

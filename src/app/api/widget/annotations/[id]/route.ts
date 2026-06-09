@@ -50,10 +50,10 @@ async function notifySiteWebhook(feedbackItemId: string, action: string, data: R
       action,
       data: { ...data, id: item.mirror_id || data.id },
     };
-    const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`;
+    const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feeddash/v1/webhook`;
     await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Feedspace-Key": wpApiKey },
+      headers: { "Content-Type": "application/json", "X-FeedDash-Key": wpApiKey },
       body: JSON.stringify(webhookPayload),
     });
   } catch {

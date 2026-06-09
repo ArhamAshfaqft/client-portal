@@ -32,14 +32,14 @@ import type { Site, Project, PreviewLink, ProjectStatus } from "@/types";
 
 const DEMO_PREVIEW_LINKS: Record<string, PreviewLink[]> = {
   "demo-proj-1": [
-    { id: "link-1", project_id: "demo-proj-1", token: "demo-preview-token-1", target_url: "https://brightonlaw.preview.feedspace.io", is_active: true, created_by: "owner-1", created_at: "2026-05-20T10:00:00Z", expires_at: null },
+    { id: "link-1", project_id: "demo-proj-1", token: "demo-preview-token-1", target_url: "https://brightonlaw.preview.feeddash.app", is_active: true, created_by: "owner-1", created_at: "2026-05-20T10:00:00Z", expires_at: null },
   ],
   "demo-proj-3": [
-    { id: "link-2", project_id: "demo-proj-3", token: "demo-preview-token-3", target_url: "https://greenleaf.preview.feedspace.io", is_active: true, created_by: "owner-1", created_at: "2026-05-22T14:00:00Z", expires_at: "2026-06-22T14:00:00Z" },
-    { id: "link-5", project_id: "demo-proj-3", token: "demo-revoked-token", target_url: "https://v1.greenleaf.preview.feedspace.io", is_active: false, created_by: "owner-1", created_at: "2026-05-01T09:00:00Z", expires_at: null },
+    { id: "link-2", project_id: "demo-proj-3", token: "demo-preview-token-3", target_url: "https://greenleaf.preview.feeddash.app", is_active: true, created_by: "owner-1", created_at: "2026-05-22T14:00:00Z", expires_at: "2026-06-22T14:00:00Z" },
+    { id: "link-5", project_id: "demo-proj-3", token: "demo-revoked-token", target_url: "https://v1.greenleaf.preview.feeddash.app", is_active: false, created_by: "owner-1", created_at: "2026-05-01T09:00:00Z", expires_at: null },
   ],
   "demo-proj-5": [
-    { id: "link-3", project_id: "demo-proj-5", token: "demo-preview-token-5", target_url: "https://pinnacle.preview.feedspace.io", is_active: true, created_by: "owner-1", created_at: "2026-05-25T08:00:00Z", expires_at: "2026-06-25T08:00:00Z" },
+    { id: "link-3", project_id: "demo-proj-5", token: "demo-preview-token-5", target_url: "https://pinnacle.preview.feeddash.app", is_active: true, created_by: "owner-1", created_at: "2026-05-25T08:00:00Z", expires_at: "2026-06-25T08:00:00Z" },
   ],
 };
 
@@ -322,7 +322,7 @@ export default function SiteDetailPage() {
           <button
             onClick={() => { navigator.clipboard.writeText(site.id); alert('Site token copied!'); }}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-            title="Copy site token for Feedspace Connector plugin"
+            title="Copy site token for FeedDash Connector plugin"
           >
             <Copy className="w-3.5 h-3.5" />
             Copy Token

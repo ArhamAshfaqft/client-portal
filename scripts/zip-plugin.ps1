@@ -20,7 +20,7 @@ function Add-FileToZip($filePath, $entryName) {
 
 # Add files with explicit forward slashes for Linux/WordPress compatibility
 Add-FileToZip 'feedspace-connector\feedspace-connector.php' 'feedspace-connector/feedspace-connector.php'
-Add-FileToZip 'feedspace-connector\widget\feedspace-widget.js' 'feedspace-connector/widget/feedspace-widget.js'
+Add-FileToZip 'feedspace-connector\widget\feeddash-widget.js' 'feedspace-connector/widget/feeddash-widget.js'
 Add-FileToZip 'feedspace-connector\assets\admin.css' 'feedspace-connector/assets/admin.css'
 
 # Close and write the archive

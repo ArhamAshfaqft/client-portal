@@ -20,10 +20,10 @@ export class AnnotationRenderer {
   }
 
   private createSVG(): void {
-    let svg = document.getElementById('feedspace-overlay') as SVGSVGElement | null;
+    let svg = document.getElementById('feeddash-overlay') as SVGSVGElement | null;
     if (!svg) {
       svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.id = 'feedspace-overlay';
+      svg.id = 'feeddash-overlay';
       document.body.appendChild(svg);
     }
     this.svg = svg;
@@ -73,7 +73,7 @@ export class AnnotationRenderer {
 
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-    marker.setAttribute('id', 'feedspace-arrowhead');
+    marker.setAttribute('id', 'feeddash-arrowhead');
     marker.setAttribute('markerWidth', '10');
     marker.setAttribute('markerHeight', '7');
     marker.setAttribute('refX', '10');
@@ -118,7 +118,7 @@ export class AnnotationRenderer {
       line.setAttribute('y2', String(endPos.y));
       line.setAttribute('stroke', '#6366f1');
       line.setAttribute('stroke-width', '2.5');
-      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      line.setAttribute('marker-end', 'url(#feeddash-arrowhead)');
       g.appendChild(line);
       const badge = this.createBadge(num, annotation.id, annotation.status, 'arrow');
       badge.setAttribute('transform', `translate(${startPos.x - 10}, ${startPos.y - 10})`);
@@ -176,7 +176,7 @@ export class AnnotationRenderer {
       line.setAttribute('y2', String(endPos.y));
       line.setAttribute('stroke', '#6366f1');
       line.setAttribute('stroke-width', '2.5');
-      line.setAttribute('marker-end', 'url(#feedspace-arrowhead)');
+      line.setAttribute('marker-end', 'url(#feeddash-arrowhead)');
       g.appendChild(line);
       const badge = this.createBadge(num, annotation.id, annotation.status, 'arrow');
       badge.setAttribute('transform', `translate(${startPos.x - 10}, ${startPos.y - 10})`);
@@ -199,7 +199,7 @@ export class AnnotationRenderer {
   private createBadge(num: number, id: string, status: string, type?: string): SVGGElement {
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('data-annotation-id', id);
-    g.classList.add('feedspace-annotation-pin');
+    g.classList.add('feeddash-annotation-pin');
     g.style.cursor = 'pointer';
 
     let color = '#6366f1';

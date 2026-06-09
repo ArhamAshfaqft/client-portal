@@ -16,9 +16,9 @@ interface PreviewData {
 }
 
 const DEMO_PREVIEW_LINKS: Record<string, { project_id: string; target_url: string; site_id: string }> = {
-  "demo-preview-token-1": { project_id: "demo-proj-1", target_url: "https://brightonlaw.preview.feedspace.io", site_id: "demo-site-1" },
-  "demo-preview-token-3": { project_id: "demo-proj-3", target_url: "https://greenleaf.preview.feedspace.io", site_id: "demo-site-2" },
-  "demo-preview-token-5": { project_id: "demo-proj-5", target_url: "https://pinnacle.preview.feedspace.io", site_id: "demo-site-3" },
+  "demo-preview-token-1": { project_id: "demo-proj-1", target_url: "https://brightonlaw.preview.feeddash.app", site_id: "demo-site-1" },
+  "demo-preview-token-3": { project_id: "demo-proj-3", target_url: "https://greenleaf.preview.feeddash.app", site_id: "demo-site-2" },
+  "demo-preview-token-5": { project_id: "demo-proj-5", target_url: "https://pinnacle.preview.feeddash.app", site_id: "demo-site-3" },
 };
 
 // Module-level singleton — stable across renders

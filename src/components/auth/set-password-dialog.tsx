@@ -58,7 +58,7 @@ export function SetPasswordDialog({ open, onClose }: SetPasswordDialogProps) {
 
     setSuccess(true);
     setLoading(false);
-    sessionStorage.removeItem("feedspace_invite_flow");
+    sessionStorage.removeItem("feeddash_invite_flow");
   };
 
   return (

@@ -103,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
 
-    const saved = sessionStorage.getItem("feedspace_demo");
-    const savedRole = sessionStorage.getItem("feedspace_demo_role") as "owner" | "developer" | "client" | null;
+    const saved = sessionStorage.getItem("feeddash_demo");
+    const savedRole = sessionStorage.getItem("feeddash_demo_role") as "owner" | "developer" | "client" | null;
     if (saved === "true") {
       setProfile(savedRole === "developer" ? DEMO_DEV : savedRole === "client" ? DEMO_CLIENT : DEMO_OWNER);
       setIsDemo(true);
@@ -139,9 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    sessionStorage.removeItem("feedspace_demo");
-    sessionStorage.removeItem("feedspace_demo_role");
-    document.cookie = "feedspace_demo=; path=/; max-age=0";
+    sessionStorage.removeItem("feeddash_demo");
+    sessionStorage.removeItem("feeddash_demo_role");
+    document.cookie = "feeddash_demo=; path=/; max-age=0";
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
@@ -150,9 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const demoLogin = useCallback((role: "owner" | "developer" | "client" = "owner") => {
     const p = role === "developer" ? DEMO_DEV : role === "client" ? DEMO_CLIENT : DEMO_OWNER;
-    sessionStorage.setItem("feedspace_demo", "true");
-    sessionStorage.setItem("feedspace_demo_role", role);
-    document.cookie = "feedspace_demo=true; path=/; max-age=86400";
+    sessionStorage.setItem("feeddash_demo", "true");
+    sessionStorage.setItem("feeddash_demo_role", role);
+    document.cookie = "feeddash_demo=true; path=/; max-age=86400";
     setProfile(p);
     setIsDemo(true);
     setIsLoading(false);

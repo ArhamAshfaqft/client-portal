@@ -150,8 +150,8 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
     status: "resolved", assigned_to: "demo-dev-1", created_by: "demo-client-1", created_at: "2026-05-26T16:00:00Z",
     media: [
-      { id: "demo-media-1", feedback_item_id: "demo-fb-4", file_url: "https://brightonlaw.com/wp-content/uploads/feedspace/contact-form-reference-1.jpg", file_type: "image/jpeg", file_name: "contact-form-reference-1.jpg", file_size: 245000, storage_type: "wordpress", created_at: "2026-05-26T16:00:00Z" },
-      { id: "demo-media-2", feedback_item_id: "demo-fb-4", file_url: "https://brightonlaw.com/wp-content/uploads/feedspace/contact-form-reference-2.jpg", file_type: "image/jpeg", file_name: "contact-form-reference-2.jpg", file_size: 312000, storage_type: "wordpress", created_at: "2026-05-26T16:00:00Z" },
+      { id: "demo-media-1", feedback_item_id: "demo-fb-4", file_url: "https://brightonlaw.com/wp-content/uploads/feeddash/contact-form-reference-1.jpg", file_type: "image/jpeg", file_name: "contact-form-reference-1.jpg", file_size: 245000, storage_type: "wordpress", created_at: "2026-05-26T16:00:00Z" },
+      { id: "demo-media-2", feedback_item_id: "demo-fb-4", file_url: "https://brightonlaw.com/wp-content/uploads/feeddash/contact-form-reference-2.jpg", file_type: "image/jpeg", file_name: "contact-form-reference-2.jpg", file_size: 312000, storage_type: "wordpress", created_at: "2026-05-26T16:00:00Z" },
     ],
   },
   {
@@ -178,7 +178,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     coordinates_x: null, coordinates_y: null, viewport_width: null, viewport_height: null,
     status: "open", assigned_to: null, created_by: "demo-client-2", created_at: "2026-05-23T15:30:00Z",
     media: [
-      { id: "demo-media-3", feedback_item_id: "demo-fb-7", file_url: "https://greenleaforganics.com/wp-content/uploads/feedspace/brand-style-guide.png", file_type: "image/png", file_name: "brand-style-guide.png", file_size: 890000, storage_type: "wordpress", created_at: "2026-05-23T15:30:00Z" },
+      { id: "demo-media-3", feedback_item_id: "demo-fb-7", file_url: "https://greenleaforganics.com/wp-content/uploads/feeddash/brand-style-guide.png", file_type: "image/png", file_name: "brand-style-guide.png", file_size: 890000, storage_type: "wordpress", created_at: "2026-05-23T15:30:00Z" },
     ],
   },
   {
@@ -229,7 +229,7 @@ export const DEMO_FEEDBACK: EnrichedFeedback[] = [
     coordinates_x: 50, coordinates_y: 35, viewport_width: 1920, viewport_height: 1080,
     status: "open", assigned_to: null, created_by: "demo-client-1", created_at: "2026-05-17T08:00:00Z",
     media: [
-      { id: "demo-media-4", feedback_item_id: "demo-fb-13", file_url: "https://brightonlaw.com/wp-content/uploads/feedspace/current-cta-screenshot.jpg", file_type: "image/jpeg", file_name: "current-cta-screenshot.jpg", file_size: 180000, storage_type: "wordpress", created_at: "2026-05-17T08:00:00Z" },
+      { id: "demo-media-4", feedback_item_id: "demo-fb-13", file_url: "https://brightonlaw.com/wp-content/uploads/feeddash/current-cta-screenshot.jpg", file_type: "image/jpeg", file_name: "current-cta-screenshot.jpg", file_size: 180000, storage_type: "wordpress", created_at: "2026-05-17T08:00:00Z" },
     ],
   },
   {

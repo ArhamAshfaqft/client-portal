@@ -392,9 +392,9 @@ export async function POST(request: Request) {
               .eq("id", parentId)
               .maybeSingle();
             const parentMirrorId = parentItem?.mirror_id || parentId;
-            fetch(`${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`, {
+            fetch(`${wpRestUrl.replace(/\/+$/, "")}/wp-json/feeddash/v1/webhook`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "X-Feedspace-Key": site.wp_api_key },
+              headers: { "Content-Type": "application/json", "X-FeedDash-Key": site.wp_api_key },
               body: JSON.stringify({
                 action: "reply_added",
                 data: {

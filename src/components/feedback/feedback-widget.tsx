@@ -159,9 +159,9 @@ export function FeedbackWidget({
           wpFormData.append("file", file);
           wpFormData.append("project_id", projectId);
           try {
-            const wpRes = await fetch(wpUrl.endsWith("/") ? `${wpUrl}feedspace/v1/media` : `${wpUrl}/feedspace/v1/media`, {
+            const wpRes = await fetch(wpUrl.endsWith("/") ? `${wpUrl}feeddash/v1/media` : `${wpUrl}/feeddash/v1/media`, {
               method: "POST",
-              headers: { "X-Feedspace-Key": wpApiKey },
+              headers: { "X-FeedDash-Key": wpApiKey },
               body: wpFormData,
             });
             if (wpRes.ok) {

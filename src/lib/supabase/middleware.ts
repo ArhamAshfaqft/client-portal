@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const hasSupabase = url && key && url !== "https://placeholder.supabase.co";
 
-  const isDemo = request.cookies.get("feedspace_demo")?.value === "true";
+  const isDemo = request.cookies.get("feeddash_demo")?.value === "true";
   const isPublicPath =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/register") ||

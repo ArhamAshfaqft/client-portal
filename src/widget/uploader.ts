@@ -17,9 +17,9 @@ export async function uploadToWordPress(
   if (projectId) formData.append('project_id', projectId);
 
   const baseUrl = wpApiUrl.replace(/\/+$/, '');
-  const res = await fetch(`${baseUrl}/wp-json/feedspace/v1/media`, {
+  const res = await fetch(`${baseUrl}/wp-json/feeddash/v1/media`, {
     method: 'POST',
-    headers: { 'X-Feedspace-Key': wpApiKey },
+    headers: { 'X-FeedDash-Key': wpApiKey },
     body: formData,
   });
 

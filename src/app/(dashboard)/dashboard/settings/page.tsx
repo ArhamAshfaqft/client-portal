@@ -275,7 +275,7 @@ export default function SettingsPage() {
                 </span>{" "}
                 to{" "}
                 <span className="font-mono text-foreground">
-                  feedspace.vercel.app
+                  feeddash.vercel.app
                 </span>
               </p>
             </div>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
                 Auto-Connect
               </h3>
               <p className="text-sm text-muted-foreground">
-                Use this token in your Feedspace WP plugin to auto-register sites
+                Use this token in your FeedDash WP plugin to auto-register sites
               </p>
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            Paste this token into any WP site's Feedspace settings to auto-connect without manual site creation or token copying.
+            Paste this token into any WP site's FeedDash settings to auto-connect without manual site creation or token copying.
           </p>
         </CardContent>
       </Card>

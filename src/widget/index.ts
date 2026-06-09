@@ -5,7 +5,7 @@ import { AnnotationEngine } from './annotation-engine';
 
 declare global {
   interface Window {
-    FeedspaceWidget?: {
+    FeedDashWidget?: {
       init: (config: WidgetConfig) => void;
       destroy: () => void;
     };
@@ -14,9 +14,9 @@ declare global {
 
 function initWidget(config: WidgetConfig): AnnotationEngine {
   function dbg(msg: string, data?: unknown) {
-    const arr = (window as any).__feedspaceDebug;
+    const arr = (window as any).__feeddashDebug;
     if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
-    console.log('[Feedspace]', msg, data || '');
+    console.log('[FeedDash]', msg, data || '');
   }
 
   dbg('initWidget() called with config', { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey, siteName: config.siteName });
@@ -40,7 +40,7 @@ function initWidget(config: WidgetConfig): AnnotationEngine {
   dbg('AnnotationEngine instance created');
 
   engine.init().catch((err) => {
-    console.error('Feedspace widget init error:', err);
+    console.error('FeedDash widget init error:', err);
     dbg('init() threw error', String(err));
   });
 
@@ -49,7 +49,7 @@ function initWidget(config: WidgetConfig): AnnotationEngine {
 
 let currentEngine: AnnotationEngine | null = null;
 
-window.FeedspaceWidget = {
+window.FeedDashWidget = {
   init(config: WidgetConfig) {
     if (currentEngine) {
       currentEngine.destroy();

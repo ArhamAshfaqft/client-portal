@@ -280,7 +280,7 @@ export default function DashboardPage() {
         {showBetaBanner && (
           <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
             <p className="text-sm text-foreground/80 leading-relaxed">
-              <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
+              <span className="font-semibold text-primary">FeedDash — Private Beta.</span>{" "}
               We&apos;re working closely with a handful of agencies to polish the experience before public launch.
             </p>
             <button
@@ -481,7 +481,7 @@ export default function DashboardPage() {
       {showBetaBanner && (
         <div className="relative rounded-lg border border-primary/20 bg-primary/5 px-5 py-3.5 pr-12">
           <p className="text-sm text-foreground/80 leading-relaxed">
-            <span className="font-semibold text-primary">Feedspace — Private Beta.</span>{" "}
+            <span className="font-semibold text-primary">FeedDash — Private Beta.</span>{" "}
             We&apos;re working closely with a handful of agencies to polish the experience before public launch.
           </p>
           <button

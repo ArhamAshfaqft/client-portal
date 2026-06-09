@@ -2,7 +2,7 @@
 (() => {
   // src/widget/styles.ts
   var STYLES = `
-#feedspace-overlay {
+#feeddash-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -11,11 +11,11 @@
   pointer-events: none;
   z-index: 99998;
 }
-#feedspace-overlay.feedspace-active {
+#feeddash-overlay.feeddash-active {
   pointer-events: auto;
 }
 
-#feedspace-widget-root {
+#feeddash-widget-root {
   display: flex;
   justify-content: center;
   position: fixed;
@@ -30,8 +30,8 @@
   color: #0f172a;
 }
 
-/* ===== TOOLBAR (inside #feedspace-widget-root) ===== */
-#feedspace-widget-root .feedspace-toolbar {
+/* ===== TOOLBAR (inside #feeddash-widget-root) ===== */
+#feeddash-widget-root .feeddash-toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -48,7 +48,7 @@
   color: #0f172a;
 }
 
-#feedspace-widget-root .feedspace-toolbar-divider {
+#feeddash-widget-root .feeddash-toolbar-divider {
   width: 1px;
   height: 28px;
   background: #e2e8f0;
@@ -56,7 +56,7 @@
   border: none;
 }
 
-#feedspace-widget-root .feedspace-tool-btn {
+#feeddash-widget-root .feeddash-tool-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -81,23 +81,23 @@
   text-decoration: none;
   margin: 0;
 }
-#feedspace-widget-root .feedspace-tool-btn:hover {
+#feeddash-widget-root .feeddash-tool-btn:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
-#feedspace-widget-root .feedspace-tool-btn.active {
+#feeddash-widget-root .feeddash-tool-btn.active {
   background: #2563eb;
   color: #fff;
 }
-#feedspace-widget-root .feedspace-tool-btn.active:hover {
+#feeddash-widget-root .feeddash-tool-btn.active:hover {
   background: #1d4ed8;
 }
-#feedspace-widget-root .feedspace-tool-btn svg {
+#feeddash-widget-root .feeddash-tool-btn svg {
   width: 20px;
   height: 20px;
   display: block;
 }
-#feedspace-widget-root .feedspace-tool-btn .badge {
+#feeddash-widget-root .feeddash-tool-btn .badge {
   position: absolute;
   top: -2px;
   right: -2px;
@@ -114,14 +114,14 @@
   border: 2px solid #fff;
 }
 
-#feedspace-widget-root .feedspace-browse-btn.browsing {
+#feeddash-widget-root .feeddash-browse-btn.browsing {
   opacity: 0.5;
 }
-#feedspace-widget-root .feedspace-browse-btn.browsing:hover {
+#feeddash-widget-root .feeddash-browse-btn.browsing:hover {
   opacity: 1;
 }
 
-#feedspace-widget-root .feedspace-device-btn {
+#feeddash-widget-root .feeddash-device-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -141,21 +141,21 @@
   font-size: 14px;
   margin: 0;
 }
-#feedspace-widget-root .feedspace-device-btn:hover {
+#feeddash-widget-root .feeddash-device-btn:hover {
   color: #2563eb;
   background: #eff6ff;
 }
-#feedspace-widget-root .feedspace-device-btn.active {
+#feeddash-widget-root .feeddash-device-btn.active {
   color: #2563eb;
   background: #eff6ff;
 }
-#feedspace-widget-root .feedspace-device-btn svg {
+#feeddash-widget-root .feeddash-device-btn svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-#feedspace-widget-root .feedspace-submit-btn {
+#feeddash-widget-root .feeddash-submit-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -179,21 +179,21 @@
   text-decoration: none;
   margin: 0;
 }
-#feedspace-widget-root .feedspace-submit-btn:hover {
+#feeddash-widget-root .feeddash-submit-btn:hover {
   background: #1d4ed8;
   text-decoration: none;
 }
-#feedspace-widget-root .feedspace-submit-btn:active {
+#feeddash-widget-root .feeddash-submit-btn:active {
   background: #1e40af;
 }
-#feedspace-widget-root .feedspace-submit-btn svg {
+#feeddash-widget-root .feeddash-submit-btn svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
 /* Body-level submit button (inside panels, not in widget root) */
-.feedspace-submit-btn {
+.feeddash-submit-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -217,40 +217,40 @@
   text-decoration: none;
   margin: 0;
 }
-.feedspace-submit-btn:hover {
+.feeddash-submit-btn:hover {
   background: #1d4ed8;
   text-decoration: none;
 }
-.feedspace-submit-btn:active {
+.feeddash-submit-btn:active {
   background: #1e40af;
 }
-.feedspace-submit-btn svg {
+.feeddash-submit-btn svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-#feedspace-widget-root .feedspace-annotation-pin {
+#feeddash-widget-root .feeddash-annotation-pin {
   cursor: pointer;
   transition: transform 0.15s, filter 0.15s;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
 }
-#feedspace-widget-root .feedspace-annotation-pin:hover {
+#feeddash-widget-root .feeddash-annotation-pin:hover {
   transform: scale(1.15);
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
 }
 
 /* ===== PANELS (appended to document.body) ===== */
-.feedspace-panel-overlay {
+.feeddash-panel-overlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.3);
   z-index: 99998;
-  animation: feedspace-fade-in 0.15s;
+  animation: feeddash-fade-in 0.15s;
   pointer-events: auto;
 }
 
-.feedspace-panel {
+.feeddash-panel {
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -262,7 +262,7 @@
   background: #fff;
   z-index: 99999;
   box-shadow: -8px 0 40px rgba(0,0,0,0.1);
-  animation: feedspace-slide-in 0.2s ease;
+  animation: feeddash-slide-in 0.2s ease;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -270,20 +270,20 @@
   pointer-events: auto;
 }
 
-.feedspace-panel-header {
+.feeddash-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
   border-bottom: 1px solid #e2e8f0;
 }
-.feedspace-panel-title {
+.feeddash-panel-title {
   font-size: 16px;
   font-weight: 600;
   color: #0f172a;
   letter-spacing: -0.01em;
 }
-.feedspace-panel-close {
+.feeddash-panel-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -303,28 +303,28 @@
   font-size: 14px;
   margin: 0;
 }
-.feedspace-panel-close:hover {
+.feeddash-panel-close:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
-.feedspace-panel-close svg {
+.feeddash-panel-close svg {
   width: 18px;
   height: 18px;
   display: block;
 }
 
-.feedspace-panel-body {
+.feeddash-panel-body {
   flex: 1;
   overflow-y: auto;
   padding: 16px 24px;
 }
 
-.feedspace-panel-footer {
+.feeddash-panel-footer {
   padding: 16px 24px 20px;
   border-top: 1px solid #e2e8f0;
 }
 
-.feedspace-comment-input {
+.feeddash-comment-input {
   display: block;
   width: 100%;
   border: 1px solid #e2e8f0;
@@ -344,22 +344,22 @@
   box-shadow: none;
   text-shadow: none;
 }
-.feedspace-comment-input:focus {
+.feeddash-comment-input:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
-.feedspace-comment-input::placeholder {
+.feeddash-comment-input::placeholder {
   color: #94a3b8;
   opacity: 1;
 }
 
-.feedspace-media-actions {
+.feeddash-media-actions {
   display: flex;
   gap: 4px;
   margin-top: 10px;
 }
 
-.feedspace-icon-btn {
+.feeddash-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -380,23 +380,23 @@
   font-size: 14px;
   margin: 0;
 }
-.feedspace-icon-btn:hover {
+.feeddash-icon-btn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
   color: #0f172a;
 }
-.feedspace-icon-btn.active {
+.feeddash-icon-btn.active {
   background: #eff6ff;
   border-color: #2563eb;
   color: #2563eb;
 }
-.feedspace-icon-btn svg {
+.feeddash-icon-btn svg {
   width: 16px;
   height: 16px;
   display: block;
 }
 
-.feedspace-avatar-sm {
+.feeddash-avatar-sm {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -410,7 +410,7 @@
   flex-shrink: 0;
 }
 
-.feedspace-avatar-xs {
+.feeddash-avatar-xs {
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -424,7 +424,7 @@
   flex-shrink: 0;
 }
 
-.feedspace-feedback-item {
+.feeddash-feedback-item {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -433,29 +433,29 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.feedspace-feedback-item:hover {
+.feeddash-feedback-item:hover {
   border-color: #cbd5e1;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
-.feedspace-feedback-item.highlight {
+.feeddash-feedback-item.highlight {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
-.feedspace-feedback-item-header {
+.feeddash-feedback-item-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.feedspace-feedback-author {
+.feeddash-feedback-author {
   font-size: 13px;
   font-weight: 600;
   color: #0f172a;
   line-height: 1.3;
 }
-.feedspace-feedback-status {
+.feeddash-feedback-status {
   display: inline-flex;
   align-items: center;
   font-size: 11px;
@@ -465,35 +465,35 @@
   white-space: nowrap;
   border: none;
 }
-.feedspace-feedback-status.open {
+.feeddash-feedback-status.open {
   background: rgba(245, 158, 11, 0.1);
   color: #d97706;
 }
-.feedspace-feedback-status.in_progress {
+.feeddash-feedback-status.in_progress {
   background: rgba(245, 158, 11, 0.1);
   color: #d97706;
 }
-.feedspace-feedback-status.resolved {
+.feeddash-feedback-status.resolved {
   background: rgba(34, 197, 94, 0.1);
   color: #16a34a;
 }
-.feedspace-feedback-status.closed {
+.feeddash-feedback-status.closed {
   background: #f1f5f9;
   color: #64748b;
 }
 
-.feedspace-feedback-content {
+.feeddash-feedback-content {
   font-size: 13px;
   color: #334155;
   line-height: 1.6;
 }
-.feedspace-feedback-meta {
+.feeddash-feedback-meta {
   font-size: 11px;
   color: #94a3b8;
   margin-top: 1px;
 }
 
-.feedspace-reply-count {
+.feeddash-reply-count {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -503,48 +503,48 @@
   padding-top: 8px;
   border-top: 1px solid #f1f5f9;
 }
-.feedspace-reply-count svg {
+.feeddash-reply-count svg {
   width: 12px;
   height: 12px;
 }
 
-.feedspace-reply {
+.feeddash-reply {
   margin-top: 10px;
   padding: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
-.feedspace-reply-header {
+.feeddash-reply-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
-.feedspace-reply-author {
+.feeddash-reply-author {
   font-size: 12px;
   font-weight: 600;
   color: #0f172a;
 }
-.feedspace-reply-text {
+.feeddash-reply-text {
   font-size: 12px;
   color: #475569;
   line-height: 1.5;
 }
-.feedspace-reply-meta {
+.feeddash-reply-meta {
   font-size: 10px;
   color: #94a3b8;
   margin-top: 1px;
 }
 
-.feedspace-section-divider {
+.feeddash-section-divider {
   height: 1px;
   background: #e2e8f0;
   margin: 16px 0;
   border: none;
 }
 
-.feedspace-file-preview {
+.feeddash-file-preview {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -556,33 +556,33 @@
   font-size: 12px;
   color: #334155;
 }
-.feedspace-file-thumb {
+.feeddash-file-thumb {
   width: 36px;
   height: 36px;
   border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
 }
-.feedspace-file-icon {
+.feeddash-file-icon {
   font-size: 18px;
   flex-shrink: 0;
 }
-.feedspace-file-info {
+.feeddash-file-info {
   flex: 1;
   min-width: 0;
 }
-.feedspace-file-name {
+.feeddash-file-name {
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #0f172a;
 }
-.feedspace-file-size {
+.feeddash-file-size {
   font-size: 10px;
   color: #94a3b8;
 }
-.feedspace-file-remove {
+.feeddash-file-remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -601,17 +601,17 @@
   outline: none;
   margin: 0;
 }
-.feedspace-file-remove:hover {
+.feeddash-file-remove:hover {
   background: #fef2f2;
   color: #ef4444;
 }
-.feedspace-file-remove svg {
+.feeddash-file-remove svg {
   width: 14px;
   height: 14px;
   display: block;
 }
 
-.feedspace-recording-indicator {
+.feeddash-recording-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -624,44 +624,44 @@
   border-radius: 8px;
   margin-top: 8px;
 }
-.feedspace-recording-dot {
+.feeddash-recording-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #ef4444;
-  animation: feedspace-pulse 1s infinite;
+  animation: feeddash-pulse 1s infinite;
 }
-.feedspace-recording-time {
+.feeddash-recording-time {
   font-variant-numeric: tabular-nums;
   color: #dc2626;
 }
 
-.feedspace-empty-state {
+.feeddash-empty-state {
   text-align: center;
   padding: 48px 24px;
   color: #94a3b8;
 }
-.feedspace-empty-state svg {
+.feeddash-empty-state svg {
   width: 48px;
   height: 48px;
   margin-bottom: 12px;
   opacity: 0.3;
 }
-.feedspace-empty-state p {
+.feeddash-empty-state p {
   font-size: 14px;
   line-height: 1.6;
   color: #64748b;
   margin: 0;
 }
 
-.feedspace-filter-tabs {
+.feeddash-filter-tabs {
   display: flex;
   gap: 4px;
   padding: 0 24px 12px;
   border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
 }
-.feedspace-filter-tab {
+.feeddash-filter-tab {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -684,17 +684,17 @@
   letter-spacing: normal;
   text-decoration: none;
 }
-.feedspace-filter-tab:hover {
+.feeddash-filter-tab:hover {
   background: #f1f5f9;
   color: #0f172a;
 }
-.feedspace-filter-tab.active {
+.feeddash-filter-tab.active {
   background: #2563eb;
   color: #fff;
 }
 
 /* ===== NAME MODAL (appended to document.body) ===== */
-.feedspace-name-modal {
+.feeddash-name-modal {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -702,9 +702,9 @@
   inset: 0;
   z-index: 100000;
   background: rgba(15, 23, 42, 0.4);
-  animation: feedspace-fade-in 0.15s;
+  animation: feeddash-fade-in 0.15s;
 }
-.feedspace-name-modal-card {
+.feeddash-name-modal-card {
   display: block;
   background: #fff;
   border-radius: 12px;
@@ -712,25 +712,25 @@
   width: 360px;
   max-width: 90vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.15);
-  animation: feedspace-scale-in 0.2s ease;
+  animation: feeddash-scale-in 0.2s ease;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.5;
   color: #0f172a;
 }
-.feedspace-name-modal h3 {
+.feeddash-name-modal h3 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 4px;
   color: #0f172a;
 }
-.feedspace-name-modal p {
+.feeddash-name-modal p {
   font-size: 14px;
   color: #64748b;
   margin-bottom: 20px;
   line-height: 1.5;
 }
-.feedspace-name-modal input {
+.feeddash-name-modal input {
   display: block;
   width: 100%;
   border: 1px solid #e2e8f0;
@@ -746,20 +746,20 @@
   box-shadow: none;
   line-height: 1.5;
 }
-.feedspace-name-modal input:focus {
+.feeddash-name-modal input:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
-.feedspace-name-modal input::placeholder {
+.feeddash-name-modal input::placeholder {
   color: #94a3b8;
   opacity: 1;
 }
-.feedspace-name-modal .actions {
+.feeddash-name-modal .actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
-.feedspace-name-modal .actions button {
+.feeddash-name-modal .actions button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -776,37 +776,37 @@
   outline: none;
   margin: 0;
 }
-.feedspace-name-modal .actions .cancel {
+.feeddash-name-modal .actions .cancel {
   background: #f1f5f9;
   color: #334155;
 }
-.feedspace-name-modal .actions .cancel:hover {
+.feeddash-name-modal .actions .cancel:hover {
   background: #e2e8f0;
 }
-.feedspace-name-modal .actions .confirm {
+.feeddash-name-modal .actions .confirm {
   background: #2563eb;
   color: #fff;
 }
-.feedspace-name-modal .actions .confirm:hover {
+.feeddash-name-modal .actions .confirm:hover {
   background: #1d4ed8;
 }
 
 /* ===== HOVER HIGHLIGHT (applied to page elements) ===== */
-.feedspace-hover-highlight {
+.feeddash-hover-highlight {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-.feedspace-hover-dashed {
+.feeddash-hover-dashed {
   outline: 2px dashed #6366f1;
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-[data-feedspace-tool="pin"],
-[data-feedspace-tool="arrow"],
-[data-feedspace-tool="rect"] {
+[data-feeddash-tool="pin"],
+[data-feeddash-tool="arrow"],
+[data-feeddash-tool="rect"] {
   cursor: crosshair;
 }
 
@@ -896,7 +896,7 @@
 }
 
 .fs-dot-menu {
-  animation: feedspace-fade-in 0.1s ease;
+  animation: feeddash-fade-in 0.1s ease;
 }
 .fs-menu-item:hover {
   background: #f1f5f9;
@@ -907,7 +907,7 @@
 }
 
 /* Device filter row */
-.feedspace-device-filter {
+.feeddash-device-filter {
   display: flex;
   gap: 4px;
   padding: 8px 16px;
@@ -922,26 +922,26 @@
 }
 
 /* Card highlight */
-.feedspace-feedback-item.highlight {
+.feeddash-feedback-item.highlight {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 
 /* ===== ANIMATIONS ===== */
-@keyframes feedspace-fade-in {
+@keyframes feeddash-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes feedspace-slide-in {
+@keyframes feeddash-slide-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-@keyframes feedspace-pulse {
+@keyframes feeddash-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
-@keyframes feedspace-scale-in {
+@keyframes feeddash-scale-in {
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
@@ -972,12 +972,12 @@
       return res.json();
     }
     async function wpRequest(method, path, body) {
-      const url = `${wpApiUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1${path}`;
+      const url = `${wpApiUrl.replace(/\/+$/, "")}/wp-json/feeddash/v1${path}`;
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          "X-Feedspace-Key": wpApiKey
+          "X-FeedDash-Key": wpApiKey
         },
         body: body ? JSON.stringify(body) : void 0
       });
@@ -1008,12 +1008,12 @@
         }
         const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(","))}${qs}`;
         const fullUrl = `${baseUrl.replace(/\/+$/, "")}/api${fullPath}`;
-        if ((_a = window.__feedspaceDebug) == null ? void 0 : _a.push) {
-          window.__feedspaceDebug.push({ msg: "getStatuses URL", data: fullUrl.replace(wpApiKey || "", "***"), time: Date.now() });
+        if ((_a = window.__feeddashDebug) == null ? void 0 : _a.push) {
+          window.__feeddashDebug.push({ msg: "getStatuses URL", data: fullUrl.replace(wpApiKey || "", "***"), time: Date.now() });
         }
-        console.log("[Feedspace] Fetching statuses from", fullUrl.replace(wpApiKey || "", "***"));
+        console.log("[FeedDash] Fetching statuses from", fullUrl.replace(wpApiKey || "", "***"));
         return vercelRequest(fullPath).then((r) => {
-          console.log("[Feedspace] Statuses response keys:", Object.keys(r.statuses).length);
+          console.log("[FeedDash] Statuses response keys:", Object.keys(r.statuses).length);
           return r.statuses;
         });
       },
@@ -1051,8 +1051,8 @@
 
   // src/widget/element-dna.ts
   function getDataId(el) {
-    const widget = el.closest("[data-feedspace-widget-id]");
-    if (widget) return widget.getAttribute("data-feedspace-widget-id");
+    const widget = el.closest("[data-feeddash-widget-id]");
+    if (widget) return widget.getAttribute("data-feeddash-widget-id");
     const elWidget = el.closest("[data-id]");
     if (elWidget) return elWidget.getAttribute("data-id");
     return null;
@@ -1097,7 +1097,7 @@
   }
   function getElementDNA(el) {
     let target = el;
-    const widget = el.closest("[data-feedspace-widget-id],[data-id]");
+    const widget = el.closest("[data-feeddash-widget-id],[data-id]");
     if (widget) target = widget;
     return {
       selector: getSelector(target),
@@ -1131,7 +1131,7 @@
     return null;
   }
   function closestTargetable(el) {
-    const widget = el.closest("[data-feedspace-widget-id],[data-id]");
+    const widget = el.closest("[data-feeddash-widget-id],[data-id]");
     if (widget) return widget;
     const semantic = el.closest("h1,h2,h3,h4,h5,h6,p,a,button,img,section,article,figure");
     if (semantic) return semantic;
@@ -1168,10 +1168,10 @@
       this.createSVG();
     }
     createSVG() {
-      let svg = document.getElementById("feedspace-overlay");
+      let svg = document.getElementById("feeddash-overlay");
       if (!svg) {
         svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = "feedspace-overlay";
+        svg.id = "feeddash-overlay";
         document.body.appendChild(svg);
       }
       this.svg = svg;
@@ -1211,7 +1211,7 @@
       while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
       const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
       const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-      marker.setAttribute("id", "feedspace-arrowhead");
+      marker.setAttribute("id", "feeddash-arrowhead");
       marker.setAttribute("markerWidth", "10");
       marker.setAttribute("markerHeight", "7");
       marker.setAttribute("refX", "10");
@@ -1251,7 +1251,7 @@
         line.setAttribute("y2", String(endPos.y));
         line.setAttribute("stroke", "#6366f1");
         line.setAttribute("stroke-width", "2.5");
-        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        line.setAttribute("marker-end", "url(#feeddash-arrowhead)");
         g2.appendChild(line);
         const badge2 = this.createBadge(num, annotation.id, annotation.status, "arrow");
         badge2.setAttribute("transform", `translate(${startPos.x - 10}, ${startPos.y - 10})`);
@@ -1300,7 +1300,7 @@
         line.setAttribute("y2", String(endPos.y));
         line.setAttribute("stroke", "#6366f1");
         line.setAttribute("stroke-width", "2.5");
-        line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+        line.setAttribute("marker-end", "url(#feeddash-arrowhead)");
         g2.appendChild(line);
         const badge2 = this.createBadge(num, annotation.id, annotation.status, "arrow");
         badge2.setAttribute("transform", `translate(${startPos.x - 10}, ${startPos.y - 10})`);
@@ -1320,7 +1320,7 @@
     createBadge(num, id, status, type) {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("data-annotation-id", id);
-      g.classList.add("feedspace-annotation-pin");
+      g.classList.add("feeddash-annotation-pin");
       g.style.cursor = "pointer";
       let color = "#6366f1";
       if (status === "resolved" || status === "closed") color = "#10b981";
@@ -1762,23 +1762,23 @@
     render() {
       this.close();
       this.overlay = document.createElement("div");
-      this.overlay.className = "feedspace-panel-overlay";
+      this.overlay.className = "feeddash-panel-overlay";
       this.overlay.addEventListener("click", () => this.close());
       document.body.appendChild(this.overlay);
       this.root = document.createElement("div");
-      this.root.className = "feedspace-panel";
+      this.root.className = "feeddash-panel";
       const header = document.createElement("div");
-      header.className = "feedspace-panel-header";
+      header.className = "feeddash-panel-header";
       header.innerHTML = `
-      <span class="feedspace-panel-title">Feedback List</span>
-      <button class="feedspace-panel-close" id="feedback-list-close">
+      <span class="feeddash-panel-title">Feedback List</span>
+      <button class="feeddash-panel-close" id="feedback-list-close">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     `;
       this.root.appendChild(header);
       header.querySelector("#feedback-list-close").addEventListener("click", () => this.close());
       const filters = document.createElement("div");
-      filters.className = "feedspace-filter-tabs";
+      filters.className = "feeddash-filter-tabs";
       const filterOptions = [
         { value: "all", label: "All" },
         { value: "pending", label: "Pending" },
@@ -1787,13 +1787,13 @@
       const filtersRoot = filters;
       for (const opt of filterOptions) {
         const btn = document.createElement("button");
-        btn.className = `feedspace-filter-tab${this.currentFilter === opt.value ? " active" : ""}`;
+        btn.className = `feeddash-filter-tab${this.currentFilter === opt.value ? " active" : ""}`;
         btn.textContent = opt.label;
         btn.dataset.filter = opt.value;
         btn.addEventListener("click", () => {
           var _a;
           this.currentFilter = opt.value;
-          filtersRoot.querySelectorAll(".feedspace-filter-tab").forEach((b) => b.classList.remove("active"));
+          filtersRoot.querySelectorAll(".feeddash-filter-tab").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           (_a = this.callbacks) == null ? void 0 : _a.onFilterChange(opt.value);
           this.renderList();
@@ -1802,19 +1802,19 @@
       }
       this.root.appendChild(filters);
       const deviceRow = document.createElement("div");
-      deviceRow.className = "feedspace-device-filter";
+      deviceRow.className = "feeddash-device-filter";
       const deviceIcons = { desktop: SVG_ICONS2.desktop, tablet: SVG_ICONS2.tablet, mobile: SVG_ICONS2.mobile };
       const deviceBtnHtml = (dv, label) => {
         const active = dv === this.currentDeviceFilter;
         const icon = `<span style="width:12px;height:12px;display:inline-flex;align-items:center;">${deviceIcons[dv] || ""}</span>`;
         return `<button class="fs-df-btn${active ? " active" : ""}" data-device="${dv}" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:5px 4px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s;background:${active ? "#2563eb" : "transparent"};color:${active ? "#fff" : "#64748b"};">${icon}${label} <span class="fs-df-count" style="background:${active ? "rgba(255,255,255,0.2)" : "#f1f5f9"};border-radius:10px;padding:0 5px;font-size:10px;line-height:18px;">0</span></button>`;
       };
-      deviceRow.innerHTML = `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feedspace-total-count">0</span></span>` + deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
+      deviceRow.innerHTML = `<span class="fs-total-badge" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#f8fafc;color:#475569;font-size:11px;font-weight:700;white-space:nowrap;margin-right:2px;"><span style="font-weight:400;color:#94a3b8;">Total</span><span id="feeddash-total-count">0</span></span>` + deviceBtnHtml("desktop", "Desktop") + deviceBtnHtml("tablet", "Tablet") + deviceBtnHtml("mobile", "Mobile") + `<button class="fs-sort-btn" title="${this.currentSort === "newest" ? "Newest first" : "Oldest first"}" style="flex:0 0 26px;display:flex;align-items:center;justify-content:center;border:none;border-radius:4px;background:transparent;color:#94a3b8;cursor:pointer;font-size:9px;font-weight:700;padding:0;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>`;
       this.root.appendChild(deviceRow);
       const body = document.createElement("div");
-      body.className = "feedspace-panel-body";
+      body.className = "feeddash-panel-body";
       body.id = "feedback-list-body";
       this.root.appendChild(body);
       document.body.appendChild(this.root);
@@ -1861,14 +1861,14 @@
         const d = a.device || "desktop";
         if (deviceCounts[d] !== void 0) deviceCounts[d]++;
       });
-      const deviceRow = (_b = this.root) == null ? void 0 : _b.querySelector(".feedspace-device-filter");
+      const deviceRow = (_b = this.root) == null ? void 0 : _b.querySelector(".feeddash-device-filter");
       if (deviceRow) {
         deviceRow.querySelectorAll(".fs-df-btn").forEach((btn) => {
           const dv = btn.dataset.device || "desktop";
           const countEl = btn.querySelector(".fs-df-count");
           if (countEl) countEl.textContent = String(deviceCounts[dv] || 0);
         });
-        const totalEl = deviceRow.querySelector("#feedspace-total-count");
+        const totalEl = deviceRow.querySelector("#feeddash-total-count");
         if (totalEl) {
           const total = Object.values(deviceCounts).reduce((s, v) => s + v, 0);
           totalEl.textContent = String(total);
@@ -1880,7 +1880,7 @@
         return this.currentSort === "newest" ? tb - ta : ta - tb;
       });
       if (filtered.length === 0) {
-        body.innerHTML = `<div class="feedspace-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
+        body.innerHTML = `<div class="feeddash-empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><p>No feedback items yet</p></div>`;
         return;
       }
       const statusLabels = { open: "Pending", in_progress: "Pending", resolved: "Resolved", closed: "Closed" };
@@ -1948,7 +1948,7 @@
           media: SVG_ICONS2.file
         };
         const typeTag = typeLabels[a.type] ? `<span class="fs-type-tag"><span style="width:10px;height:10px;display:inline-flex;align-items:center;">${typeIcons[a.type] || ""}</span>${typeLabels[a.type]}</span>` : "";
-        return `<div class="feedspace-feedback-item" data-id="${a.id}" data-idx="${idx}">
+        return `<div class="feeddash-feedback-item" data-id="${a.id}" data-idx="${idx}">
         <div class="fs-card-header">
           <div style="display:flex;align-items:center;gap:8px;min-width:0;">
             <span class="fs-number-badge">${a._num || idx + 1}</span>
@@ -1961,14 +1961,14 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-          <div class="feedspace-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
+          <div class="feeddash-avatar-sm" style="width:28px;height:28px;font-size:11px;">${initial}</div>
           <div style="min-width:0;flex:1;">
-            <div class="feedspace-feedback-author" style="font-size:13px;">${escHtml2(a.createdBy)}</div>
+            <div class="feeddash-feedback-author" style="font-size:13px;">${escHtml2(a.createdBy)}</div>
             <div style="font-size:10px;color:#94a3b8;">${timeStr}</div>
           </div>
-          <span class="feedspace-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
+          <span class="feeddash-feedback-status ${a.status}" style="font-size:10px;">${statusLabels[a.status] || a.status}</span>
         </div>
-        <div class="feedspace-feedback-content" style="margin-top:8px;font-size:13px;">
+        <div class="feeddash-feedback-content" style="margin-top:8px;font-size:13px;">
           <span class="fs-comment-text">${escHtml2(needsReadMore ? shortComment : comment)}</span>
           ${needsReadMore ? `<button class="fs-read-more" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:12px;font-weight:600;padding:0;margin-left:4px;">Read More</button>` : ""}
         </div>
@@ -1980,12 +1980,12 @@
       </div>`;
       }).join("");
       body.innerHTML = html;
-      body.querySelectorAll(".feedspace-feedback-item").forEach((item) => {
+      body.querySelectorAll(".feeddash-feedback-item").forEach((item) => {
         item.addEventListener("click", (e) => {
           var _a2;
           if (e.target.closest(".fs-dots-trigger, .fs-dot-menu, .fs-reveal-btn, .fs-read-more, .fs-att-thumb")) return;
           const id = item.dataset.id;
-          body.querySelectorAll(".feedspace-feedback-item").forEach((el) => el.classList.remove("highlight"));
+          body.querySelectorAll(".feeddash-feedback-item").forEach((el) => el.classList.remove("highlight"));
           item.classList.add("highlight");
           if (id) (_a2 = this.callbacks) == null ? void 0 : _a2.onSelectAnnotation(id);
         });
@@ -1994,7 +1994,7 @@
         btn.addEventListener("click", (e) => {
           var _a2;
           e.stopPropagation();
-          const parent = e.target.closest(".feedspace-feedback-content");
+          const parent = e.target.closest(".feeddash-feedback-content");
           if (!parent) return;
           const textEl = parent.querySelector(".fs-comment-text");
           if (!textEl) return;
@@ -2021,7 +2021,7 @@
         trigger.addEventListener("click", (e) => {
           e.stopPropagation();
           document.querySelectorAll(".fs-dot-menu").forEach((m) => m.remove());
-          const item = e.target.closest(".feedspace-feedback-item");
+          const item = e.target.closest(".feeddash-feedback-item");
           const id = item == null ? void 0 : item.dataset.id;
           const menu = document.createElement("div");
           menu.className = "fs-dot-menu";
@@ -2061,7 +2061,7 @@
         thumb.addEventListener("click", (e) => {
           var _a2;
           e.stopPropagation();
-          const item = e.target.closest(".feedspace-feedback-item");
+          const item = e.target.closest(".feeddash-feedback-item");
           const id = item == null ? void 0 : item.dataset.id;
           if (!id) return;
           const a = this.annotations.find((ann) => ann.id === id);
@@ -2080,9 +2080,9 @@
     formData.append("file", file);
     if (projectId) formData.append("project_id", projectId);
     const baseUrl = wpApiUrl.replace(/\/+$/, "");
-    const res = await fetch(`${baseUrl}/wp-json/feedspace/v1/media`, {
+    const res = await fetch(`${baseUrl}/wp-json/feeddash/v1/media`, {
       method: "POST",
-      headers: { "X-Feedspace-Key": wpApiKey },
+      headers: { "X-FeedDash-Key": wpApiKey },
       body: formData
     });
     if (!res.ok) {
@@ -2093,11 +2093,11 @@
 
   // src/widget/annotation-engine.ts
   function dbg(msg, data) {
-    const arr = window.__feedspaceDebug;
+    const arr = window.__feeddashDebug;
     if (arr && Array.isArray(arr)) {
       arr.push({ msg, data, time: Date.now() });
     }
-    console.log("[Feedspace]", msg, data || "");
+    console.log("[FeedDash]", msg, data || "");
   }
   var SVG_ICONS3 = {
     select: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l14 8-7 2-3 7z"/></svg>',
@@ -2122,7 +2122,7 @@
       this.deviceMode = "desktop";
       this.filterMode = "all";
       this.clientName = "";
-      this.browseMode = sessionStorage.getItem("feedspace_browse") === "1";
+      this.browseMode = sessionStorage.getItem("feeddash_browse") === "1";
       this.isDrawing = false;
       this.drawStart = null;
       this.drawPoints = [];
@@ -2147,7 +2147,7 @@
     }
     async init() {
       dbg("AnnotationEngine.init() called");
-      this.clientName = localStorage.getItem("feedspace_client_name") || "";
+      this.clientName = localStorage.getItem("feeddash_client_name") || "";
       dbg("clientName from localStorage:", this.clientName || "(empty)");
       if (!this.clientName) {
         dbg("No client name \u2014 showing name modal");
@@ -2164,39 +2164,39 @@
         return;
       }
       const modal = document.createElement("div");
-      modal.className = "feedspace-name-modal";
+      modal.className = "feeddash-name-modal";
       modal.innerHTML = `
-      <div class="feedspace-name-modal-card">
+      <div class="feeddash-name-modal-card">
         <h3>What is your name?</h3>
         <p>This will be shown with your feedback.</p>
-        <input type="text" id="feedspace-name-input" placeholder="Your name..." maxlength="50" autocomplete="off">
+        <input type="text" id="feeddash-name-input" placeholder="Your name..." maxlength="50" autocomplete="off">
         <div class="actions">
-          <button class="cancel" id="feedspace-name-skip">Skip</button>
-          <button class="confirm" id="feedspace-name-continue">Continue</button>
+          <button class="cancel" id="feeddash-name-skip">Skip</button>
+          <button class="confirm" id="feeddash-name-continue">Continue</button>
         </div>
       </div>
     `;
       document.body.appendChild(modal);
       this.nameModal = modal;
       dbg("Name modal appended to body");
-      const input = modal.querySelector("#feedspace-name-input");
+      const input = modal.querySelector("#feeddash-name-input");
       input.focus();
-      modal.querySelector("#feedspace-name-skip").addEventListener("click", () => {
+      modal.querySelector("#feeddash-name-skip").addEventListener("click", () => {
         this.clientName = "Anonymous";
-        localStorage.setItem("feedspace_client_name", this.clientName);
+        localStorage.setItem("feeddash_client_name", this.clientName);
         this.destroyNameModal();
         this.boot();
       });
-      modal.querySelector("#feedspace-name-continue").addEventListener("click", () => {
+      modal.querySelector("#feeddash-name-continue").addEventListener("click", () => {
         this.clientName = input.value.trim() || "Anonymous";
-        localStorage.setItem("feedspace_client_name", this.clientName);
+        localStorage.setItem("feeddash_client_name", this.clientName);
         this.destroyNameModal();
         this.boot();
       });
       input.addEventListener("keydown", (e) => {
         var _a;
         if (e.key === "Enter") {
-          (_a = modal.querySelector("#feedspace-name-continue")) == null ? void 0 : _a.click();
+          (_a = modal.querySelector("#feeddash-name-continue")) == null ? void 0 : _a.click();
         }
       });
     }
@@ -2215,7 +2215,7 @@
       this.attachDrawingListeners();
       this.loadAnnotations();
       if (this.browseMode) {
-        const overlay = document.getElementById("feedspace-overlay");
+        const overlay = document.getElementById("feeddash-overlay");
         if (overlay) overlay.style.display = "none";
       }
       dbg("boot() complete");
@@ -2224,27 +2224,27 @@
       var _a, _b, _c;
       const dev = !!this.config.devMode;
       this.toolbarRoot = document.createElement("div");
-      this.toolbarRoot.id = "feedspace-widget-root";
+      this.toolbarRoot.id = "feeddash-widget-root";
       this.toolbarRoot.innerHTML = `
-      <div class="feedspace-toolbar">
-        ${dev ? "" : `<button class="feedspace-tool-btn active" data-tool="select" title="Select">${SVG_ICONS3.select}</button>
-        <button class="feedspace-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
-        <button class="feedspace-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS3.arrow}</button>
-        <button class="feedspace-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS3.rect}</button>
-        <div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
-        <button class="feedspace-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
-        <button class="feedspace-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS3.mobile}</button>
-        <div class="feedspace-toolbar-divider"></div>`}
-        <button class="feedspace-tool-btn feedspace-browse-btn ${this.browseMode ? "browsing" : ""}" data-action="browse" title="${this.browseMode ? "Switch to Comment Mode" : "Switch to Browse Mode"}">
+      <div class="feeddash-toolbar">
+        ${dev ? "" : `<button class="feeddash-tool-btn active" data-tool="select" title="Select">${SVG_ICONS3.select}</button>
+        <button class="feeddash-tool-btn" data-tool="pin" title="Add Pin">${SVG_ICONS3.pin}</button>
+        <button class="feeddash-tool-btn" data-tool="arrow" title="Add Arrow">${SVG_ICONS3.arrow}</button>
+        <button class="feeddash-tool-btn" data-tool="rect" title="Add Rectangle">${SVG_ICONS3.rect}</button>
+        <div class="feeddash-toolbar-divider"></div>
+        <button class="feeddash-device-btn active" data-device="desktop" title="Desktop">${SVG_ICONS3.desktop}</button>
+        <button class="feeddash-device-btn" data-device="tablet" title="Tablet">${SVG_ICONS3.tablet}</button>
+        <button class="feeddash-device-btn" data-device="mobile" title="Mobile">${SVG_ICONS3.mobile}</button>
+        <div class="feeddash-toolbar-divider"></div>`}
+        <button class="feeddash-tool-btn feeddash-browse-btn ${this.browseMode ? "browsing" : ""}" data-action="browse" title="${this.browseMode ? "Switch to Comment Mode" : "Switch to Browse Mode"}">
           ${this.browseMode ? SVG_ICONS3.eyeOff : SVG_ICONS3.eye}
         </button>
-        <button class="feedspace-tool-btn" data-action="list" title="Feedback List" id="feedspace-list-btn">
+        <button class="feeddash-tool-btn" data-action="list" title="Feedback List" id="feeddash-list-btn">
           ${SVG_ICONS3.list}
-          <span class="badge" id="feedspace-list-count" style="display:none">0</span>
+          <span class="badge" id="feeddash-list-count" style="display:none">0</span>
         </button>
-        ${dev ? "" : `<div class="feedspace-toolbar-divider"></div>
-        <button class="feedspace-submit-btn" data-action="submit" title="Finish reviewing">
+        ${dev ? "" : `<div class="feeddash-toolbar-divider"></div>
+        <button class="feeddash-submit-btn" data-action="submit" title="Finish reviewing">
           ${SVG_ICONS3.submit}
           Finish Review
         </button>`}
@@ -2300,11 +2300,11 @@
       (_a = this.toolbarRoot) == null ? void 0 : _a.querySelectorAll("[data-tool]").forEach((btn) => {
         btn.classList.toggle("active", btn.getAttribute("data-tool") === this.currentTool);
       });
-      document.body.setAttribute("data-feedspace-tool", this.currentTool);
+      document.body.setAttribute("data-feeddash-tool", this.currentTool);
       if (this.currentTool === "select") this.clearHoverHighlight();
-      const overlay = document.getElementById("feedspace-overlay");
+      const overlay = document.getElementById("feeddash-overlay");
       if (overlay) {
-        overlay.classList.toggle("feedspace-active", this.currentTool === "select");
+        overlay.classList.toggle("feeddash-active", this.currentTool === "select");
       }
       this.cleanupDrawState();
     }
@@ -2315,7 +2315,7 @@
         btn.classList.toggle("active", btn.getAttribute("data-device") === device);
       });
       const body = document.body;
-      let wrapper = document.getElementById("feedspace-viewport-wrapper");
+      let wrapper = document.getElementById("feeddash-viewport-wrapper");
       if (wrapper) {
         (_b = wrapper.parentNode) == null ? void 0 : _b.removeChild(wrapper);
       }
@@ -2337,8 +2337,8 @@
     toggleBrowse() {
       var _a;
       this.browseMode = !this.browseMode;
-      sessionStorage.setItem("feedspace_browse", this.browseMode ? "1" : "0");
-      const overlay = document.getElementById("feedspace-overlay");
+      sessionStorage.setItem("feeddash_browse", this.browseMode ? "1" : "0");
+      const overlay = document.getElementById("feeddash-overlay");
       if (overlay) {
         overlay.style.display = this.browseMode ? "none" : "";
       }
@@ -2371,10 +2371,10 @@
         return;
       }
       if (this.currentTool === "rect") {
-        target.classList.add("feedspace-hover-dashed");
+        target.classList.add("feeddash-hover-dashed");
         this.hoverHighlightEl = target;
       } else {
-        target.classList.add("feedspace-hover-highlight");
+        target.classList.add("feeddash-hover-highlight");
         this.hoverHighlightEl = target;
       }
     }
@@ -2384,8 +2384,8 @@
         this.arrowPreviewEl = null;
       }
       if (this.hoverHighlightEl) {
-        this.hoverHighlightEl.classList.remove("feedspace-hover-highlight");
-        this.hoverHighlightEl.classList.remove("feedspace-hover-dashed");
+        this.hoverHighlightEl.classList.remove("feeddash-hover-highlight");
+        this.hoverHighlightEl.classList.remove("feeddash-hover-dashed");
         this.hoverHighlightEl = null;
       }
     }
@@ -2393,7 +2393,7 @@
       var _a;
       if (this.currentTool === "select") return;
       if (e.button !== 0) return;
-      if ((_a = e.target) == null ? void 0 : _a.closest("#feedspace-widget-root, #feedspace-overlay, .feedspace-panel, .feedspace-panel-overlay, .feedspace-name-modal")) return;
+      if ((_a = e.target) == null ? void 0 : _a.closest("#feeddash-widget-root, #feeddash-overlay, .feeddash-panel, .feeddash-panel-overlay, .feeddash-name-modal")) return;
       e.preventDefault();
       this.isDrawing = true;
       if (this.currentTool === "arrow") {
@@ -2415,7 +2415,7 @@
         return;
       }
       if (this.currentTool === "arrow") {
-        const overlay = document.getElementById("feedspace-overlay");
+        const overlay = document.getElementById("feeddash-overlay");
         if (!overlay) return;
         if (this.dragLineEl && this.dragLineEl.parentNode) {
           this.dragLineEl.parentNode.removeChild(this.dragLineEl);
@@ -2483,7 +2483,7 @@
       this.cleanupDrawState();
     }
     showPendingAnnotation(el, dna) {
-      const svg = document.getElementById("feedspace-overlay");
+      const svg = document.getElementById("feeddash-overlay");
       if (!svg) return;
       this.removePendingAnnotation();
       const scrollX = window.scrollX;
@@ -2505,7 +2505,7 @@
       this.pendingAnnotationEl = g;
     }
     showPendingArrow(startX, startY, endX, endY) {
-      const svg = document.getElementById("feedspace-overlay");
+      const svg = document.getElementById("feeddash-overlay");
       if (!svg) return;
       this.removePendingAnnotation();
       const x1 = startX;
@@ -2520,7 +2520,7 @@
       line.setAttribute("y2", String(y2));
       line.setAttribute("stroke", "#6366f1");
       line.setAttribute("stroke-width", "2.5");
-      line.setAttribute("marker-end", "url(#feedspace-arrowhead)");
+      line.setAttribute("marker-end", "url(#feeddash-arrowhead)");
       g.appendChild(line);
       svg.appendChild(g);
       this.pendingAnnotationEl = g;
@@ -2647,9 +2647,9 @@
     }
     async changeAnnotationStatus(id, status) {
       try {
-        console.log("[Feedspace] changeAnnotationStatus:", { id, status });
+        console.log("[FeedDash] changeAnnotationStatus:", { id, status });
         const updated = await this.api.updateAnnotation(id, { status });
-        console.log("[Feedspace] changeAnnotationStatus response:", updated);
+        console.log("[FeedDash] changeAnnotationStatus response:", updated);
         const idx = this.annotations.findIndex((a) => a.id === id);
         if (idx >= 0) {
           this.annotations[idx] = { ...this.annotations[idx], ...updated, status };
@@ -2666,11 +2666,11 @@
     async saveToLibrary(fileUrl, fileName) {
       try {
         const wpUrl = this.config.wpApiUrl.replace(/\/+$/, "");
-        const res = await fetch(`${wpUrl}/wp-json/feedspace/v1/media/save-to-library`, {
+        const res = await fetch(`${wpUrl}/wp-json/feeddash/v1/media/save-to-library`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Feedspace-Key": this.config.wpApiKey
+            "X-FeedDash-Key": this.config.wpApiKey
           },
           body: JSON.stringify({ url: fileUrl })
         });
@@ -2729,7 +2729,7 @@
             if (changed.length > 0) this.renderer.setAnnotations(this.annotations);
           }
         } catch (err) {
-          console.warn("[Feedspace] statusSync failed:", err);
+          console.warn("[FeedDash] statusSync failed:", err);
           dbg("statusSync: FAILED", typeof err === "object" ? String((err == null ? void 0 : err.message) || err) : String(err));
         }
         dbg("loadAnnotations: fetched " + this.annotations.length + " annotations");
@@ -2765,7 +2765,7 @@
             body: JSON.stringify({ projectId: pid })
           });
           const data = await res.json();
-          console.log("[Feedspace] Project name lookup:", { projectId: pid, status: res.status, response: data });
+          console.log("[FeedDash] Project name lookup:", { projectId: pid, status: res.status, response: data });
           if (res.ok && data.name) {
             this.projectNameCache[pid] = data.name;
             for (const a of this.annotations) {
@@ -2774,24 +2774,24 @@
             continue;
           }
           if (token) {
-            console.log("[Feedspace] Falling back to token lookup for", pid);
+            console.log("[FeedDash] Falling back to token lookup for", pid);
             const tres = await fetch(`${apiUrl}/api/widget/verify-token`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ token })
             });
             const tdata = await tres.json();
-            console.log("[Feedspace] Token lookup result:", { token, status: tres.status, response: tdata });
+            console.log("[FeedDash] Token lookup result:", { token, status: tres.status, response: tdata });
             if (tres.ok && tdata.valid && tdata.siteName) {
               this.projectNameCache[pid] = tdata.siteName;
               for (const a of this.annotations) {
                 if (a.projectId === pid && !a.projectName) a.projectName = tdata.siteName;
               }
-              console.log("[Feedspace] Set projectName from token fallback:", pid, "->", tdata.siteName);
+              console.log("[FeedDash] Set projectName from token fallback:", pid, "->", tdata.siteName);
               continue;
             }
           }
-          console.log("[Feedspace] No name found for project", pid, "- using fallback");
+          console.log("[FeedDash] No name found for project", pid, "- using fallback");
         } catch (e) {
         }
       }
@@ -2886,7 +2886,7 @@
       });
     }
     updateBadge() {
-      const badge = document.getElementById("feedspace-list-count");
+      const badge = document.getElementById("feeddash-list-count");
       if (!badge) return;
       const count = this.annotations.length;
       badge.textContent = String(count);
@@ -2964,15 +2964,15 @@
       if (indicator) indicator.style.display = "none";
     }
     showToast(message) {
-      const existing = document.getElementById("feedspace-toast");
+      const existing = document.getElementById("feeddash-toast");
       if (existing) existing.remove();
       const toast = document.createElement("div");
-      toast.id = "feedspace-toast";
+      toast.id = "feeddash-toast";
       toast.style.cssText = `
       position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
       background:#1f2937;color:#fff;padding:10px 20px;border-radius:8px;
       font-size:13px;font-family:'Poppins',sans-serif;z-index:100001;
-      box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:feedspace-fade-in 0.15s;
+      box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:feeddash-fade-in 0.15s;
     `;
       toast.textContent = message;
       document.body.appendChild(toast);
@@ -2992,8 +2992,8 @@
         this.toolbarRoot.parentNode.removeChild(this.toolbarRoot);
       }
       if (this.recordingTimer) clearInterval(this.recordingTimer);
-      document.body.removeAttribute("data-feedspace-tool");
-      const wrapper = document.getElementById("feedspace-viewport-wrapper");
+      document.body.removeAttribute("data-feeddash-tool");
+      const wrapper = document.getElementById("feeddash-viewport-wrapper");
       if (wrapper) (_a = wrapper.parentNode) == null ? void 0 : _a.removeChild(wrapper);
       document.body.style.maxWidth = "";
       document.body.style.margin = "";
@@ -3006,9 +3006,9 @@
   // src/widget/index.ts
   function initWidget(config) {
     function dbg2(msg, data) {
-      const arr = window.__feedspaceDebug;
+      const arr = window.__feeddashDebug;
       if (arr && Array.isArray(arr)) arr.push({ msg, data, time: Date.now() });
-      console.log("[Feedspace]", msg, data || "");
+      console.log("[FeedDash]", msg, data || "");
     }
     dbg2("initWidget() called with config", { apiUrl: config.apiUrl, projectId: config.projectId, pageUrl: config.pageUrl, wpApiUrl: config.wpApiUrl, hasWpKey: !!config.wpApiKey, siteName: config.siteName });
     injectStyles();
@@ -3026,13 +3026,13 @@
     const engine = new AnnotationEngine(config, api);
     dbg2("AnnotationEngine instance created");
     engine.init().catch((err) => {
-      console.error("Feedspace widget init error:", err);
+      console.error("FeedDash widget init error:", err);
       dbg2("init() threw error", String(err));
     });
     return engine;
   }
   var currentEngine = null;
-  window.FeedspaceWidget = {
+  window.FeedDashWidget = {
     init(config) {
       if (currentEngine) {
         currentEngine.destroy();

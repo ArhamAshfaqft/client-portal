@@ -42,12 +42,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
     }
 
-    const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feedspace/v1/webhook`;
+    const webhookUrl = `${wpRestUrl.replace(/\/+$/, "")}/wp-json/feeddash/v1/webhook`;
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Feedspace-Key": wpApiKey,
+        "X-FeedDash-Key": wpApiKey,
       },
       body: JSON.stringify({ action, data }),
     });

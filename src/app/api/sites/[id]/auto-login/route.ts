@@ -34,7 +34,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
     if (site.agency_id !== profile.agency_id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    if (!site.wp_api_key) return NextResponse.json({ error: "Site has no WP API key configured. Connect via Feedspace Connector plugin first." }, { status: 400 });
+    if (!site.wp_api_key) return NextResponse.json({ error: "Site has no WP API key configured. Connect via FeedDash Connector plugin first." }, { status: 400 });
 
     const now = Math.floor(Date.now() / 1000);
     const payload = Buffer.from(JSON.stringify({
@@ -49,7 +49,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const token = payload + "." + sig;
 
     const wpUrl = (site.url || "").replace(/\/+$/, "");
-    const loginUrl = `${wpUrl}/wp-json/feedspace/v1/auto-login?token=${encodeURIComponent(token)}`;
+    const loginUrl = `${wpUrl}/wp-json/feeddash/v1/auto-login?token=${encodeURIComponent(token)}`;
 
     return NextResponse.json({ url: loginUrl });
   } catch (e: any) {

@@ -24,12 +24,12 @@ export function createApiClient(baseUrl: string, token: string, projectId: strin
   }
 
   async function wpRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const url = `${wpApiUrl!.replace(/\/+$/, '')}/wp-json/feedspace/v1${path}`;
+    const url = `${wpApiUrl!.replace(/\/+$/, '')}/wp-json/feeddash/v1${path}`;
     const res = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'X-Feedspace-Key': wpApiKey!,
+        'X-FeedDash-Key': wpApiKey!,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -64,13 +64,13 @@ export function createApiClient(baseUrl: string, token: string, projectId: strin
       }
       const fullPath = `/widget/statuses?ids=${encodeURIComponent(ids.join(','))}${qs}`;
       const fullUrl = `${baseUrl.replace(/\/+$/, '')}/api${fullPath}`;
-      if ((window as any).__feedspaceDebug?.push) {
-        (window as any).__feedspaceDebug.push({ msg: 'getStatuses URL', data: fullUrl.replace(wpApiKey || '', '***'), time: Date.now() });
+      if ((window as any).__feeddashDebug?.push) {
+        (window as any).__feeddashDebug.push({ msg: 'getStatuses URL', data: fullUrl.replace(wpApiKey || '', '***'), time: Date.now() });
       }
-      console.log('[Feedspace] Fetching statuses from', fullUrl.replace(wpApiKey || '', '***'));
+      console.log('[FeedDash] Fetching statuses from', fullUrl.replace(wpApiKey || '', '***'));
       return vercelRequest<{ statuses: Record<string, string> }>(fullPath)
         .then(r => {
-          console.log('[Feedspace] Statuses response keys:', Object.keys(r.statuses).length);
+          console.log('[FeedDash] Statuses response keys:', Object.keys(r.statuses).length);
           return r.statuses;
         });
     },

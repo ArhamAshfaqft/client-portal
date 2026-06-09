@@ -82,7 +82,7 @@ export default function RegisterPage() {
     <Card>
       <CardHeader>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground">Feedspace</h1>
+          <h1 className="text-2xl font-bold text-foreground">FeedDash</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Create your agency workspace
           </p>

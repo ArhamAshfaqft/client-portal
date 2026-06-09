@@ -9,19 +9,19 @@ async function build() {
     target: 'es2019',
     platform: 'browser',
     format: 'iife',
-    outfile: 'feedspace-connector/widget/feedspace-widget.js',
+    outfile: 'feedspace-connector/widget/feeddash-widget.js',
   };
 
   await esbuild.build(config);
-  console.log('Widget built successfully → feedspace-connector/widget/feedspace-widget.js');
+  console.log('Widget built successfully → feedspace-connector/widget/feeddash-widget.js');
 
   // Also copy to public/widget for dev
   const fs = require('fs');
   if (!fs.existsSync('public/widget')) {
     fs.mkdirSync('public/widget', { recursive: true });
   }
-  fs.copyFileSync('feedspace-connector/widget/feedspace-widget.js', 'public/widget/feedspace-widget.js');
-  console.log('Copied to public/widget/feedspace-widget.js for dev server');
+  fs.copyFileSync('feedspace-connector/widget/feeddash-widget.js', 'public/widget/feeddash-widget.js');
+  console.log('Copied to public/widget/feeddash-widget.js for dev server');
 }
 
 build().catch((err) => {

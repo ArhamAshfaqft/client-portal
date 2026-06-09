@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const wpHost = parsed.origin;
 
     const response = await fetch(url, {
-      headers: { "User-Agent": "FeedspaceProxy/1.0" },
+      headers: { "User-Agent": "FeedDashProxy/1.0" },
     });
 
     if (!response.ok) {

@@ -11,7 +11,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Feedspace - Client Feedback Platform",
+  title: "FeedDash - Client Feedback Platform",
   description:
     "Professional client feedback and collaboration platform for web agencies",
 };

@@ -28,7 +28,7 @@ export default function LoginPage() {
     if (!isLoading && user) {
       redirectedRef.current = true;
       if (window.location.hash.includes("access_token")) {
-        sessionStorage.setItem("feedspace_invite_flow", "true");
+        sessionStorage.setItem("feeddash_invite_flow", "true");
         window.history.replaceState(null, "", window.location.pathname);
       }
       router.replace("/dashboard");
@@ -45,7 +45,7 @@ export default function LoginPage() {
         supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ data }) => {
           if (data.session && !redirectedRef.current) {
             redirectedRef.current = true;
-            sessionStorage.setItem("feedspace_invite_flow", "true");
+            sessionStorage.setItem("feeddash_invite_flow", "true");
             window.history.replaceState(null, "", window.location.pathname);
             router.replace("/dashboard");
           }
@@ -82,7 +82,7 @@ export default function LoginPage() {
     <Card>
       <CardHeader>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground">Feedspace</h1>
+          <h1 className="text-2xl font-bold text-foreground">FeedDash</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Sign in to your workspace
           </p>

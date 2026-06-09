@@ -582,14 +582,14 @@ export default function SitesPage() {
                                       const newUrl = prompt('Enter new WordPress URL (e.g. https://yoursite.com):', 'https://');
                                       if (newUrl && newUrl !== 'https://') {
                                         const apiKey = (site as any).wp_api_key || '';
-                                        console.log('[Feedspace] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
+                                        console.log('[FeedDash] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
                                         const base = window.location.origin;
                                         fetch(base + '/api/widget/verify-token', {
                                           method: 'POST',
                                           headers: { 'Content-Type': 'application/json' },
                                           body: JSON.stringify({ _updateUrl: newUrl, _siteId: site.id, _wpApiKey: apiKey }),
                                         }).then(r => r.text()).then(text => {
-                                          console.log('[Feedspace] URL update response:', text);
+                                          console.log('[FeedDash] URL update response:', text);
                                           try {
                                             const d = JSON.parse(text);
                                             alert(d.ok ? 'URL updated!' : 'Failed: ' + JSON.stringify(d));
@@ -732,7 +732,7 @@ export default function SitesPage() {
               <div className="mt-3">
               <Input
                 label="Webhook API Key"
-                placeholder="From Feedspace Connector admin page"
+                placeholder="From FeedDash Connector admin page"
                 value={formData.wp_api_key}
                 onChange={(e) => setFormData({ ...formData, wp_api_key: e.target.value })}
               />
