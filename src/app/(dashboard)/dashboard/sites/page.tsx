@@ -105,12 +105,11 @@ export default function SitesPage() {
   const fetchSites = async () => {
     if (!profile?.agency_id) return;
     try {
-      // Fetch team members (developers) for the assign dropdown
+      // Fetch team members for the assign dropdown and assigned-to display
       supabase
         .from("profiles")
         .select("user_id, full_name, email, position")
         .eq("agency_id", profile.agency_id)
-        .neq("user_id", profile.user_id)
         .order("full_name", { ascending: true })
         .then(({ data }) => { if (data) setTeamMembers(data as any); });
 
