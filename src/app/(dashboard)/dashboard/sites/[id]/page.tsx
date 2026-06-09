@@ -183,7 +183,7 @@ export default function SiteDetailPage() {
     const linkedSite = site;
     const isWPConnected = linkedSite?.wp_connected && linkedSite?.url;
     return isWPConnected
-      ? `${linkedSite.url.replace(/\/+$/, '')}?feedspace_preview=${link.token}`
+      ? `${linkedSite.url.replace(/\/+$/, '')}?feeddash_preview=${link.token}`
       : `${window.location.origin}/preview/${link.token}`;
   };
 
@@ -191,7 +191,7 @@ export default function SiteDetailPage() {
     const linkedSite = site;
     const isWPConnected = linkedSite?.wp_connected && linkedSite?.url;
     const url = isWPConnected
-      ? `${linkedSite.url.replace(/\/+$/, '')}?feedspace_preview=${token}`
+      ? `${linkedSite.url.replace(/\/+$/, '')}?feeddash_preview=${token}`
       : `${window.location.origin}/preview/${token}`;
     navigator.clipboard.writeText(url);
     setCopiedLinkToken(token);

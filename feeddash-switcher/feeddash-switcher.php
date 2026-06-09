@@ -8,7 +8,7 @@
 
 defined('ABSPATH') or die;
 
-add_filter('plugin_action_links_feedspace-connector/feedspace-connector.php', function ($links) {
+add_filter('plugin_action_links_feeddash-connector/feeddash-connector.php', function ($links) {
     $url = wp_nonce_url(
         admin_url('admin-post.php?action=feeddash_replace'),
         'feeddash_replace'
@@ -23,7 +23,7 @@ add_action('admin_post_feeddash_replace', function () {
     }
     check_admin_referer('feeddash_replace');
 
-    $plugin = 'feedspace-connector/feedspace-connector.php';
+    $plugin = 'feeddash-connector/feeddash-connector.php';
 
     if (is_plugin_active($plugin)) {
         deactivate_plugins($plugin);

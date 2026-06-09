@@ -1,4 +1,4 @@
-$path = "e:\White label Client Portal\feedspace-connector\feedspace-connector.php"
+$path = "e:\White label Client Portal\feeddash-connector\feeddash-connector.php"
 $lines = [System.IO.File]::ReadAllLines($path)
 Write-Host "Original line count: $($lines.Count)"
 
@@ -21,7 +21,7 @@ $replacement = @"
     public function toggleFeedbackMode(`$request)
     {
         `$enabled = (bool) `$request->get_param('enabled');
-        update_option('feedspace_feedback_mode', `$enabled ? 'enabled' : 'disabled');
+        update_option('feeddash_feedback_mode', `$enabled ? 'enabled' : 'disabled');
         return new WP_REST_Response(array(
             'feedback_mode' => `$enabled ? 'enabled' : 'disabled',
         ), 200);
@@ -30,7 +30,7 @@ $replacement = @"
     public function createAnnotation(`$request)
     {
         global `$wpdb;
-        `$tableName = `$wpdb->prefix . 'feedspace_annotations';
+        `$tableName = `$wpdb->prefix . 'feeddash_annotations';
         `$body = `$request->get_json_params();
 
         `$annotationId = wp_generate_uuid4();
@@ -66,7 +66,7 @@ $replacement = @"
             'project_id'    => sanitize_text_field(`$body['projectId'] ?? ''),
             'type'          => sanitize_text_field(`$body['type'] ?? 'pin'),
             'content'       => sanitize_textarea_field(`$body['content'] ?? ''),
-            'page_url'      => remove_query_arg('feedspace_preview', esc_url_raw(`$body['pageUrl'] ?? '')),
+            'page_url'      => remove_query_arg('feeddash_preview', esc_url_raw(`$body['pageUrl'] ?? '')),
             'meta_data'     => !empty(`$incomingMeta) ? wp_json_encode(`$incomingMeta) : null,
             'selector'              => sanitize_text_field(`$body['selector'] ?? ''),
             'coordinates_x'         => isset(`$body['coordinatesX'])    ? floatval(`$body['coordinatesX'])    : null,

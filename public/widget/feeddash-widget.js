@@ -3016,7 +3016,7 @@
     if (config.pageUrl) {
       try {
         const u = new URL(config.pageUrl);
-        u.searchParams.delete("feedspace_preview");
+        u.searchParams.delete("feeddash_preview");
         config.pageUrl = u.toString();
       } catch {
       }

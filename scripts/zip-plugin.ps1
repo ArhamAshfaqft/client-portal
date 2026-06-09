@@ -2,7 +2,7 @@
 Add-Type -Assembly 'System.IO.Compression'
 Add-Type -Assembly 'System.IO.Compression.FileSystem'
 
-$zipPath = 'feedspace-connector\feedspace-connector.zip'
+$zipPath = 'feeddash-connector\feeddash-connector.zip'
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
 }
@@ -19,9 +19,9 @@ function Add-FileToZip($filePath, $entryName) {
 }
 
 # Add files with explicit forward slashes for Linux/WordPress compatibility
-Add-FileToZip 'feedspace-connector\feedspace-connector.php' 'feedspace-connector/feedspace-connector.php'
-Add-FileToZip 'feedspace-connector\widget\feeddash-widget.js' 'feedspace-connector/widget/feeddash-widget.js'
-Add-FileToZip 'feedspace-connector\assets\admin.css' 'feedspace-connector/assets/admin.css'
+Add-FileToZip 'feeddash-connector\feeddash-connector.php' 'feeddash-connector/feeddash-connector.php'
+Add-FileToZip 'feeddash-connector\widget\feeddash-widget.js' 'feeddash-connector/widget/feeddash-widget.js'
+Add-FileToZip 'feeddash-connector\assets\admin.css' 'feeddash-connector/assets/admin.css'
 
 # Close and write the archive
 $archive.Dispose()
