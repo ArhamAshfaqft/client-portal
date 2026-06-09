@@ -552,17 +552,19 @@ export default function SitesPage() {
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
                               <div className="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg border border-border bg-popover shadow-lg py-1">
-                                <button
-                                  onClick={() => {
-                                    setMenuOpen(null);
-                                    setAssignMessage(siteAssignments[site.id]?.message || "");
-                                    setAssignSite(site.id);
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
-                                >
-                                  <UserPlus className="w-4 h-4 text-muted-foreground" />
-                                  {siteAssignments[site.id]?.userId ? "Reassign" : "Assign Developer"}
-                                </button>
+                                {profile?.role === "owner" && (
+                                  <button
+                                    onClick={() => {
+                                      setMenuOpen(null);
+                                      setAssignMessage(siteAssignments[site.id]?.message || "");
+                                      setAssignSite(site.id);
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
+                                  >
+                                    <UserPlus className="w-4 h-4 text-muted-foreground" />
+                                    {siteAssignments[site.id]?.userId ? "Reassign" : "Assign Developer"}
+                                  </button>
+                                )}
                                 {canCreateSession && (
                                   <button
                                     onClick={() => addSession(site.id)}
@@ -572,34 +574,36 @@ export default function SitesPage() {
                                     Add Session
                                   </button>
                                 )}
-                                <button
-                                  onClick={() => {
-                                    setMenuOpen(null);
-                                    const newUrl = prompt('Enter new WordPress URL (e.g. https://yoursite.com):', 'https://');
-                                    if (newUrl && newUrl !== 'https://') {
-                                      const apiKey = (site as any).wp_api_key || '';
-                                      console.log('[Feedspace] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
-                                      const base = window.location.origin;
-                                      fetch(base + '/api/widget/verify-token', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ _updateUrl: newUrl, _siteId: site.id, _wpApiKey: apiKey }),
-                                      }).then(r => r.text()).then(text => {
-                                        console.log('[Feedspace] URL update response:', text);
-                                        try {
-                                          const d = JSON.parse(text);
-                                          alert(d.ok ? 'URL updated!' : 'Failed: ' + JSON.stringify(d));
-                                        } catch {
-                                          alert('Response (not JSON): ' + text.substring(0, 200));
-                                        }
-                                      }).catch(e => alert('Error: ' + e.message));
-                                    }
-                                  }}
-                                  className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
-                                >
-                                  <Globe className="w-4 h-4 text-muted-foreground" />
-                                  Edit WP URL
-                                </button>
+                                {profile?.role === "owner" && (
+                                  <button
+                                    onClick={() => {
+                                      setMenuOpen(null);
+                                      const newUrl = prompt('Enter new WordPress URL (e.g. https://yoursite.com):', 'https://');
+                                      if (newUrl && newUrl !== 'https://') {
+                                        const apiKey = (site as any).wp_api_key || '';
+                                        console.log('[Feedspace] Updating site URL', { siteId: site.id, newUrl, hasApiKey: !!apiKey });
+                                        const base = window.location.origin;
+                                        fetch(base + '/api/widget/verify-token', {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ _updateUrl: newUrl, _siteId: site.id, _wpApiKey: apiKey }),
+                                        }).then(r => r.text()).then(text => {
+                                          console.log('[Feedspace] URL update response:', text);
+                                          try {
+                                            const d = JSON.parse(text);
+                                            alert(d.ok ? 'URL updated!' : 'Failed: ' + JSON.stringify(d));
+                                          } catch {
+                                            alert('Response (not JSON): ' + text.substring(0, 200));
+                                          }
+                                        }).catch(e => alert('Error: ' + e.message));
+                                      }
+                                    }}
+                                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors flex items-center gap-2"
+                                  >
+                                    <Globe className="w-4 h-4 text-muted-foreground" />
+                                    Edit WP URL
+                                  </button>
+                                )}
                                 {canDelete && (
                                   <button
                                     onClick={() => { setMenuOpen(null); handleRemoveSite(site.id); }}
