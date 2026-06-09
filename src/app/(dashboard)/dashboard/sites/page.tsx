@@ -541,13 +541,14 @@ export default function SitesPage() {
                             WP
                           </Badge>
                         )}
-                        <div className="relative">
-                          <button
-                            onClick={() => setMenuOpen(menuOpen === site.id ? null : site.id)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
+                        {(profile?.role === "owner" || canCreateSession || canDelete) && (
+                          <div className="relative">
+                            <button
+                              onClick={() => setMenuOpen(menuOpen === site.id ? null : site.id)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
                           {menuOpen === site.id && (
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(null)} />
@@ -617,9 +618,10 @@ export default function SitesPage() {
                             </>
                           )}
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
+                </div>
 
                   {/* Feedback stats */}
                   <div className="px-5 pb-4">
