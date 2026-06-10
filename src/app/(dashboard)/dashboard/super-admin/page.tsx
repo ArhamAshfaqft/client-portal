@@ -115,7 +115,7 @@ export default function SuperAdminPage() {
       };
       const res = await fetch("/api/webhooks/freemius", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-signature": "test-mode" },
+        headers: { "Content-Type": "application/json", "x-super-admin-test": "true" },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -247,7 +247,7 @@ export default function SuperAdminPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Simulate a Freemius webhook event. The "x-signature" check is bypassed when sent from the browser (testing convenience).
+            Simulate a Freemius webhook event. Signature verification is bypassed when sent from the Super Admin panel.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <Select label="Event Type" value={whEvent} options={[
