@@ -73,15 +73,14 @@ export default function SuperAdminPage() {
       profiles: profiles.count || 0,
     });
 
-    // Env check
-    setEnvStatus({
-      SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      FREEMIUS_WEBHOOK_SECRET: !!process.env.FREEMIUS_WEBHOOK_SECRET,
-      FREEMIUS_PRODUCT_ID: !!process.env.FREEMIUS_PRODUCT_ID,
-      FREEMIUS_PUBLIC_KEY: !!process.env.FREEMIUS_PUBLIC_KEY,
-    });
+    // Fetch env status from server
+    try {
+      const envRes = await fetch("/api/super-admin/env-check");
+      const envData = await envRes.json();
+      setEnvStatus(envData);
+    } catch {
+      // fallback
+    }
 
     setLoading(false);
   }, [isDemo]);
@@ -284,7 +283,7 @@ export default function SuperAdminPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Object.entries(envStatus).map(([key, set]) => (
+            {Object.entries(envStatus).filter(([k]) => k !== "SUPABASE_ERROR").map(([key, set]) => (
               <div key={key} className="flex items-center gap-2">
                 {set ? (
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
