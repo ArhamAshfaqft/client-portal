@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { resolveAgencyPlanStatus, ACTIVE_PLAN_STATUSES } from "@/lib/freemius";
 
 function adminClient() {
   return createClient(
@@ -210,6 +211,14 @@ export async function POST(request: Request) {
           { status: 200, headers: corsHeaders() }
         );
       }
+    }
+
+    const planStatus = await resolveAgencyPlanStatus(projectId);
+    if (planStatus && !ACTIVE_PLAN_STATUSES.includes(planStatus)) {
+      return NextResponse.json(
+        { error: "Subscription required", planStatus },
+        { status: 402, headers: corsHeaders() }
+      );
     }
 
     const { data: feedbackItem, error } = await supabase

@@ -4,6 +4,7 @@ export type FeedbackType = "pin" | "comment" | "voice" | "media" | "rect" | "arr
 export type FeedbackStatus = "open" | "resolved" | "closed";
 export type ProjectStatus = "draft" | "active" | "completed" | "archived";
 export type MediaStorageType = "wordpress" | "supabase";
+export type PlanStatus = "beta" | "trialing" | "active" | "past_due" | "canceled" | "expired" | "lifetime";
 
 export interface Agency {
   id: string;
@@ -13,6 +14,9 @@ export interface Agency {
   primary_color: string;
   secondary_color: string;
   custom_domain: string | null;
+  plan_status: PlanStatus;
+  freemius_user_id: string | null;
+  freemius_subscription_id: string | null;
   created_at: string;
 }
 
@@ -28,6 +32,7 @@ export interface Profile {
   email: string;
   position: string | null;
   permissions: string[];
+  is_super_admin: boolean;
   created_at: string;
 }
 

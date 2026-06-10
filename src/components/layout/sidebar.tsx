@@ -13,6 +13,7 @@ import {
   ListTodo,
   Clock,
   History,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -21,7 +22,7 @@ import { Permissions } from "@/lib/permissions";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { can } = usePermissions();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -34,6 +35,7 @@ export function Sidebar() {
     { href: "/dashboard/activity", label: "Activity", icon: History, show: false },
     { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
     { href: "/dashboard/settings", label: "Settings", icon: Settings, show: can(Permissions.SETTINGS_VIEW) },
+    ...(isSuperAdmin ? [{ href: "/dashboard/super-admin", label: "Super Admin", icon: ShieldCheck }] : []),
   ].filter((item: any) => item.show !== false);
 
   return (
@@ -100,7 +102,11 @@ export function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2 px-3">
             <span className="text-xs text-sidebar-muted">FeedDash</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary leading-none">Beta</span>
+            {isSuperAdmin ? (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 leading-none">Super Admin</span>
+            ) : (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary leading-none">Beta</span>
+            )}
           </div>
         )}
       </div>

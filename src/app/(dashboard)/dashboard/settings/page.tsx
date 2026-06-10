@@ -17,7 +17,11 @@ import {
   Key,
   Copy,
   Check,
+  CreditCard,
+  ExternalLink,
+  Zap,
 } from "lucide-react";
+import { PLAN_LABELS, PLAN_BADGE_COLORS, type PlanStatus } from "@/lib/freemius";
 
 const DEMO_SETTINGS = {
   fullName: "Sarah Mitchell",
@@ -37,6 +41,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [agencyToken, setAgencyToken] = useState("");
   const [tokenCopied, setTokenCopied] = useState(false);
+  const [planStatus, setPlanStatus] = useState<PlanStatus>("beta");
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -66,6 +72,7 @@ export default function SettingsPage() {
         .single();
       if (data) {
         setAgencyToken(data.agency_token || "");
+        setPlanStatus(data.plan_status || "beta");
         setFormData({
           fullName: profile?.full_name || "",
           primaryColor: data.primary_color,
@@ -121,6 +128,27 @@ export default function SettingsPage() {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleUpgrade = async (plan: string) => {
+    setCheckoutLoading(plan);
+    try {
+      const res = await fetch("/api/billing/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          agencyId: profile?.agency_id,
+          userEmail: profile?.email,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch {} finally {
+      setCheckoutLoading(null);
+    }
   };
 
   return (
@@ -323,6 +351,75 @@ export default function SettingsPage() {
           <p className="text-xs text-muted-foreground">
             Paste this token into any WP site's FeedDash settings to auto-connect without manual site creation or token copying.
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <CreditCard className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-foreground">Billing & Plan</h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full border ${PLAN_BADGE_COLORS[planStatus] || ""}`}>
+                  {PLAN_LABELS[planStatus] || planStatus}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Manage your subscription and upgrade your plan
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-foreground">Pro</span>
+                <span className="text-xs text-muted-foreground">$19/mo</span>
+              </div>
+              <ul className="text-xs text-muted-foreground space-y-1 mb-3">
+                <li>Up to 5 client sites</li>
+                <li>Up to 3 team members</li>
+                <li>Remove FeedDash branding</li>
+              </ul>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                loading={checkoutLoading === "pro"}
+                onClick={() => handleUpgrade("pro")}
+                disabled={planStatus === "active" || planStatus === "lifetime"}
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                {planStatus === "active" || planStatus === "lifetime" ? "Current Plan" : "Upgrade"}
+              </Button>
+            </div>
+            <div className="p-4 rounded-lg border border-primary/30 bg-primary/5">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-foreground">Agency</span>
+                <span className="text-xs text-muted-foreground">$39/mo</span>
+              </div>
+              <ul className="text-xs text-muted-foreground space-y-1 mb-3">
+                <li>Unlimited client sites</li>
+                <li>Unlimited team members</li>
+                <li>White label + custom domain</li>
+                <li>Priority support</li>
+              </ul>
+              <Button
+                size="sm"
+                className="w-full"
+                loading={checkoutLoading === "agency"}
+                onClick={() => handleUpgrade("agency")}
+                disabled={planStatus === "lifetime"}
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                {planStatus === "lifetime" ? "Lifetime Active" : "Upgrade"}
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

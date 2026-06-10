@@ -46,6 +46,7 @@ const DEMO_MEMBERS: MemberEntry[] = [
     role: "owner", full_name: "Sarah Mitchell", avatar_url: null,
     email: "sarah@skylineagency.com", position: null,
     permissions: getDefaultPermissions("owner"),
+    is_super_admin: false,
     created_at: "2026-01-15T10:00:00Z", last_active: new Date().toISOString(),
   },
   {
@@ -53,6 +54,7 @@ const DEMO_MEMBERS: MemberEntry[] = [
     role: "developer", full_name: "James Chen", avatar_url: null,
     email: "james@skylineagency.com", position: "developer",
     permissions: getDefaultPermissions("developer", "developer"),
+    is_super_admin: false,
     created_at: "2026-02-20T08:00:00Z", last_active: "2026-05-29T16:30:00Z",
   },
   {
@@ -60,6 +62,7 @@ const DEMO_MEMBERS: MemberEntry[] = [
     role: "developer", full_name: "Maria Rodriguez", avatar_url: null,
     email: "maria@skylineagency.com", position: "designer",
     permissions: getDefaultPermissions("developer", "designer"),
+    is_super_admin: false,
     created_at: "2026-03-05T09:00:00Z", last_active: "2026-05-29T15:00:00Z",
   },
   {
@@ -67,6 +70,7 @@ const DEMO_MEMBERS: MemberEntry[] = [
     role: "developer", full_name: "Alex Thompson", avatar_url: null,
     email: "alex@skylineagency.com", position: "manager",
     permissions: getDefaultPermissions("developer", "manager"),
+    is_super_admin: false,
     created_at: "2026-03-12T11:00:00Z", last_active: "2026-05-28T17:45:00Z",
   },
   {
@@ -74,6 +78,7 @@ const DEMO_MEMBERS: MemberEntry[] = [
     role: "developer", full_name: "Priya Patel", avatar_url: null,
     email: "priya@skylineagency.com", position: "developer",
     permissions: getDefaultPermissions("developer", "developer"),
+    is_super_admin: false,
     created_at: "2026-04-01T10:00:00Z", last_active: "2026-05-29T14:20:00Z",
   },
 ];
@@ -197,6 +202,7 @@ export default function TeamPage() {
         email: inviteEmail,
         position: invitePosition,
         permissions: customPermissions,
+        is_super_admin: false,
         created_at: new Date().toISOString(),
       };
       setMembers((prev) => [newMember, ...prev]);

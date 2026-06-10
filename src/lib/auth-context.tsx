@@ -19,6 +19,7 @@ interface AuthState {
   profile: Profile | null;
   isLoading: boolean;
   isDemo: boolean;
+  isSuperAdmin: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   demoLogin: (role?: "owner" | "developer" | "client") => void;
@@ -26,44 +27,53 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
-const DEMO_OWNER: Profile = {
+function makeDemo(overrides: Partial<Profile>): Profile {
+  return {
+    id: "",
+    user_id: "",
+    agency_id: "",
+    role: "developer",
+    full_name: "",
+    avatar_url: null,
+    email: "",
+    position: null,
+    permissions: [],
+    is_super_admin: false,
+    created_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
+const DEMO_OWNER = makeDemo({
   id: "demo-id",
   user_id: "demo-user-id",
   agency_id: "demo-agency-id",
   role: "owner",
   full_name: "Sarah Mitchell",
-  avatar_url: null,
   email: "sarah@skylineagency.com",
-  position: null,
   permissions: getDefaultPermissions("owner"),
-  created_at: new Date().toISOString(),
-};
+});
 
-const DEMO_CLIENT: Profile = {
+const DEMO_CLIENT = makeDemo({
   id: "demo-client-profile",
   user_id: "demo-client-1",
   agency_id: "demo-agency-id",
   role: "client",
   full_name: "Michael Chen",
-  avatar_url: null,
   email: "michael@brightonlaw.com",
-  position: null,
   permissions: [],
-  created_at: new Date().toISOString(),
-};
+});
 
-const DEMO_DEV: Profile = {
+const DEMO_DEV = makeDemo({
   id: "demo-mem-2",
   user_id: "demo-dev-1",
   agency_id: "demo-agency-id",
   role: "developer",
   full_name: "James Chen",
-  avatar_url: null,
   email: "james@skylineagency.com",
   position: "developer",
   permissions: getDefaultPermissions("developer", "developer"),
-  created_at: new Date().toISOString(),
-};
+});
 
 // Grab the singleton once at module level — the reference never changes
 const supabase = createClient();
@@ -73,6 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+
+  const isSuperAdmin = !!profile?.is_super_admin;
 
   // Guard against double-fire in React 18 Strict Mode
   const initRef = useRef(false);
@@ -170,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         isLoading,
         isDemo,
+        isSuperAdmin,
         signOut,
         refreshProfile,
         demoLogin,
