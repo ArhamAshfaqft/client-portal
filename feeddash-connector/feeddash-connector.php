@@ -1041,7 +1041,7 @@ class FeedDashConnector
         }
 
         $ext = '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = 'feeddash_' . uniqid() . '_' . sanitize_file_name(basename($file['name']));
+        $filename = sanitize_file_name(basename($file['name']));
         $dest = $mediaDir . $filename;
 
         $content = file_get_contents($file['tmp_name']);
