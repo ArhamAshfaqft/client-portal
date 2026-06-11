@@ -89,6 +89,7 @@ export default function SessionDetailPage() {
   const [copied, setCopied] = useState(false);
   const [replyOpenId, setReplyOpenId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     if (!projectId || isDemo) { setLoading(false); return; }
@@ -188,9 +189,10 @@ export default function SessionDetailPage() {
   };
 
   const handleReply = async (feedbackId: string) => {
-    if (!replyText.trim()) return;
+    if (!replyText.trim() || sendingReply) return;
     const item = feedback.find((f) => f.id === feedbackId);
     if (isDemo || !item) { setReplyText(""); setReplyOpenId(null); return; }
+    setSendingReply(true);
     try {
       const res = await fetch("/api/widget/annotations", {
         method: "POST",
@@ -218,6 +220,8 @@ export default function SessionDetailPage() {
       setReplyOpenId(null);
     } catch (err) {
       console.error("Failed to submit reply:", err);
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -444,17 +448,17 @@ export default function SessionDetailPage() {
                         type="text"
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") handleReply(item.id); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" && !sendingReply) handleReply(item.id); }}
                         placeholder="Write a reply..."
                         className="flex-1 text-sm border border-border rounded-lg px-3 py-1.5 bg-background outline-none focus:border-primary transition-colors"
                         autoFocus
                       />
                       <button
                         onClick={() => handleReply(item.id)}
-                        disabled={!replyText.trim()}
+                        disabled={!replyText.trim() || sendingReply}
                         className="flex items-center gap-1 text-xs font-semibold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors"
                       >
-                        Send
+                        {sendingReply ? "Sending..." : "Send"}
                       </button>
                     </div>
                   )}

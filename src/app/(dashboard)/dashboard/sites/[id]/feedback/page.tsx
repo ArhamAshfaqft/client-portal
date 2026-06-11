@@ -159,6 +159,7 @@ export default function SiteFeedbackPage() {
   const [previewMedia, setPreviewMedia] = useState<{ media: FeedbackMedia[]; index: number } | null>(null);
   const [replyOpen, setReplyOpen] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const [feedback, setFeedback] = useState<EnrichedFeedback[]>([]);
   const [loading, setLoading] = useState(!isDemo);
@@ -461,7 +462,7 @@ export default function SiteFeedbackPage() {
   };
 
   const handleReply = async (feedbackId: string) => {
-    if (!replyText.trim()) return;
+    if (!replyText.trim() || sendingReply) return;
     const parent = feedback.find((f) => f.id === feedbackId);
     if (isDemo) {
       const reply: EnrichedFeedback = {
@@ -507,6 +508,7 @@ export default function SiteFeedbackPage() {
       return;
     }
 
+    setSendingReply(true);
     try {
       const { data, error } = await supabase
         .from("feedback_items")
@@ -592,6 +594,7 @@ export default function SiteFeedbackPage() {
     } finally {
       setReplyText("");
       setReplyOpen(null);
+      setSendingReply(false);
     }
   };
 
@@ -917,13 +920,13 @@ export default function SiteFeedbackPage() {
                                     rows={2}
                                     className="flex-1 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                                     onKeyDown={(e) => {
-                                      if (e.key === "Enter" && !e.shiftKey) {
+                                      if (e.key === "Enter" && !e.shiftKey && !sendingReply) {
                                         e.preventDefault();
                                         handleReply(item.id);
                                       }
                                     }}
                                   />
-                                  <Button size="sm" onClick={() => handleReply(item.id)} disabled={!replyText.trim()}>
+                                  <Button size="sm" onClick={() => handleReply(item.id)} disabled={!replyText.trim() || sendingReply} loading={sendingReply}>
                                     <Send className="w-3.5 h-3.5 mr-1" />
                                     Send
                                   </Button>
