@@ -1040,7 +1040,6 @@ class FeedDashConnector
             wp_mkdir_p($mediaDir);
         }
 
-        $ext = '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = sanitize_file_name(basename($file['name']));
         $dest = $mediaDir . $filename;
 
