@@ -466,6 +466,9 @@ class FeedDashConnector
                 $wpdb->update($table, array('status' => 'done', 'updated_at' => current_time('mysql')), array('id' => $item->id));
                 self::logDebug('queue_done', array('annotation_id' => $item->annotation_id, 'code' => $code));
                 $processed++;
+            } elseif ($code === 402) {
+                $wpdb->update($table, array('status' => 'failed', 'last_error' => 'Subscription required (402)', 'updated_at' => current_time('mysql')), array('id' => $item->id));
+                self::logDebug('queue_failed_permanent', array('annotation_id' => $item->annotation_id, 'code' => $code, 'reason' => 'subscription required'));
             } else {
                 self::handleSyncFailure($item->id, "HTTP $code: $body", $item->attempts, $item->max_attempts);
             }
